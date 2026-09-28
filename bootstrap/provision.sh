@@ -35,20 +35,28 @@ for p in Microsoft.ContainerService Microsoft.ContainerRegistry Microsoft.Networ
   else log warn "provider $p is $state"; run az provider register -n "$p" --wait --subscription "$AZ_SUBSCRIPTION_ID"; fi
 done
 
-sku=$(az_s vm list-skus -l "$AZ_LOCATION" --resource-type virtualMachines --size "$AKS_NODE_SIZE" -o json 2>/dev/null \
-  | jq -c --arg n "$AKS_NODE_SIZE" '[.[] | select(.name == $n)][0] // empty')
-[ -n "$sku" ] || { log error "VM size $AKS_NODE_SIZE not offered in $AZ_LOCATION"; exit 1; }
-restricted=$(jq -r '[.restrictions[]?.reasonCode] | join(",")' <<<"$sku")
-[ -z "$restricted" ] || { log error "VM size $AKS_NODE_SIZE restricted: $restricted"; exit 1; }
-family=$(jq -r '.family' <<<"$sku")
-vcpus=$(jq -r '[.capabilities[] | select(.name == "vCPUs") | .value][0]' <<<"$sku")
-need=$(( vcpus * (AKS_NODE_COUNT + 1) ))   # +1 surge node during upgrades
-usage=$(az_s vm list-usage -l "$AZ_LOCATION" -o json 2>/dev/null)
-for q in "$family" cores; do
-  free=$(jq -r --arg q "$q" '[.[] | select(.name.value == $q) | ((.limit | tonumber) - (.currentValue | tonumber))][0] // -1' <<<"$usage")
-  [ "$free" -ge "$need" ] || { log error "quota $q: need $need vCPU, free $free"; exit 1; }
-  log info "quota $q: need $need vCPU, free $free"
-done
+# check_capacity -- VM size offered + vCPU quota for nodes + 1 surge. Only needed when creating AKS
+# (an existing node already consumes quota, so re-checking would fail every re-run).
+check_capacity() {
+  local sku restricted family vcpus need usage q free
+  sku=$(az_s vm list-skus -l "$AZ_LOCATION" --resource-type virtualMachines --size "$AKS_NODE_SIZE" -o json 2>/dev/null \
+    | jq -c --arg n "$AKS_NODE_SIZE" '[.[] | select(.name == $n)][0] // empty')
+  [ -n "$sku" ] || { log error "VM size $AKS_NODE_SIZE not offered in $AZ_LOCATION"; exit 1; }
+  restricted=$(jq -r '[.restrictions[]?.reasonCode] | join(",")' <<<"$sku")
+  [ -z "$restricted" ] || { log error "VM size $AKS_NODE_SIZE restricted: $restricted"; exit 1; }
+  family=$(jq -r '.family' <<<"$sku")
+  vcpus=$(jq -r '[.capabilities[] | select(.name == "vCPUs") | .value][0]' <<<"$sku")
+  need=$(( vcpus * (AKS_NODE_COUNT + 1) ))   # +1 surge node during upgrades
+  usage=$(az_s vm list-usage -l "$AZ_LOCATION" -o json 2>/dev/null)
+  for q in "$family" cores; do
+    free=$(jq -r --arg q "$q" '[.[] | select(.name.value == $q) | ((.limit | tonumber) - (.currentValue | tonumber))][0] // -1' <<<"$usage")
+    [ "$free" -ge "$need" ] || { log error "quota $q: need $need vCPU, free $free"; exit 1; }
+    log info "quota $q: need $need vCPU, free $free"
+  done
+}
+
+aks=$(az_s aks show -n "$AKS_NAME" -g "$AZ_RESOURCE_GROUP" -o json 2>/dev/null || true)
+[ -n "$aks" ] || check_capacity   # before any mutation: no half-built state on a quota failure
 
 # ---- resources (idempotent) ----
 if az_s acr show -n "$ACR_NAME" -g "$AZ_RESOURCE_GROUP" -o none 2>/dev/null; then
@@ -57,7 +65,7 @@ else
   run az acr create -n "$ACR_NAME" -g "$AZ_RESOURCE_GROUP" -l "$AZ_LOCATION" --sku Basic --subscription "$AZ_SUBSCRIPTION_ID"
 fi
 
-if aks=$(az_s aks show -n "$AKS_NAME" -g "$AZ_RESOURCE_GROUP" -o json 2>/dev/null); then
+if [ -n "$aks" ]; then
   log info "skip AKS $AKS_NAME (exists)"
   oidc=$(jq -r '.oidcIssuerProfile.enabled // false' <<<"$aks")
   wi=$(jq -r '.securityProfile.workloadIdentity.enabled // false' <<<"$aks")

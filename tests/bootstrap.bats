@@ -42,6 +42,12 @@ mutations() { grep -cE "$MUTATING" "$AZ_LOG" || true; }
   [[ "$output" == *"ns1-01.azure-dns.com."* ]] || false
 }
 
+@test "re-run with AKS present skips quota check (node already uses quota)" {
+  FAKE_EXISTS="acr aks zone" FAKE_LIMIT=2 run "$PROV" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  [ "$(grep -c 'vm list-usage' "$AZ_LOG" || true)" -eq 0 ]
+}
+
 @test "partial failure then retry: existing ACR skipped, AKS retried" {
   FAKE_FAIL="aks create" run "$PROV" --env "$ENV" --apply
   [ "$status" -ne 0 ]

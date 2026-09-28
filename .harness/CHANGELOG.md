@@ -18,16 +18,23 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
-## 2026-09-28 — F013 Provision Azure prerequisites — IN PROGRESS (offline part done; awaiting apply OK)
-Branch/commit: feat/F013 @ (this commit)   PR: not opened (BLK-006)
+## 2026-09-28 — F013 Provision Azure prerequisites — COMPLETE
+Branch/commit: feat/F013 @ (this commit)   PR: not opened (BLK-006)   CI: N/A
 Contract: `verification/contracts/F013.md`
-Evidence so far:
-  - `bats tests/bootstrap.bats` -> 16/16 (fake az): dry-run makes 0 mutating calls; apply creates; idempotent skip + NS print; partial failure retry; OIDC/WI update on existing AKS; provider register; preflight fails (subscription, RG, quota need=vcpus*(n+1), restricted/missing SKU); config validation exit 2; teardown needs --yes, never deletes the RG
-  - mutations killed: dry-run executes; drop surge node; teardown defaults to delete; drop OIDC flags on create
-  - full suite: `./scripts/init.sh` -> BASELINE GREEN, 78 bats tests
-  - real read-only dry-run vs subscription1: ContainerRegistry provider NotRegistered (register planned); quota StandardDasv7Family 4/4 free, cores 4/4 free; plans ACR `nimatpreviewacr` (Basic), AKS `aks-preview` (1× Standard_D2as_v7, free tier, OIDC+WI, ACR attached), zone `preview.nimat.dev`
-  - bug found by the real dry-run: az returns quota numbers as strings -> jq tonumber; fake now mirrors real JSON shape
-Remaining: human OK -> `--apply` -> nodes Ready -> second run no-op -> Namecheap NS records (human) -> Checker.
+Evidence:
+  - `bootstrap/provision.sh --apply` (human-approved, DEC-019) -> exit 0: registered Microsoft.ContainerRegistry; created ACR `nimatpreviewacr` (Basic), AKS `aks-preview`, DNS zone `preview.nimat.dev`
+  - `az aks show` -> provisioningState Succeeded, power Running, k8s 1.35.8, tier Free, OIDC issuer + workload identity enabled (`evidence/F013/verify.txt`)
+  - `kubectl get nodes` -> 1 node Ready (Standard_D2as_v7)
+  - `az aks check-acr` -> name resolution, managed identity, image pull permission SUCCEEDED
+  - second `--apply` -> skip ACR / skip AKS / skip DNS zone, exit 0 (`evidence/F013/apply-rerun.txt`)
+  - zone NS: ns1-07.azure-dns.com. ns2-07.azure-dns.net. ns3-07.azure-dns.org. ns4-07.azure-dns.info.
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN, 79 bats tests (17 bootstrap)
+  - mutations killed: dry-run executes; drop surge node; teardown defaults to delete; drop OIDC flags; capacity check on every run
+Evaluator: acceptance=5 correctness=4 boundaries=5 modularity=5 evidence=5 => avg 4.8 (PASS)
+Notes:
+  - Two bugs escaped the fake az and were caught only against real Azure: (1) quota numbers are JSON strings (jq tonumber; fake now mirrors real shape); (2) quota preflight ran on every run and failed re-runs once the node consumed quota — capacity is now checked only when AKS will be created, and before any mutation. Both have regression tests.
+  - Side effects on the operator machine: `--generate-ssh-keys` created ~/.ssh/id_rsa(.pub) (none existed); kubeconfig current-context is now `aks-preview`.
+  - Cost is running (~$90–105/mo est. once ingress LB exists); `az aks stop -g nimatresourceg -n aks-preview` to pause, `bootstrap/teardown.sh --yes` to remove.
 
 ## 2026-09-28 — F004 discovery (read-only, no FID completion)
 Evidence: `az account show`, `az account list`, `az group list`, `az aks list`, `az acr list`, `az network dns zone list`, `az graph query` -> 1 subscription, RG `nimatresourceg` empty; 0 AKS / 0 ACR / 0 DNS zones.

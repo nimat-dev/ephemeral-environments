@@ -1,20 +1,23 @@
 # CURRENT TASK
 
-**Feature**: F013 — Provision Azure prerequisites (AKS + ACR + DNS zone)
+**Feature**: F004 — Cluster bootstrap (spec Part A1–A6) on `aks-preview`
 **Phase**: Phase 01 — Foundation
-**Status**: IN PROGRESS (F004 BLOCKED behind it)
+**Status**: IN PROGRESS — A1/A4/A5/A6 workable now; A2 (wildcard A) + A3 (DNS-01 wildcard cert)
+need the Namecheap NS delegation (BLK-005, human)
 
 ## Exact next step
-Offline part DONE (scripts + 16 tests + real dry-run). Waiting on the human:
-1. Human approves cost + runs (or OKs Claude running) `bootstrap/provision.sh --apply`
-   (~10 min; registers Microsoft.ContainerRegistry, creates ACR, AKS, DNS zone).
-2. Verify: `az aks show -g nimatresourceg -n aks-preview --query provisioningState` = Succeeded;
-   `kubectl get nodes` Ready; re-run `--apply` → all "skip".
-3. Human adds the printed NS records in Namecheap (host `preview`); verify `dig NS preview.nimat.dev`.
-4. Checker pass → mark F013 COMPLETE → unblock F004.
+1. Human: add 4 NS records in Namecheap for host `preview` (values in BLOCKERS.md BLK-005).
+2. Branch `feat/F004` exists (tracking only) — rebase/continue it on top of `feat/F013`.
+3. Sprint contract `verification/contracts/F004.md`; resolve BLK-004 by pinning KEDA core +
+   HTTP add-on chart versions compatible with k8s 1.35.
+4. Scripts (dry-run default, `--apply`, idempotent, reuse `bootstrap/_common.sh` + `.env`):
+   `a1-ingress-nginx.sh`, `a2-wildcard-dns.sh`, `a3-cert-manager.sh` (+ clusterissuer/wildcard-cert
+   templated from env, workload identity for DNS-01), `a4-keda.sh`, `a5-github-oidc.sh`, `a6-github-env.sh`.
+5. bats with fakes for az/helm/kubectl/gh; then human-approved apply; evidence.
+Proof: cert `wildcard-preview` Ready; `dig x.preview.nimat.dev` → LB IP; interceptor svc name/port recorded.
 
 ## Acceptance (summary)
-See `phases/PHASE-01-FOUNDATION.md` → F013.
+See `phases/PHASE-01-FOUNDATION.md` → F004.
 
 ## Definition of done
 Every acceptance item met + evidence in `CHANGELOG.md` + Evaluator PASS + check-architecture

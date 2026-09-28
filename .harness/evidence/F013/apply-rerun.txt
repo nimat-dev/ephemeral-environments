@@ -1,0 +1,16 @@
+[info] provision: mode=APPLY sub=1325f79b-c2c1-437c-a8c7-a0746ab748d4 rg=nimatresourceg
+[info] provision: provider Microsoft.ContainerService Registered
+[info] provision: provider Microsoft.ContainerRegistry Registered
+[info] provision: provider Microsoft.Network Registered
+[info] provision: provider Microsoft.Compute Registered
+[info] provision: skip ACR nimatpreviewacr (exists)
+[info] provision: skip AKS aks-preview (exists)
+[info] provision: skip DNS zone preview.nimat.dev (exists)
+[info] provision: + az aks get-credentials -n aks-preview -g nimatresourceg --overwrite-existing --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+WARNING: Merged "aks-preview" as current context in /Users/nimatullahrazmjo/.kube/config
+Add these NS records in Namecheap (host: preview):
+  ns1-07.azure-dns.com.
+  ns2-07.azure-dns.net.
+  ns3-07.azure-dns.org.
+  ns4-07.azure-dns.info.
+[info] provision: done

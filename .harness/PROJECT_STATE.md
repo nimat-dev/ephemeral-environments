@@ -4,18 +4,18 @@
 
 ## Where we are
 - **Phase**: Phase 01 — Foundation
-- **Active feature**: F013 — Provision AKS + ACR + DNS zone (IN PROGRESS); F004 BLOCKED behind it
-- **Overall progress**: 4 / 13 features COMPLETE (31%) — F001, F002, F003, F012 done
+- **Active feature**: F004 — Cluster bootstrap (IN PROGRESS; A2/A3 wait on Namecheap NS delegation)
+- **Overall progress**: 5 / 13 features COMPLETE (38%) — F001, F002, F003, F012, F013 done
 
 ## Last verified
 - **Date**: 2026-09-28
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-28)
-- **Full suite + check-architecture**: green — `bats tests/` 78/78; check-architecture clean
-- **E2E**: F012 local docker run + curl green; cluster e2e N/A
+- **Full suite + check-architecture**: green — `bats tests/` 79/79; check-architecture clean
+- **E2E**: F013 real apply green (AKS Succeeded, node Ready, ACR pull OK, re-run no-op); F012 local docker
 - **Git**: branch `feat/F013` (stack: chore/harness-and-todo → F001 → F002 → F003 → F004 (tracking only) → F013) — pushed; unreviewed (BLK-006, DEC-016).
 
 ## Next step
-F013: human OK on cost, then `bootstrap/provision.sh --apply`; then Namecheap NS records. Mirrors `CURRENT_TASK.md`.
+Human: Namecheap NS records for `preview`. Agent: F004 contract + A1/A4–A6 scripts. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-001 (no Azure values) blocks F004+; BLK-002 now only = F006 build
@@ -23,7 +23,8 @@ context `todo`; BLK-006 blocks opening PRs via `gh`. F001–F003 offline and unb
 
 ## Notes for the next agent
 - 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
-  F013 approved (DEC-019); domain = preview.nimat.dev at Namecheap (DEC-020).
+  F013 DONE: AKS `aks-preview` (1× D2as_v7, k8s 1.35.8), ACR `nimatpreviewacr`, zone `preview.nimat.dev`.
+  COST IS RUNNING — pause: `az aks stop -g nimatresourceg -n aks-preview`; remove: `bootstrap/teardown.sh --yes`.
 - Tooling lives outside brew: yamllint (~/.local/bin, pipx), kubeconform (~/go/bin), bats (npm).
   `scripts/init.sh` adds those to PATH. Brew blocked until `sudo xcodebuild -license accept`.
 - Hooks (`.claude/settings.json`, DEC-013) enforce the loop: Stop is blocked if you change
