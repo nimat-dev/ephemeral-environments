@@ -5,14 +5,14 @@
 ## Where we are
 - **Phase**: Phase 01 — Foundation
 - **Active feature**: F001 — Repo tooling (IN PROGRESS, no code yet)
-- **Overall progress**: 0 / 11 features COMPLETE (0%)
+- **Overall progress**: 1 / 12 features COMPLETE (8%) — F012 done
 
 ## Last verified
 - **Date**: 2026-09-28
 - **init**: N/A — `scripts/init.sh` not written yet (F001)
-- **Full suite + check-architecture**: N/A — no code yet
-- **E2E**: N/A
-- **Git**: branch `main`, commit `2d8e6fb` — Working tree: DIRTY (`.harness/` untracked, `README.md` deleted)
+- **Full suite + check-architecture**: N/A — not built yet (F001)
+- **E2E**: F012 local docker run + curl green; cluster e2e N/A
+- **Git**: branch `chore/harness-and-todo` @ (see `git log -1`; last feature commit 8f4ef86 F012, aa73f65 root CLAUDE.md) — pushed; PR not opened. Working tree: `README.md` deletion unstaged (user's, pending decision)
 
 ## Next step
 Write `scripts/check-architecture.sh` (9 rules in `rules/layer-boundaries.md`, each skipping
@@ -23,6 +23,9 @@ See `BLOCKERS.md`. BLK-001 (no Azure values) and BLK-002 (app repo location) blo
 F004+ and Phase 02; F001–F003 are offline and unblocked.
 
 ## Notes for the next agent
+- Hooks (`.claude/settings.json`, DEC-013) enforce the loop: Stop is blocked if you change
+  files outside `.harness/` without updating this file.
+- App to preview = `todo/` (F012). Deploy workflow (F006) must build `context: todo`.
 - The requirement is `.harness/preview-environments-implementation.md` — verbatim file
   contents for chart, workflows, bootstrap. Harness files distill it; the spec wins on detail.
 - DEC-010: preview-id sanitizer lives once in `scripts/lib/preview.sh` (spec inlines it twice).

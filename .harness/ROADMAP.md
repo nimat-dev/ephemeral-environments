@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 0 / 11 COMPLETE (0%)
+**Progress**: 1 / 12 COMPLETE (8%)
 
 ## Phase 01 — Foundation (offline-verifiable first, then real cluster)
 - [ ] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `IN PROGRESS`
@@ -14,6 +14,7 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [ ] **F003** — Helm chart `deploy/preview` (Part B), `helm lint` + `helm template` clean — `NOT STARTED`
 - [ ] **F004** — Cluster bootstrap (Part A1–A6): `bootstrap/` scripts + `clusterissuer.yaml` + `wildcard-cert.yaml`, applied once — `NOT STARTED`
 - [ ] **F005** — Smoke test `scripts/smoke.sh` (Part C): HTTPS valid, cold-start 200, scales back to 0 — `NOT STARTED`
+- [x] **F012** — Sample app container: `todo/Dockerfile` (Vite build → nginx-unprivileged :8080, SPA fallback) — the image F005/F006 deploy — `COMPLETE`
 
 ## Phase 02 — Workflows (Part D)
 - [ ] **F006** — `preview-deploy.yml`: dispatch → build/push → ns+labels → helm → verify → summary — `NOT STARTED`

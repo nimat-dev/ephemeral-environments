@@ -20,3 +20,5 @@ DEC-008 (2026-09-28): Image tag = short Git SHA. — traceable, immutable per co
 DEC-009 (2026-09-28): Start with Azure RBAC Writer at cluster scope; tighten to k8s ClusterRole in F009. — Azure RBAC can't glob `preview-*` namespaces.
 DEC-010 (2026-09-28): Deviation from spec "verbatim": preview-id/duration/expiry logic extracted to `scripts/lib/preview.sh`, sourced by workflows. — deploy & destroy duplicated the sanitizer; drift breaks destroy; makes logic unit-testable.
 DEC-011 (2026-09-28): Build order: offline-verifiable (tooling, lib, chart) before cluster bootstrap. — progress without Azure access (BLK-001); spec Part E order otherwise kept.
+DEC-012 (2026-09-28): Sample app `todo/` (Vite+React static SPA) is the preview target; image = nginx-unprivileged on :8080, matching chart defaults. — F012; unblocks F005/F006 image needs.
+DEC-013 (2026-09-28): Enforce harness with project hooks in `.claude/settings.json`: SessionStart injects state, UserPromptSubmit reminds, Stop blocks if non-harness files changed without PROJECT_STATE update. — CLAUDE.md is advisory; ad-hoc asks were bypassing the loop.

@@ -89,6 +89,23 @@ Script run logs; `kubectl get certificate -n ingress-nginx`; `dig *.preview…` 
 ### Evidence expected
 smoke.sh log with 3 checkpoints PASS; saved to `.harness/evidence/F005/`.
 
+## F012 — Sample app container (`todo/`)
+**Status**: COMPLETE (recorded retroactively — built outside the loop, see CHANGELOG)
+
+### Acceptance criteria
+- [x] `todo/Dockerfile` multi-stage: node:22-alpine + pnpm `--frozen-lockfile` build → `nginxinc/nginx-unprivileged` runtime.
+- [x] Listens on 8080 (= chart `containerPort`); `/` returns 200 (= chart `probePath`).
+- [x] SPA fallback: unknown path returns `index.html` (200).
+- [x] Runs non-root.
+- [x] `.dockerignore` excludes `node_modules`, `dist`, `.git`.
+- [ ] Edge/error cases — N/A beyond the above (static site, no inputs).
+- [ ] Boundary invariants — N/A (check-architecture not built yet, F001).
+- [ ] Full verify — N/A until F001 provides `init.sh`.
+- [x] E2E: local `docker run` + curl (real-cluster e2e is F005).
+
+### Evidence expected
+`docker build` + `docker run` + curl output (CHANGELOG 2026-09-28 F012).
+
 ## Phase completion criteria
 F001–F005 `COMPLETE` with evidence; `scripts/smoke.sh` green against the real cluster
 before Phase 02 starts.
