@@ -3,19 +3,19 @@
 > Read this first, every session. Rewrite it for a cold reader before you stop.
 
 ## Where we are
-- **Phase**: Phase 01 — Foundation
-- **Active feature**: F005 — Smoke test (IN PROGRESS)
-- **Overall progress**: 6 / 13 features COMPLETE (46%) — F001–F004, F012, F013 done
+- **Phase**: Phase 02 — Workflows (Phase 01 COMPLETE 2026-09-28)
+- **Active feature**: F006 — preview-deploy.yml (IN PROGRESS; real e2e blocked on BLK-006)
+- **Overall progress**: 7 / 13 features COMPLETE (54%) — all of Phase 01
 
 ## Last verified
 - **Date**: 2026-09-28
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-28)
-- **Full suite + check-architecture**: green — `bats tests/` 107/107; check-architecture clean
-- **E2E**: https://anything.preview.nimat.dev → trusted wildcard TLS via Traefik (404); F013 infra green
-- **Git**: branch `feat/F004` (stack … → F013 → F004) — pushed; unreviewed (BLK-006, DEC-016).
+- **Full suite + check-architecture**: green — `bats tests/` 115/115; check-architecture clean
+- **E2E**: `scripts/smoke.sh` 3/3 PASS twice on aks-preview (TLS, cold start ~8–9s, back to 0 after 127s)
+- **Git**: branch `feat/F005` (stack chore/harness-and-todo → F001 → F002 → F003 → F004 → F013 → F004 → F005) — pushed; no PRs (BLK-006).
 
 ## Next step
-F005: push todo image to ACR, write scripts/smoke.sh, run 3 checkpoints. Mirrors `CURRENT_TASK.md`.
+Human: fix gh access (BLK-006) and run `bootstrap/a6-github-env.sh --apply`. Agent: F006 workflow. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-001 (no Azure values) blocks F004+; BLK-002 now only = F006 build

@@ -1,20 +1,20 @@
 # CURRENT TASK
 
-**Feature**: F005 — Smoke test `scripts/smoke.sh` (spec Part C)
-**Phase**: Phase 01 — Foundation
-**Status**: IN PROGRESS
+**Feature**: F006 — `.github/workflows/preview-deploy.yml`
+**Phase**: Phase 02 — Workflows
+**Status**: IN PROGRESS (not started; real e2e BLOCKED on BLK-006: gh access → A6 repo variables)
 
 ## Exact next step
-1. Branch `feat/F005` from `feat/F004`; sprint contract `verification/contracts/F005.md`.
-2. Push a real todo image to ACR tagged with the short SHA (`az acr build` or buildx linux/amd64).
-3. `scripts/smoke.sh`: ns `preview-smoke`, chart with `idleTimeoutSeconds=120`,
-   `ingressClassName=traefik`, trap cleanup; checkpoints: (1) valid HTTPS, (2) cold start 0→1 → 200,
-   (3) back to 0 after idle. Deterministic waits (poll state), no blind sleeps.
-4. Evidence to `.harness/evidence/F005/`.
-Proof: smoke.sh 3/3 checkpoints PASS against aks-preview; init GREEN.
+1. Human: `gh auth login` (or switch) to the GitHub account with admin on nimat-dev/ephemeral-environments,
+   then run `bootstrap/a6-github-env.sh --apply` (sets `preview` environment + 12 variables).
+2. Branch `feat/F006` from `feat/F005`; sprint contract.
+3. Workflow per spec Part D, adapted: source `scripts/lib/preview.sh` (DEC-010), build context `todo`
+   (BLK-002), buildx linux/amd64 (DEC-025), `--set ingressClassName=${{ vars.INGRESS_CLASS }}` (DEC-022).
+4. actionlint + check-architecture (rules 2, 3, 6, 7, 8) clean; dispatch against a test branch.
+Proof: Actions run green, job summary URL returns 200 after cold start.
 
 ## Acceptance (summary)
-See `phases/PHASE-01-FOUNDATION.md` → F005.
+See `phases/PHASE-02-WORKFLOWS.md` → F006.
 
 ## Definition of done
 Every acceptance item met + evidence in `CHANGELOG.md` + Evaluator PASS + check-architecture
