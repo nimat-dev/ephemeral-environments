@@ -18,6 +18,17 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F004 stage 1 (Traefik + KEDA) — progress, feature still IN PROGRESS
+Branch/commit: feat/F004 @ (this commit)
+Evidence:
+  - `bootstrap/a1-ingress.sh --apply` -> Traefik v3.7.13 deployed, LB_IP=74.151.139.236 (`evidence/F004/a1-apply.txt`)
+  - `curl http://74.151.139.236/ -H 'Host: x.preview.nimat.dev'` -> 301 → https; https -> 404 (Traefik default)
+  - `bootstrap/a4-keda.sh --apply` -> KEDA 2.21.0 + HTTP add-on 0.16.0 Running; interceptor `keda-add-ons-http-interceptor-proxy:8080` verified (`evidence/F004/a4-apply.txt`)
+  - first A4 attempt failed: `context deadline exceeded` — 3 external-scaler pods Pending (Insufficient cpu, node at 88% requests). Fixed with sized values (DEC-023); re-run converged
+  - spec chart `helm template … --set ingressClassName=traefik | kubectl apply --dry-run=server` -> all 6 objects accepted incl. HTTPScaledObject (`evidence/F004/chart-server-dry-run.txt`) — closes the spec's version-drift risk
+  - tests: `bats tests/` 89/89 (10 new in tests/cluster-bootstrap.bats); mutation (drop context guard) killed; init GREEN
+  - NS delegation live at Namecheap (BLK-005 resolved)
+
 ## 2026-09-28 — F013 Provision Azure prerequisites — COMPLETE
 Branch/commit: feat/F013 @ (this commit)   PR: not opened (BLK-006)   CI: N/A
 Contract: `verification/contracts/F013.md`

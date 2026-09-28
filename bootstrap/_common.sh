@@ -26,3 +26,37 @@ run() {
     printf '[dry-run] %s\n' "$*"
   fi
 }
+
+# load_versions -- source pinned chart versions. Exit 2 if missing.
+load_versions() {
+  local f="${VERSIONS_FILE:-$(dirname "${BASH_SOURCE[0]}")/versions.env}" v
+  [ -f "$f" ] || { log error "versions file not found: $f"; exit 2; }
+  # shellcheck disable=SC1090
+  . "$f"
+  for v in TRAEFIK_CHART_VERSION KEDA_CHART_VERSION KEDA_HTTP_CHART_VERSION CERT_MANAGER_CHART_VERSION; do
+    [ -n "${!v:-}" ] || { log error "missing $v in $f"; exit 2; }
+  done
+}
+
+# require_context -- refuse to touch any cluster but $AKS_NAME. Exit 1 otherwise.
+require_context() {
+  local ctx
+  ctx=$(kubectl config current-context 2>/dev/null || true)
+  [ "$ctx" = "$AKS_NAME" ] || {
+    log error "kube context is '${ctx:-none}', expected '$AKS_NAME' (az aks get-credentials -g $AZ_RESOURCE_GROUP -n $AKS_NAME)"
+    exit 1
+  }
+}
+
+# parse_apply_args "$@" -- common flags: --apply, --env FILE. Sets APPLY, env_file.
+parse_apply_args() {
+  APPLY=0
+  env_file="${env_file:-$(dirname "${BASH_SOURCE[0]}")/.env}"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --apply) APPLY=1; shift ;;
+      --env) [ $# -ge 2 ] || { log error "--env needs a file"; exit 2; }; env_file="$2"; shift 2 ;;
+      *) log error "unknown argument: $1"; exit 2 ;;
+    esac
+  done
+}

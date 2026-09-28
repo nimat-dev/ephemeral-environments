@@ -1,0 +1,6 @@
+resourcequota/preview-quota created (server dry run)
+service/keda-http-interceptor created (server dry run)
+service/feature-login created (server dry run)
+deployment.apps/feature-login created (server dry run)
+ingress.networking.k8s.io/feature-login created (server dry run)
+httpscaledobject.http.keda.sh/feature-login created (server dry run)

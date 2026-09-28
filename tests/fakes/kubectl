@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Fake kubectl for bootstrap tests. Logs to $KUBECTL_LOG.
+#   FAKE_CTX=<current context>  FAKE_LB_IP=<ip or empty>  FAKE_ICP_PORT=<port or empty>
+echo "$*" >>"${KUBECTL_LOG:?}"
+case " $* " in
+  *" config current-context "*) [ -n "${FAKE_CTX:-}" ] && echo "$FAKE_CTX" || exit 1 ;;
+  *" get svc traefik "*) printf '%s' "${FAKE_LB_IP-}" ;;
+  *" get svc keda-add-ons-http-interceptor-proxy "*) printf '%s' "${FAKE_ICP_PORT-}" ;;
+  *) exit 0 ;;
+esac
