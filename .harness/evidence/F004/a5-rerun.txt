@@ -1,0 +1,9 @@
+[info] a5-github-oidc: skip AKS Entra ID + Azure RBAC (enabled)
+[info] a5-github-oidc: skip role 'Azure Kubernetes Service RBAC Cluster Admin' (assigned)
+[info] a5-github-oidc: skip app gh-preview-deployer (exists: ecf81f55-698c-4ffd-9c15-3150f6928718)
+[info] a5-github-oidc: skip service principal (exists)
+[info] a5-github-oidc: skip federated credential gh-preview-env (exists)
+[info] a5-github-oidc: skip role 'AcrPush' (assigned)
+[info] a5-github-oidc: skip role 'Azure Kubernetes Service Cluster User Role' (assigned)
+clusterrole.rbac.authorization.k8s.io/preview-deployer unchanged
+clusterrolebinding.rbac.authorization.k8s.io/preview-deployer unchanged

@@ -18,6 +18,23 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F004 Cluster bootstrap — COMPLETE (A6 apply pending BLK-006)
+Branch/commit: feat/F004 @ (this commit)   PR: not opened (BLK-006)
+Contract: `verification/contracts/F004.md` (adapted: Traefik DEC-021, nimat.dev DEC-020)
+Evidence (stages 1 and 3 in the entries below), plus stage 2:
+  - `bootstrap/a5-github-oidc.sh --apply` -> AKS Entra ID + Azure RBAC enabled; operator RBAC Cluster Admin; app `gh-preview-deployer` (client ecf81f55-…), SP b34bba52-…, federated credential `repo:nimat-dev/ephemeral-environments:environment:preview`; AcrPush + Cluster User Role; ClusterRole/Binding `preview-deployer`
+  - re-run -> every step "skip"/"unchanged" (`evidence/F004/a5-rerun.txt`)
+  - SP impersonation (`evidence/F004/sp-rbac.txt`): yes = create/delete namespaces, create resourcequotas/httpscaledobjects/deployments/ingresses/secrets; no = clusterroles, pods/exec, delete nodes, daemonsets in kube-system
+  - `bootstrap/a6-github-env.sh` dry-run -> environment `preview` + 12 variables (incl. INGRESS_CLASS=traefik); apply refused: gh account `nimatrazmjo` lacks admin (BLK-006)
+  - cluster: all pods Running; node CPU 4% / mem 35%
+  - full suite: `./scripts/init.sh` GREEN, 107 bats tests (28 in tests/cluster-bootstrap.bats); mutations killed: drop context guard; drop AcrPush
+Evaluator: acceptance=4 correctness=4 boundaries=5 modularity=5 evidence=5 => avg 4.6 (PASS)
+Notes:
+  - Spec bug: `Azure Kubernetes Service RBAC Writer` cannot create namespaces/resourcequotas/httpscaledobjects -> DEC-024.
+  - Real-cluster bugs fixed: HTTP add-on defaults unschedulable on 1 node (DEC-023); wildcard `kubectl auth can-i '*' '*'` returns "unknown" under Azure RBAC -> concrete verb.
+  - Operator kubeconfig now uses kubelogin (`~/go/bin/kubelogin`, azurecli mode); break-glass: `az aks get-credentials --admin`.
+  - SP may delete ANY namespace (k8s RBAC can't prefix-match) -> F009 adds an admission guard.
+
 ## 2026-09-28 — F004 stage 3 (wildcard DNS + TLS) — progress, feature still IN PROGRESS
 Evidence:
   - `bootstrap/a2-wildcard-dns.sh --apply` -> `*.preview.nimat.dev A 74.151.139.236`; `dig anything.preview.nimat.dev @1.1.1.1` -> 74.151.139.236

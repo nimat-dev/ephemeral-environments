@@ -165,3 +165,90 @@ setup_az() { export AZ_LOG="$T/az.log"; : >"$AZ_LOG"; }
   FAKE_EXISTS="zone aks uami fic" FAKE_ROLE_COUNT=1 FAKE_WAIT_FAIL=1 run "$A3" --env "$ENV" --apply
   [ "$status" -ne 0 ]
 }
+
+# --- A5 GitHub OIDC ---
+A5="$ROOT/bootstrap/a5-github-oidc.sh"
+a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-preview-deployer\n' >>"$ENV"; }
+
+@test "A5 dry-run: plans AAD/RBAC, identity, roles, k8s RBAC; mutates nothing" {
+  setup_az; a5_env
+  run "$A5" --env "$ENV"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"[dry-run] az aks update"*"--enable-aad --enable-azure-rbac"* ]] || false
+  [[ "$output" == *"[dry-run] az role assignment create --assignee-object-id me-oid --assignee-principal-type User --role Azure Kubernetes Service RBAC Cluster Admin"* ]] || false
+  [[ "$output" == *"[dry-run] az ad app create --display-name gh-preview-deployer"* ]] || false
+  [[ "$output" == *'"subject":"repo:nimat-dev/ephemeral-environments:environment:preview"'* ]] || false
+  [[ "$output" == *"--role AcrPush --scope /acr-id"* ]] || false
+  [[ "$output" == *"--role Azure Kubernetes Service Cluster User Role --scope /aks-id"* ]] || false
+  [[ "$output" == *"kind: ClusterRole"* ]] || false
+  [ "$(grep -cE ' create | update ' "$AZ_LOG" || true)" -eq 0 ]
+}
+
+@test "A5: spec's RBAC Writer is not granted; ClusterRole covers what deploy creates" {
+  setup_az; a5_env
+  run "$A5" --env "$ENV"
+  [[ "$output" != *"RBAC Writer"* ]] || false
+  for r in namespaces resourcequotas httpscaledobjects deployments ingresses services secrets; do
+    [[ "$output" == *"$r"* ]] || { echo "missing $r"; false; }
+  done
+}
+
+@test "A5 apply: converts kubeconfig and binds ClusterRole to the SP object id" {
+  setup_az; a5_env
+  FAKE_EXISTS="app sp" run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  grep -q '^kubelogin convert-kubeconfig -l azurecli' "$KUBECTL_LOG"
+  grep -q 'name: sp-oid' "$KUBECTL_LOG.apply"
+  [[ "$output" == *"AZURE_CLIENT_ID=app-123"* ]] || false
+}
+
+@test "A5 idempotent: everything present -> no creates" {
+  setup_az; a5_env
+  FAKE_EXISTS="app sp ghfic" FAKE_AZURE_RBAC=true FAKE_ROLE_COUNT=1 run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  [ "$(grep -cE '^ad app create|^ad sp create|federated-credential create|^role assignment create|^aks update' "$AZ_LOG" || true)" -eq 0 ]
+}
+
+@test "A5: operator without cluster access after role assignment fails" {
+  setup_az; a5_env
+  FAKE_EXISTS="app sp" FAKE_CANI_FAIL=1 RBAC_WAIT_TRIES=1 RBAC_WAIT_SECONDS=0 run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 1 ]; [[ "$output" == *"no cluster access"* ]] || false
+}
+
+@test "A5: invalid GH_REPO exits 2" {
+  setup_az; printf 'GH_REPO=not-a-repo\n' >>"$ENV"
+  run "$A5" --env "$ENV"
+  [ "$status" -eq 2 ]
+}
+
+# --- A6 GitHub environment ---
+A6="$ROOT/bootstrap/a6-github-env.sh"
+
+@test "A6 apply: creates env and all workflow variables" {
+  setup_az; a5_env; export GH_LOG="$T/gh.log"; : >"$GH_LOG"
+  FAKE_EXISTS=app FAKE_GH_ADMIN=true run "$A6" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  grep -q '^api -X PUT repos/nimat-dev/ephemeral-environments/environments/preview' "$GH_LOG"
+  for k in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_LOGIN_SERVER APP_IMAGE_NAME \
+           AKS_CLUSTER AKS_RESOURCE_GROUP PREVIEW_DOMAIN INTERCEPTOR_FQDN INTERCEPTOR_PORT INGRESS_CLASS; do
+    grep -q "^variable set $k --env preview" "$GH_LOG" || { echo "missing $k"; false; }
+  done
+  grep -q 'variable set AZURE_CLIENT_ID .* --body app-123' "$GH_LOG"
+  grep -q 'variable set INGRESS_CLASS .* --body traefik' "$GH_LOG"
+  [ "$(grep -c secret "$GH_LOG" || true)" -eq 0 ]
+}
+
+@test "A6: no repo admin -> apply refuses, dry-run warns" {
+  setup_az; a5_env; export GH_LOG="$T/gh.log"; : >"$GH_LOG"
+  FAKE_EXISTS=app FAKE_GH_ADMIN=false run "$A6" --env "$ENV" --apply
+  [ "$status" -eq 1 ]; [[ "$output" == *"lacks admin"* ]] || false
+  [ "$(grep -c 'variable set' "$GH_LOG" || true)" -eq 0 ]
+  FAKE_EXISTS=app FAKE_GH_ADMIN=false run "$A6" --env "$ENV"
+  [ "$status" -eq 0 ]
+}
+
+@test "A6: missing Entra app fails" {
+  setup_az; a5_env; export GH_LOG="$T/gh.log"; : >"$GH_LOG"
+  FAKE_GH_ADMIN=true run "$A6" --env "$ENV" --apply
+  [ "$status" -eq 1 ]; [[ "$output" == *"no Entra app"* ]] || false
+}

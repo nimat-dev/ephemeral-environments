@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Fake kubectl for bootstrap tests. Logs to $KUBECTL_LOG.
 #   FAKE_CTX=<current context>  FAKE_LB_IP=<ip or empty>  FAKE_ICP_PORT=<port or empty>
-#   FAKE_WAIT_FAIL=1 (kubectl wait fails). `apply -f -` stdin is appended to $KUBECTL_LOG.apply
+#   FAKE_WAIT_FAIL=1 (kubectl wait fails)  FAKE_CANI_FAIL=1 (auth can-i denies). `apply -f -` stdin is appended to $KUBECTL_LOG.apply
 echo "$*" >>"${KUBECTL_LOG:?}"
 case " $* " in
   *" config current-context "*) [ -n "${FAKE_CTX:-}" ] && echo "$FAKE_CTX" || exit 1 ;;
@@ -9,5 +9,6 @@ case " $* " in
   *" get svc keda-add-ons-http-interceptor-proxy "*) printf '%s' "${FAKE_ICP_PORT-}" ;;
   *" apply -f - "*) cat >>"$KUBECTL_LOG.apply" ;;
   *" wait "*) exit "${FAKE_WAIT_FAIL:-0}" ;;
+  *" auth can-i "*) exit "${FAKE_CANI_FAIL:-0}" ;;
   *) exit 0 ;;
 esac

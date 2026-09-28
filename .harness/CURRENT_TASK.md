@@ -1,23 +1,20 @@
 # CURRENT TASK
 
-**Feature**: F004 — Cluster bootstrap (spec Part A1–A6) on `aks-preview`
+**Feature**: F005 — Smoke test `scripts/smoke.sh` (spec Part C)
 **Phase**: Phase 01 — Foundation
-**Status**: IN PROGRESS — A1/A4/A5/A6 workable now; A2 (wildcard A) + A3 (DNS-01 wildcard cert)
-need the Namecheap NS delegation (BLK-005, human)
+**Status**: IN PROGRESS
 
 ## Exact next step
-1. Human: add 4 NS records in Namecheap for host `preview` (values in BLOCKERS.md BLK-005).
-2. Branch `feat/F004` exists (tracking only) — rebase/continue it on top of `feat/F013`.
-3. Sprint contract `verification/contracts/F004.md`; resolve BLK-004 by pinning KEDA core +
-   HTTP add-on chart versions compatible with k8s 1.35.
-4. Scripts (dry-run default, `--apply`, idempotent, reuse `bootstrap/_common.sh` + `.env`):
-   `a1-ingress-nginx.sh`, `a2-wildcard-dns.sh`, `a3-cert-manager.sh` (+ clusterissuer/wildcard-cert
-   templated from env, workload identity for DNS-01), `a4-keda.sh`, `a5-github-oidc.sh`, `a6-github-env.sh`.
-5. bats with fakes for az/helm/kubectl/gh; then human-approved apply; evidence.
-Proof: cert `wildcard-preview` Ready; `dig x.preview.nimat.dev` → LB IP; interceptor svc name/port recorded.
+1. Branch `feat/F005` from `feat/F004`; sprint contract `verification/contracts/F005.md`.
+2. Push a real todo image to ACR tagged with the short SHA (`az acr build` or buildx linux/amd64).
+3. `scripts/smoke.sh`: ns `preview-smoke`, chart with `idleTimeoutSeconds=120`,
+   `ingressClassName=traefik`, trap cleanup; checkpoints: (1) valid HTTPS, (2) cold start 0→1 → 200,
+   (3) back to 0 after idle. Deterministic waits (poll state), no blind sleeps.
+4. Evidence to `.harness/evidence/F005/`.
+Proof: smoke.sh 3/3 checkpoints PASS against aks-preview; init GREEN.
 
 ## Acceptance (summary)
-See `phases/PHASE-01-FOUNDATION.md` → F004.
+See `phases/PHASE-01-FOUNDATION.md` → F005.
 
 ## Definition of done
 Every acceptance item met + evidence in `CHANGELOG.md` + Evaluator PASS + check-architecture
