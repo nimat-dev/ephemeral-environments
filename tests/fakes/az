@@ -2,7 +2,7 @@
 # Fake az for bootstrap tests (JSON shapes mirror real az, e.g. usage numbers are strings). Logs every call to $AZ_LOG; behavior via FAKE_* env vars:
 #   FAKE_EXISTS="acr aks zone"  FAKE_UNREG="Microsoft.X"  FAKE_ACCOUNT_FAIL=1  FAKE_RG_MISSING=1
 #   FAKE_LIMIT=4  FAKE_RESTRICT=NotAvailableForSubscription  FAKE_NO_SKU=1  FAKE_AKS_OIDC=false
-#   FAKE_FAIL="aks create"
+#   FAKE_FAIL="aks create"  FAKE_A_IPS="1.2.3.4"  FAKE_ROLE_COUNT=1  (FAKE_EXISTS also: uami fic)
 echo "$*" >>"$AZ_LOG"
 args=" $* "
 has() { [[ " ${FAKE_EXISTS:-} " == *" $1 "* ]]; }
@@ -21,6 +21,14 @@ case "$args" in
   *" vm list-usage "*)
     l=${FAKE_LIMIT:-4}
     echo "[{\"name\":{\"value\":\"FamX\"},\"currentValue\":\"0\",\"limit\":\"$l\"},{\"name\":{\"value\":\"cores\"},\"currentValue\":\"0\",\"limit\":\"$l\"}]" ;;
+  *" record-set a show "*) [ -n "${FAKE_A_IPS:-}" ] || exit 3; tr ' ' '\n' <<<"$FAKE_A_IPS" ;;
+  *" identity federated-credential show "*) has fic ;;
+  *" identity show "*)
+    has uami || exit 3
+    [[ "$args" == *" clientId "* ]] && echo cid-123
+    [[ "$args" == *" principalId "* ]] && echo pid-456
+    exit 0 ;;
+  *" role assignment list "*) echo "${FAKE_ROLE_COUNT:-0}" ;;
   *" acr show "*) has acr ;;
   *" aks show "*)
     has aks || exit 3
@@ -29,6 +37,7 @@ case "$args" in
   *" dns zone show "*)
     has zone || exit 3
     [[ "$args" == *" nameServers "* ]] && printf 'ns1-01.azure-dns.com.\nns2-01.azure-dns.net.\n'
+    [[ "$args" == *" --query id "* ]] && echo /subscriptions/sub-1/zone
     exit 0 ;;
   *) exit 0 ;;   # create / update / delete / register / get-credentials
 esac

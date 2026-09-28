@@ -82,3 +82,86 @@ helm_calls() { grep -c . "$HELM_LOG" || true; }
   run "$A1" --bogus; [ "$status" -eq 2 ]
   run "$A4" --bogus; [ "$status" -eq 2 ]
 }
+
+# --- A2 wildcard DNS ---
+A2="$ROOT/bootstrap/a2-wildcard-dns.sh"
+A3="$ROOT/bootstrap/a3-cert-manager.sh"
+setup_az() { export AZ_LOG="$T/az.log"; : >"$AZ_LOG"; }
+
+@test "A2: no record -> add wildcard to LB IP" {
+  setup_az
+  FAKE_LB_IP=20.1.2.3 run "$A2" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  grep -q "^network dns record-set a add-record .* -n \* --ipv4-address 20.1.2.3" "$AZ_LOG"
+  [[ "$output" == *"WILDCARD=*.preview.nimat.dev -> 20.1.2.3"* ]] || false
+}
+
+@test "A2: record already correct -> skip" {
+  setup_az
+  FAKE_LB_IP=20.1.2.3 FAKE_A_IPS=20.1.2.3 run "$A2" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  [ "$(grep -cE 'add-record|remove-record' "$AZ_LOG" || true)" -eq 0 ]
+}
+
+@test "A2: stale IP -> removed, new added" {
+  setup_az
+  FAKE_LB_IP=20.1.2.3 FAKE_A_IPS=9.9.9.9 run "$A2" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  grep -q 'remove-record .* --ipv4-address 9.9.9.9' "$AZ_LOG"
+  grep -q 'add-record .* --ipv4-address 20.1.2.3' "$AZ_LOG"
+}
+
+@test "A2: no LB IP fails before touching DNS" {
+  setup_az
+  FAKE_LB_IP= run "$A2" --env "$ENV" --apply
+  [ "$status" -eq 1 ]
+  [ "$(grep -c 'record-set' "$AZ_LOG" || true)" -eq 0 ]
+}
+
+@test "A2 dry-run: no DNS mutation" {
+  setup_az
+  FAKE_LB_IP=20.1.2.3 run "$A2" --env "$ENV"
+  [[ "$output" == *"[dry-run] az network dns record-set a add-record"* ]] || false
+  [ "$(grep -cE 'add-record|remove-record' "$AZ_LOG" || true)" -eq 0 ]
+}
+
+# --- A3 cert-manager ---
+@test "A3 dry-run: plans install, identity, role, federation, manifests; mutates nothing" {
+  setup_az
+  FAKE_EXISTS="zone aks" run "$A3" --env "$ENV"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"[dry-run] helm upgrade --install cert-manager jetstack/cert-manager"*"--version v1.21.2"* ]] || false
+  [[ "$output" == *"[dry-run] az identity create"* ]] || false
+  [[ "$output" == *"[dry-run] az role assignment create"*"DNS Zone Contributor"* ]] || false
+  [[ "$output" == *"[dry-run] az identity federated-credential create"*"system:serviceaccount:cert-manager:cert-manager"* ]] || false
+  [[ "$output" == *'commonName: "*.preview.nimat.dev"'* ]] || false
+  [[ "$output" == *"kind: TLSStore"* ]] || false
+  [ "$(grep -cE ' create | assignment create' "$AZ_LOG" || true)" -eq 0 ]
+  [ "$(grep -c . "$HELM_LOG" || true)" -eq 0 ]
+}
+
+@test "A3 apply: manifests use MI client id, zone, no ACME email; waits for cert" {
+  setup_az
+  FAKE_EXISTS="zone aks uami" run "$A3" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  m="$KUBECTL_LOG.apply"
+  grep -q 'clientID: cid-123' "$m"
+  grep -q 'hostedZoneName: preview.nimat.dev' "$m"
+  grep -q 'namespace: traefik' "$m"
+  [ "$(grep -c 'email:' "$m" || true)" -eq 0 ]
+  grep -q 'annotate serviceaccount cert-manager -n cert-manager azure.workload.identity/client-id=cid-123' "$KUBECTL_LOG"
+  grep -q 'wait --for=condition=Ready certificate/wildcard-preview' "$KUBECTL_LOG"
+}
+
+@test "A3 idempotent: identity, role, federation present -> none recreated" {
+  setup_az
+  FAKE_EXISTS="zone aks uami fic" FAKE_ROLE_COUNT=1 run "$A3" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  [ "$(grep -cE '^identity create|^role assignment create|^identity federated-credential create' "$AZ_LOG" || true)" -eq 0 ]
+}
+
+@test "A3: certificate never Ready -> fails" {
+  setup_az
+  FAKE_EXISTS="zone aks uami fic" FAKE_ROLE_COUNT=1 FAKE_WAIT_FAIL=1 run "$A3" --env "$ENV" --apply
+  [ "$status" -ne 0 ]
+}

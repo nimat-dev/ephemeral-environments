@@ -18,6 +18,13 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F004 stage 3 (wildcard DNS + TLS) — progress, feature still IN PROGRESS
+Evidence:
+  - `bootstrap/a2-wildcard-dns.sh --apply` -> `*.preview.nimat.dev A 74.151.139.236`; `dig anything.preview.nimat.dev @1.1.1.1` -> 74.151.139.236
+  - `bootstrap/a3-cert-manager.sh --apply` -> cert-manager v1.21.2, UAMI `cert-manager-dns` (DNS Zone Contributor on zone, federated to cert-manager SA), ClusterIssuer `letsencrypt-dns` (no ACME email), Certificate `wildcard-preview` Ready, Traefik TLSStore `default` (`evidence/F004/a3-apply.txt`)
+  - `openssl s_client anything.preview.nimat.dev:443` -> CN=*.preview.nimat.dev, issuer Let's Encrypt YR2, valid to 2026-12-27 (`evidence/F004/tls.txt`); `curl https://anything.preview.nimat.dev/` -> 404, ssl_verify_result=0 (trusted)
+  - tests: 98/98 (A2: add/skip/stale-replace/no-LB/dry-run; A3: dry-run no mutation, MI client id + zone + no email in manifests, idempotent identity/role/federation, cert never Ready fails)
+
 ## 2026-09-28 — F004 stage 1 (Traefik + KEDA) — progress, feature still IN PROGRESS
 Branch/commit: feat/F004 @ (this commit)
 Evidence:

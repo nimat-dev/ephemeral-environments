@@ -1,0 +1,5 @@
+[info] a2-wildcard-dns: + az network dns record-set a add-record -g nimatresourceg -z preview.nimat.dev -n * --ipv4-address 74.151.139.236 --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+}
+WILDCARD=*.preview.nimat.dev -> 74.151.139.236
+[info] a2-wildcard-dns: done
