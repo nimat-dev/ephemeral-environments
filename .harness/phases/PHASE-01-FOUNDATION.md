@@ -5,24 +5,24 @@ Tooling, pure core, chart, one-time cluster bootstrap, manual smoke test. Source
 copied from the spec; deviations need a DEC.
 
 ## F001 — Repo tooling
-**Status**: IN PROGRESS
+**Status**: COMPLETE
 
 ### Acceptance criteria
-- [ ] `scripts/init.sh` runs: tool check → yamllint → shellcheck → actionlint (if workflows exist) → helm lint/template + kubeconform (if chart exists) → bats (if tests exist) → check-architecture. Exit non-zero on any failure.
-- [ ] `scripts/check-architecture.sh` implements all 9 rules in `rules/layer-boundaries.md`; each rule skips cleanly when its target dir doesn't exist yet.
-- [ ] Deliberately violating each rule (fixture) makes check-architecture exit non-zero naming the rule.
-- [ ] `.yamllint` config tolerates Helm templates (exclude `deploy/preview/templates`).
-- [ ] Structured log lines (`[level] component: msg`) at start/end/failure.
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: N/A — not user-facing.
+- [x] `scripts/init.sh` runs: tool check → yamllint → shellcheck → actionlint (if workflows exist) → helm lint/template + kubeconform (if chart exists) → bats (if tests exist) → check-architecture. Exit non-zero on any failure.
+- [x] `scripts/check-architecture.sh` implements all 9 rules in `rules/layer-boundaries.md`; each rule skips cleanly when its target dir doesn't exist yet.
+- [x] Deliberately violating each rule (fixture) makes check-architecture exit non-zero naming the rule.
+- [x] `.yamllint` config tolerates Helm templates (exclude `deploy/preview/templates`).
+- [x] Structured log lines (`[level] component: msg`) at start/end/failure.
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] E2E: N/A — not user-facing (init run is the integration check).
 
 ### Evidence expected
 `./scripts/init.sh` output green; per-rule violation fixture output.
 
 ## F002 — Pure core `scripts/lib/preview.sh`
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 
 ### Acceptance criteria
 - [ ] `preview_id <branch>` matches spec sanitizer exactly (lowercase, `[^a-z0-9]+`→`-`, trim, cut 40, trim trailing `-`); empty → exit 1.

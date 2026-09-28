@@ -22,3 +22,5 @@ DEC-010 (2026-09-28): Deviation from spec "verbatim": preview-id/duration/expiry
 DEC-011 (2026-09-28): Build order: offline-verifiable (tooling, lib, chart) before cluster bootstrap. — progress without Azure access (BLK-001); spec Part E order otherwise kept.
 DEC-012 (2026-09-28): Sample app `todo/` (Vite+React static SPA) is the long-term preview target (confirmed by user); image = nginx-unprivileged on :8080, matching chart defaults. — F012; unblocks F005/F006 image needs.
 DEC-013 (2026-09-28): Enforce harness with project hooks in `.claude/settings.json`: SessionStart injects state, UserPromptSubmit reminds, Stop blocks if non-harness files changed without PROJECT_STATE update. — CLAUDE.md is advisory; ad-hoc asks were bypassing the loop.
+DEC-014 (2026-09-28): check-architecture is grep/awk-based with `--root`; fixtures generated per bats test in temp dirs. — no import graph in an infra repo; generated fixtures keep deliberate violations out of lint.
+DEC-015 (2026-09-28): Dev tools may come from pipx/go/npm when brew is unavailable; init.sh prepends ~/.local/bin and ~/go/bin. — brew blocked on Xcode license.

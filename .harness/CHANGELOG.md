@@ -18,6 +18,23 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F001 Repo tooling — COMPLETE
+Branch/commit: feat/F001 @ (this commit)   PR: not opened (BLK-006)   CI: N/A (no CI yet)
+Contract: `verification/contracts/F001.md`
+Evidence:
+  - `./scripts/init.sh` -> BASELINE GREEN (roadmap gate, yamllint, shellcheck, bats, check-architecture; actionlint/helm/e2e skipped: targets absent)
+  - full suite: `bats tests/` -> 25 passed, 0 failed (18 check-architecture, 7 init)
+  - rules 1-9: one violation fixture each -> exit 1 naming the rule; compliant tree -> clean; empty tree -> clean
+  - edge cases: empty tree, comments ignored, near-miss identifiers, GITHUB_TOKEN allowed, missing/extra/job-level permissions, multiple violations, bad args (exit 2), roadmap 0/1/2/empty/missing
+  - checker probes: mutation (disable rule 5) -> tests 9,16 fail; mutation (drop comment strip) -> test 2 fails; bad YAML file -> init RED (yamllint); tools off PATH -> init RED "tool missing"
+  - e2e: N/A — not user-facing
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=4 evidence=5 => avg 4.8 (PASS)
+Notes:
+  - Fixtures are generated per test in temp dirs (not static files under tests/fixtures/arch/) so yamllint/shellcheck never lint deliberate violations.
+  - Tools installed without brew (brew blocked on Xcode license): yamllint via pipx (~/.local/bin), kubeconform via go install (~/go/bin), bats via npm. init.sh prepends ~/.local/bin and ~/go/bin.
+  - Also fixed SC2001 in `.claude/hooks/harness-stop-guard.sh` (now shellchecked by init).
+  - Modularity 4: rules are one block each in check-architecture.sh, not a registry — adequate for 9 grep rules.
+
 ## 2026-09-28 — chore: confirm todo target, drop placeholder README, open PR (harness-only, no FID)
 Branch/commit: chore/harness-and-todo @ 3bae845   PR: NOT OPENED — `gh pr create` -> "must be a collaborator" (BLK-006)
 Evidence:
