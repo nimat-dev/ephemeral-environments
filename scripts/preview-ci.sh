@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CI entrypoint for the preview workflows (.github/workflows/preview-*.yml). Each workflow step is
 # one subcommand; inputs come from env (never interpolated into shell by the workflow).
-# Usage: scripts/preview-ci.sh plan|namespace|deploy|verify|summary|destroy
+# Usage: scripts/preview-ci.sh plan|namespace|deploy|verify|summary|destroy|reap
 # Exit: 0 ok, 1 step failed, 2 usage/config error.
 set -euo pipefail
 
@@ -124,10 +124,35 @@ cmd_destroy() {
   summary_line "Destroyed \`$ns\` (branch \`$BRANCH\`)."
 }
 
+# reap: delete every preview-bot namespace whose preview.expires-at < now. Nothing expired -> exit 0.
+# A failed delete doesn't stop the others; the run fails at the end. Env: [REAP_NOW] (epoch, tests)
+cmd_reap() {
+  local now list expired ns failed=0 n=0
+  now="${REAP_NOW:-$(date -u +%s)}"
+  list=$(kubectl get namespaces -l managed-by=preview-bot -o json)
+  expired=$(expired_namespaces "$now" <<<"$list")
+  if [ -z "$expired" ]; then
+    log info "reap: nothing to reap (now=$now)"
+    summary_line "Nothing to reap."
+    return 0
+  fi
+  while read -r ns; do
+    [ -n "$ns" ] || continue
+    log info "reap: deleting $ns"
+    if kubectl delete namespace "$ns" --ignore-not-found --wait=false; then
+      summary_line "Reaped \`$ns\`."; n=$((n + 1))
+    else
+      log error "reap: failed to delete $ns"; summary_line "FAILED to reap \`$ns\`."; failed=1
+    fi
+  done <<<"$expired"
+  log info "reap: deleted $n namespace(s)"
+  [ "$failed" -eq 0 ] || exit 1
+}
+
 summary_line() { printf '%s\n' "$1" >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"; }
 
 case "${1-}" in
-  plan|namespace|deploy|verify|summary|destroy) "cmd_$1" ;;
+  plan|namespace|deploy|verify|summary|destroy|reap) "cmd_$1" ;;
   -h|--help) sed -n '2,5p' "$0" ;;
-  *) log error "unknown command '${1-}' (want plan|namespace|deploy|verify|summary|destroy)"; exit 2 ;;
+  *) log error "unknown command '${1-}' (want plan|namespace|deploy|verify|summary|destroy|reap)"; exit 2 ;;
 esac

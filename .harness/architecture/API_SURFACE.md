@@ -25,7 +25,8 @@ Concurrency: `preview-<branch>` (shared with deploy), no cancel-in-progress.
 
 ## `Reap Expired Previews` (`preview-reap.yml`)
 Cron `*/30 * * * *` + manual dispatch. Deletes `managed-by=preview-bot` namespaces with
-`preview.expires-at < now`. No expired → "nothing to reap", exit 0.
+`preview.expires-at < now` and a `preview-` name. No expired → "nothing to reap", exit 0.
+One failed delete → others still deleted, run fails. Concurrency: `preview-reap`.
 
 ## Helm chart `deploy/preview` values (set via `--set`)
 `name`, `host`, `image.repository`, `image.tag`, `image.pullPolicy`, `containerPort` (8080),

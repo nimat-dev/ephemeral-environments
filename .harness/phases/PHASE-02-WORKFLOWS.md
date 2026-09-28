@@ -31,15 +31,15 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 - [ ] E2E: deploy then destroy test branch; ns gone; URL 404.
 
 ## F008 — `preview-reap.yml`
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (local e2e green; e2e on `main` open — BLK-009)
 
 ### Acceptance criteria
-- [ ] Cron `*/30 * * * *` + manual dispatch.
-- [ ] Deletes only `managed-by=preview-bot` ns with `expires-at < now`; "nothing to reap" exit 0 otherwise.
-- [ ] Never touches non-preview namespaces.
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] Cron `*/30 * * * *` + manual dispatch.
+- [x] Deletes only `managed-by=preview-bot` ns with `expires-at < now`; "nothing to reap" exit 0 otherwise.
+- [x] Never touches non-preview namespaces.
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 - [ ] E2E: deploy with `custom` lifetime `1h` (or shorter for test), confirm next reap deletes it.
 
 ## Phase completion criteria

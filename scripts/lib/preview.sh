@@ -114,13 +114,15 @@ namespace_manifest() {
 }
 
 # expired_namespaces NOW < namespace-list.json -> names of preview-bot namespaces whose
-# preview.expires-at < NOW. Missing or non-numeric label counts as expired.
+# preview.expires-at < NOW. Missing or non-numeric label counts as expired. Only `preview-*`
+# names qualify: a stray managed-by label on e.g. `default` never makes it reapable.
 expired_namespaces() {
   local now="${1-}"
   case "$now" in ''|*[!0-9]*) _preview_err "invalid now '$now'"; return 1 ;; esac
   jq -r --argjson now "$now" '
     .items[]
     | select(.metadata.labels["managed-by"] == "preview-bot")
+    | select(.metadata.name | startswith("preview-"))
     | select(((.metadata.labels["preview.expires-at"] // "0") | tonumber? // 0) < $now)
     | .metadata.name'
 }

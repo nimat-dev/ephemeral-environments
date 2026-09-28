@@ -18,6 +18,16 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F008 preview-reap.yml — IN PROGRESS (e2e on main pending BLK-009)
+Branch/commit: feat/F008   PR: see PROJECT_STATE   CI: N/A until on main
+Contract: `verification/contracts/F008.md`
+Evidence:
+  - `bats tests/preview-ci.bats` -> 26/26 (5 new reap tests); `tests/preview.bats` `default` ns with preview-bot label ignored
+  - local reap e2e vs aks-preview (`evidence/F008/local-reap-e2e.txt`): reap-short (+60s, HTTP 200) and reap-live (+24h); reap before expiry -> nothing; after -> only reap-short deleted, URL 404; again -> nothing; live cleaned by destroy
+  - actionlint/shellcheck/yamllint/check-architecture clean; `./scripts/init.sh` -> BASELINE GREEN, bats 151/151
+Evaluator: acceptance=4 correctness=5 boundaries=5 modularity=5 evidence=4 => avg 4.6 (PASS pending scheduled e2e)
+Notes: lib `expired_namespaces` now also requires a `preview-` name (stricter than spec, extends DEC-017).
+
 ## 2026-09-28 — F007 preview-destroy.yml — IN REVIEW (dispatch e2e pending BLK-009)
 Branch/commit: feat/F007   PR: see PROJECT_STATE   CI: N/A until on main
 Contract: `verification/contracts/F007.md`

@@ -31,7 +31,7 @@ annotations:
 2. Same branch → same `preview_id` in deploy and destroy (single implementation).
 3. `lifetime=custom` with empty `lifetime_custom` → hard fail.
 4. `expires_at` is an integer epoch > now.
-5. Reaper deletes only namespaces with `managed-by=preview-bot` AND `expires-at < now`;
+5. Reaper deletes only `preview-*` namespaces with `managed-by=preview-bot` AND `expires-at < now`;
    missing label → treated as `0` (expired) — per spec.
 6. One preview per branch (redeploy rolls the same Deployment).
 
