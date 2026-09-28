@@ -5,17 +5,17 @@ finished features to History. A cold agent reads this to know which round it is 
 active feature also lives in `../CURRENT_TASK.md`; keep them consistent.
 
 ## Parameters (current feature)
-- Feature: F004 — Cluster bootstrap
+- Feature: F013 — Provision Azure prerequisites
 - REQUIRED_PASSES: 2
 - MAX_ROUNDS: 6
 
 ## Current
 - Round: 0
 - consecutivePasses: 0
-- Last Maker change: none (F004 not started)
+- Last Maker change: none (F013 not started)
 - Last Checker verdict: none
 - Standing defects: none
-- Next action: write the sprint contract for F004
+- Next action: write the sprint contract for F013
 
 ## History
 ```

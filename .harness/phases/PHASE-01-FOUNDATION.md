@@ -57,8 +57,24 @@ copied from the spec; deviations need a DEC.
 ### Evidence expected
 helm lint/template output; bats render tests.
 
+## F013 — Provision Azure prerequisites
+**Status**: IN PROGRESS
+
+### Acceptance criteria
+- [ ] `bootstrap/provision.sh`: default = dry-run (prints `az` commands, mutates nothing); `--apply` executes.
+- [ ] Idempotent: each resource is `show`-checked first; re-run with everything present creates nothing.
+- [ ] Preflight (read-only): subscription reachable, resource providers registered, vCPU quota for the node size.
+- [ ] Creates in `nimatresourceg`/eastus: Basic ACR; AKS (1 node Standard_B2s, free tier, OIDC issuer + workload identity, ACR attached); Azure DNS zone `preview.nimat.dev`; prints the zone's NS servers for Namecheap.
+- [ ] `bootstrap/teardown.sh --yes` deletes AKS, ACR, DNS zone (never the resource group); without `--yes` it only prints.
+- [ ] All values from `bootstrap/.env` (gitignored); `bootstrap/.env.example` committed.
+- [ ] bats with a fake `az`: dry-run makes no mutating calls; apply skips existing resources; teardown refuses without `--yes`.
+- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [ ] E2E (online, human-approved): `--apply` run; `az aks show` Succeeded; `kubectl get nodes` Ready; second run no-op.
+
 ## F004 — Cluster bootstrap (Part A)
-**Status**: IN PROGRESS (writing offline; apply blocked on BLK-001/004/005)
+**Status**: BLOCKED (on F013 + Namecheap NS delegation for preview.nimat.dev)
 
 ### Acceptance criteria
 - [ ] `bootstrap/` scripts for A1 ingress-nginx, A2 wildcard A record, A3 cert-manager + DNS-01 identity + `clusterissuer.yaml` + `wildcard-cert.yaml` + default-ssl-certificate, A4 KEDA core + HTTP add-on (pinned chart version), A5 OIDC app + federated cred + AcrPush/Cluster User/RBAC Writer, A6 `preview` env + vars (documented or `gh` script).

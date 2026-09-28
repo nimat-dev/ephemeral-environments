@@ -29,7 +29,7 @@ import-direction rules — dependencies point one way only.
 5. **KEDA owns replicas.** `deploy/preview/templates/deployment.yaml` has no `replicas:`
    field. (grep)
 6. **No hard-coded env.** Workflows reference no literal domain, ACR, cluster, RG, or
-   interceptor FQDN — only `vars.*`. (grep `alleghenycounty.us`, `azurecr.io`,
+   interceptor FQDN — only `vars.*`. (grep `nimat.dev`, `alleghenycounty.us`, `azurecr.io`,
    `svc.cluster.local` in `.github/workflows/`)
 7. **Least-privilege tokens.** Every workflow declares `permissions:` with exactly
    `id-token: write` and `contents: read`. (yaml parse)

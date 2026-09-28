@@ -69,7 +69,7 @@ dep=(deploy/preview/templates/deployment.yaml)
 [ -f "${dep[0]}" ] && scan 5 '^[ \t]*replicas:' '' "${dep[@]}"
 
 # 6. No hard-coded environment in workflows.
-scan 6 'alleghenycounty\.us|azurecr\.io|svc\.cluster\.local' '' ${wf[@]+"${wf[@]}"}
+scan 6 'alleghenycounty\.us|nimat\.dev|azurecr\.io|svc\.cluster\.local' '' ${wf[@]+"${wf[@]}"}
 
 # 7. Least-privilege tokens: top-level permissions == {id-token: write, contents: read}; no job overrides.
 want=$'contents: read\nid-token: write'

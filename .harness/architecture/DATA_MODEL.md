@@ -9,7 +9,7 @@ that deploy, destroy, and reap agree on. Defined in `scripts/lib/preview.sh` (pu
 | `branch` | dispatch input (raw) | `Feature/JIRA-123_login` |
 | `preview_id` | lowercase; non-`[a-z0-9]` runs → `-`; trim `-`; cut 40; trim trailing `-` | `feature-jira-123-login` |
 | `namespace` | `preview-<preview_id>` | `preview-feature-jira-123-login` |
-| `host` | `<preview_id>.<PREVIEW_DOMAIN>` | `feature-jira-123-login.preview.alleghenycounty.us` |
+| `host` | `<preview_id>.<PREVIEW_DOMAIN>` | `feature-jira-123-login.preview.nimat.dev` |
 | `short_sha` | `git rev-parse --short HEAD` of branch | `a1b2c3d` |
 | `image` | `<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>:<short_sha>` | |
 | `idle_seconds` | `15m/30m/1h/6h` → seconds; `never` → 31536000 | `1800` |

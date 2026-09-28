@@ -4,8 +4,8 @@
 
 ## Where we are
 - **Phase**: Phase 01 — Foundation
-- **Active feature**: F004 — Cluster bootstrap (IN PROGRESS; offline part workable, apply BLOCKED on BLK-001/004/005)
-- **Overall progress**: 4 / 12 features COMPLETE (33%) — F001, F002, F003, F012 done
+- **Active feature**: F013 — Provision AKS + ACR + DNS zone (IN PROGRESS); F004 BLOCKED behind it
+- **Overall progress**: 4 / 13 features COMPLETE (31%) — F001, F002, F003, F012 done
 
 ## Last verified
 - **Date**: 2026-09-28
@@ -15,7 +15,7 @@
 - **Git**: branch `feat/F004` (stack: chore/harness-and-todo → F001 → F002 → F003 → F004) — F001–F003 pushed, unreviewed (BLK-006, DEC-016).
 
 ## Next step
-F004: write bootstrap scripts with `--dry-run` + tests offline; applying needs Azure access (BLK-001). Mirrors `CURRENT_TASK.md`.
+F013: provision.sh/teardown.sh (dry-run default) + tests; human OK before `--apply`. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-001 (no Azure values) blocks F004+; BLK-002 now only = F006 build
@@ -23,7 +23,7 @@ context `todo`; BLK-006 blocks opening PRs via `gh`. F001–F003 offline and unb
 
 ## Notes for the next agent
 - 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
-  F004 cannot apply until F013 (provision) is approved and a domain is chosen (BLK-001, BLK-005).
+  F013 approved (DEC-019); domain = preview.nimat.dev at Namecheap (DEC-020).
 - Tooling lives outside brew: yamllint (~/.local/bin, pipx), kubeconform (~/go/bin), bats (npm).
   `scripts/init.sh` adds those to PATH. Brew blocked until `sudo xcodebuild -license accept`.
 - Hooks (`.claude/settings.json`, DEC-013) enforce the loop: Stop is blocked if you change

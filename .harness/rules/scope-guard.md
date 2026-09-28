@@ -11,6 +11,7 @@ until the previous phase's completion criteria pass.
 - F001 — repo tooling: `init.sh`, `check-architecture.sh`, lint configs
 - F002 — pure core `scripts/lib/preview.sh` + bats tests
 - F003 — Helm chart `deploy/preview` (Part B)
+- F013 — provision AKS + ACR + DNS zone (spec prerequisites)
 - F004 — bootstrap scripts + manifests (Part A)
 - F005 — smoke test script (Part C)
 
