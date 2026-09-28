@@ -188,9 +188,16 @@ a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-prev
   setup_az; a5_env
   run "$A5" --env "$ENV"
   [[ "$output" != *"RBAC Writer"* ]] || false
-  for r in namespaces resourcequotas httpscaledobjects deployments ingresses services secrets; do
+  for r in namespaces resourcequotas httpscaledobjects deployments ingresses services configmaps; do
     [[ "$output" == *"$r"* ]] || { echo "missing $r"; false; }
   done
+}
+
+@test "A5: ClusterRole never grants secrets (helm uses configmap driver, DEC-026)" {
+  setup_az; a5_env
+  run "$A5" --env "$ENV"
+  [ "$status" -eq 0 ]
+  [ "$(grep -cE '^ *resources:.*secrets' <<<"$output" || true)" -eq 0 ]
 }
 
 @test "A5 apply: converts kubeconfig and binds ClusterRole to the SP object id" {

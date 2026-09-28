@@ -4,7 +4,7 @@
 #  - Entra app + SP + federated credential repo:<GH_REPO>:environment:preview
 #  - SP: AcrPush (ACR), AKS Cluster User Role (kubeconfig)
 #  - k8s ClusterRole `preview-deployer` bound to the SP (spec's RBAC Writer can't create
-#    namespaces, resourcequotas or HTTPScaledObjects — DEC-024)
+#    namespaces, resourcequotas or HTTPScaledObjects — DEC-024); no secrets (DEC-026)
 # Usage: bootstrap/a5-github-oidc.sh [--apply] [--env FILE]   (default: dry-run)
 set -euo pipefail
 export SCRIPT_NAME=a5-github-oidc
@@ -88,8 +88,10 @@ rules:
   - apiGroups: [""]
     resources: [namespaces]
     verbs: [get, list, watch, create, update, patch, delete]
+  # No secrets: cluster-wide read would expose the wildcard TLS key. Helm release state
+  # lives in configmaps instead (workflows set HELM_DRIVER=configmap, DEC-026).
   - apiGroups: [""]
-    resources: [services, resourcequotas, secrets, configmaps]
+    resources: [services, resourcequotas, configmaps]
     verbs: [get, list, watch, create, update, patch, delete]
   - apiGroups: [""]
     resources: [pods, events]

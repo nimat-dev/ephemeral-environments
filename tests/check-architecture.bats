@@ -97,6 +97,21 @@ run_check() { run "$CHECK" --root "$R"; }
   run_check; [ "$status" -eq 1 ]; [[ "$output" == *"rule 3"* ]] || false
 }
 
+@test "rule 3: secret whose name starts with GITHUB_TOKEN" {
+  all_ok; echo '      - run: echo ${{ secrets.GITHUB_TOKEN_ADMIN }}' >>"$R/.github/workflows/preview-deploy.yml"
+  run_check; [ "$status" -eq 1 ]; [[ "$output" == *"rule 3"* ]] || false
+}
+
+@test "rule 3: bracket-notation secret" {
+  all_ok; echo "      - run: echo \${{ secrets['AZURE_PASSWORD'] }}" >>"$R/.github/workflows/preview-deploy.yml"
+  run_check; [ "$status" -eq 1 ]; [[ "$output" == *"rule 3"* ]] || false
+}
+
+@test "rule 3: GITHUB_TOKEN next to another expression stays clean" {
+  all_ok; echo '      - run: echo ${{ secrets.GITHUB_TOKEN }}-${{ github.sha }}' >>"$R/.github/workflows/preview-deploy.yml"
+  run_check; [ "$status" -eq 0 ]
+}
+
 @test "rule 4: Namespace in chart" {
   all_ok; printf 'apiVersion: v1\nkind: Namespace\n' >"$R/deploy/preview/templates/ns.yaml"
   run_check; [ "$status" -eq 1 ]; [[ "$output" == *"rule 4"* ]] || false
