@@ -17,5 +17,5 @@ BLK-005 | 2026-09-28 | F004 | Control of `preview.` sub-zone delegation under al
 ## Resolved
 ```
 (id | resolved | how)
---- none ---
+BLK-007 | 2026-09-28 | brew install failed (Xcode license, needs sudo) -> installed yamllint (pipx), kubeconform (go install), bats (npm); DEC-015
 ```

@@ -6,11 +6,11 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 1 / 12 COMPLETE (8%)
+**Progress**: 2 / 12 COMPLETE (17%)
 
 ## Phase 01 — Foundation (offline-verifiable first, then real cluster)
-- [ ] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `IN PROGRESS`
-- [ ] **F002** — Pure core `scripts/lib/preview.sh` (preview-id, to_seconds, expires_at, expired filter) + bats tests — `NOT STARTED`
+- [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
+- [ ] **F002** — Pure core `scripts/lib/preview.sh` (preview-id, to_seconds, expires_at, expired filter) + bats tests — `IN PROGRESS`
 - [ ] **F003** — Helm chart `deploy/preview` (Part B), `helm lint` + `helm template` clean — `NOT STARTED`
 - [ ] **F004** — Cluster bootstrap (Part A1–A6): `bootstrap/` scripts + `clusterissuer.yaml` + `wildcard-cert.yaml`, applied once — `NOT STARTED`
 - [ ] **F005** — Smoke test `scripts/smoke.sh` (Part C): HTTPS valid, cold-start 200, scales back to 0 — `NOT STARTED`

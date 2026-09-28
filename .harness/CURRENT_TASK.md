@@ -1,22 +1,22 @@
 # CURRENT TASK
 
-**Feature**: F001 — Repo tooling (`init.sh`, `check-architecture.sh`, lint configs)
+**Feature**: F002 — Pure core `scripts/lib/preview.sh` + bats tests
 **Phase**: Phase 01 — Foundation
 **Status**: IN PROGRESS
 
 ## Exact next step
-1. Branch `feat/F001`.
-2. Write `scripts/check-architecture.sh`: one function per rule in
-   `rules/layer-boundaries.md` (1–9), skip when target path absent, print
-   `[error] check-architecture: rule N: <why>` and exit 1 on violation.
-3. Add fixtures under `tests/fixtures/arch/` that violate each rule; bats test asserts each fails.
-4. Write `scripts/init.sh` per `CLAUDE.md` → Commands (skip missing tools/paths with a warn).
-5. Add `.yamllint` (exclude `deploy/preview/templates/`).
-Proof: `./scripts/init.sh` green; `bats tests/` shows 9 violation cases failing as expected.
+1. Branch `feat/F002` (from `feat/F001`).
+2. Write sprint contract `verification/contracts/F002.md` (edge cases: unicode, all-symbol
+   branch, >40 chars ending in `-` after cut, each duration unit, invalid unit, `custom` empty,
+   `expires-at == now`, missing label).
+3. Write `scripts/lib/preview.sh`: `preview_id`, `to_seconds`, `idle_seconds`, `expires_at`,
+   `expired_namespaces` (jq). Pure — rule 1 of check-architecture must stay clean.
+4. `tests/preview.bats` covering every contract edge case; sanitizer output must match the
+   spec's inline sed exactly (compare against it in a test).
+Proof: `./scripts/init.sh` BASELINE GREEN; new bats cases pass.
 
 ## Acceptance (summary)
-See `phases/PHASE-01-FOUNDATION.md` → F001 and the signed
-`verification/sprint-contract.md` for this feature.
+See `phases/PHASE-01-FOUNDATION.md` → F002.
 
 ## Definition of done
 Every acceptance item met + evidence in `CHANGELOG.md` + Evaluator PASS + check-architecture
