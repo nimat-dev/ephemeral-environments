@@ -18,6 +18,15 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F007 preview-destroy.yml — IN REVIEW (dispatch e2e pending BLK-009)
+Branch/commit: feat/F007   PR: see PROJECT_STATE   CI: N/A until on main
+Contract: `verification/contracts/F007.md`
+Evidence:
+  - `bats tests/preview-ci.bats` -> 21/21 (5 new destroy tests: delete, not-found no-op, foreign refused, bad input/get failure, workflow shape)
+  - local destroy e2e vs aks-preview (`evidence/F007/local-destroy-e2e.txt`): destroy `feat/F006` -> ns NotFound, URL 404; again -> "nothing to destroy" exit 0; unlabeled `preview-e2e-foreign` -> refused exit 1, ns kept
+  - actionlint/shellcheck/yamllint/check-architecture clean; `./scripts/init.sh` -> BASELINE GREEN, bats 146/146
+Evaluator: acceptance=4 correctness=5 boundaries=5 modularity=5 evidence=4 => avg 4.6 (PASS pending dispatch e2e)
+
 ## 2026-09-28 — F006 preview-deploy.yml — IN REVIEW (dispatch e2e pending BLK-009)
 Branch/commit: feat/F006   PR: see PROJECT_STATE   CI: N/A until on main
 Contract: `verification/contracts/F006.md`

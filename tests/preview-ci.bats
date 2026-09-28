@@ -175,3 +175,50 @@ SH
   [ -z "$output" ] || { echo "$output"; false; }
   ! grep -qE '^ *run: *\|' "$WF"   # multi-line run blocks would dodge the check above
 }
+
+# --- destroy (F007) ---
+DWF="$ROOT/.github/workflows/preview-destroy.yml"
+ns_json() { printf '{"metadata":{"name":"%s","labels":{%s}}}' "$1" "$2"; }
+
+@test "destroy: preview-bot namespace -> delete --ignore-not-found --wait=false, same id as deploy" {
+  export FAKE_NS_JSON; FAKE_NS_JSON=$(ns_json preview-feature-jira-1 '"managed-by":"preview-bot"')
+  run "$CI" destroy
+  [ "$status" -eq 0 ]
+  grep -q 'get namespace preview-feature-jira-1 --ignore-not-found -o json' "$KUBECTL_LOG"
+  grep -qx 'delete namespace preview-feature-jira-1 --ignore-not-found --wait=false' "$KUBECTL_LOG"
+  grep -qF 'Destroyed `preview-feature-jira-1`' "$GITHUB_STEP_SUMMARY"
+  # deploy's plan derives the very same namespace
+  "$CI" plan 2>/dev/null; grep -qx namespace=preview-feature-jira-1 "$GITHUB_OUTPUT"
+}
+
+@test "destroy: non-existent preview -> success, no delete (idempotent)" {
+  FAKE_NS_JSON='' run "$CI" destroy
+  [ "$status" -eq 0 ]
+  ! grep -q '^delete ' "$KUBECTL_LOG"
+  grep -qF 'Nothing to destroy' "$GITHUB_STEP_SUMMARY"
+}
+
+@test "destroy: namespace not owned by preview-bot is refused, never deleted" {
+  for labels in '' '"managed-by":"someone-else"'; do
+    : >"$KUBECTL_LOG"
+    FAKE_NS_JSON=$(ns_json preview-feature-jira-1 "$labels") run "$CI" destroy
+    [ "$status" -eq 1 ]; [[ "$output" == *"refusing preview-feature-jira-1"* ]] || false
+    ! grep -q '^delete ' "$KUBECTL_LOG"
+  done
+}
+
+@test "destroy: invalid branch -> exit 1, missing -> exit 2, kubectl get failure -> exit non-zero, no delete" {
+  BRANCH='///' run "$CI" destroy; [ "$status" -eq 1 ]
+  BRANCH='' run "$CI" destroy; [ "$status" -eq 2 ]
+  FAKE_GET_FAIL=1 run "$CI" destroy; [ "$status" -ne 0 ]
+  ! grep -q '^delete ' "$KUBECTL_LOG"
+}
+
+@test "destroy workflow: input, concurrency shared with deploy, env-only input, calls entrypoint" {
+  grep -qx 'name: Destroy Preview' "$DWF"
+  grep -qx '      branch:' "$DWF"
+  grep -qF 'group: preview-${{ inputs.branch }}' "$DWF"
+  grep -qx '    environment: preview' "$DWF"
+  grep -qx '        run: ./scripts/preview-ci.sh destroy' "$DWF"
+  run awk '/^ *run: /{ if ($0 ~ /\$\{\{/) print }' "$DWF"; [ -z "$output" ]
+}

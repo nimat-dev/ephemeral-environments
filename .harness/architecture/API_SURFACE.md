@@ -19,7 +19,9 @@ Failure: non-200 from URL after 30×5s → job fails.
 | Input | Type |
 |---|---|
 | `branch` | string, required |
-Effect: `kubectl delete ns preview-<id> --ignore-not-found --wait=false`.
+Effect: `kubectl delete ns preview-<id> --ignore-not-found --wait=false`. Absent → success (no-op).
+A `preview-<id>` namespace not labeled `managed-by=preview-bot` is refused (exit 1, DEC-029).
+Concurrency: `preview-<branch>` (shared with deploy), no cancel-in-progress.
 
 ## `Reap Expired Previews` (`preview-reap.yml`)
 Cron `*/30 * * * *` + manual dispatch. Deletes `managed-by=preview-bot` namespaces with
