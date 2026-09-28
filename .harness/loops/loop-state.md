@@ -15,11 +15,12 @@ active feature also lives in `../CURRENT_TASK.md`; keep them consistent.
 - Last Maker change: none (F004 not started)
 - Last Checker verdict: none
 - Standing defects: none
-- Next action: write the sprint contract for F004
+- Next action: F004 sprint contract (after Namecheap NS delegation for A2/A3)
 
 ## History
 ```
 (feature id | rounds used | final verdict | date)
+F013 | 2 rounds (real-apply bugs fixed) | PASS 4.8 | 2026-09-28
 F003 | 1 round (2 consecutive passes) | PASS 4.8 | 2026-09-28
 F002 | 1 round (2 consecutive passes) | PASS 5.0 | 2026-09-28
 F001 | 1 round (2 consecutive passes: checker run + post-tracking init) | PASS 4.8 | 2026-09-28

@@ -4,24 +4,27 @@
 
 ## Where we are
 - **Phase**: Phase 01 — Foundation
-- **Active feature**: F004 — Cluster bootstrap (IN PROGRESS; offline part workable, apply BLOCKED on BLK-001/004/005)
-- **Overall progress**: 4 / 12 features COMPLETE (33%) — F001, F002, F003, F012 done
+- **Active feature**: F004 — Cluster bootstrap (IN PROGRESS; A2/A3 wait on Namecheap NS delegation)
+- **Overall progress**: 5 / 13 features COMPLETE (38%) — F001, F002, F003, F012, F013 done
 
 ## Last verified
 - **Date**: 2026-09-28
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-28)
-- **Full suite + check-architecture**: green — `bats tests/` 62/62; helm lint + kubeconform active; check-architecture clean (lib=1, templates=8)
-- **E2E**: F012 local docker run + curl green; cluster e2e N/A
-- **Git**: branch `feat/F003` (stack: chore/harness-and-todo → feat/F001 → feat/F002 → feat/F003) — pushed. No PRs open (BLK-006); F001–F003 unreviewed (DEC-016).
+- **Full suite + check-architecture**: green — `bats tests/` 79/79; check-architecture clean
+- **E2E**: F013 real apply green (AKS Succeeded, node Ready, ACR pull OK, re-run no-op); F012 local docker
+- **Git**: branch `feat/F013` (stack: chore/harness-and-todo → F001 → F002 → F003 → F004 (tracking only) → F013) — pushed; unreviewed (BLK-006, DEC-016).
 
 ## Next step
-F004: write bootstrap scripts with `--dry-run` + tests offline; applying needs Azure access (BLK-001). Mirrors `CURRENT_TASK.md`.
+Human: Namecheap NS records for `preview`. Agent: F004 contract + A1/A4–A6 scripts. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-001 (no Azure values) blocks F004+; BLK-002 now only = F006 build
 context `todo`; BLK-006 blocks opening PRs via `gh`. F001–F003 offline and unblocked.
 
 ## Notes for the next agent
+- 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
+  F013 DONE: AKS `aks-preview` (1× D2as_v7, k8s 1.35.8), ACR `nimatpreviewacr`, zone `preview.nimat.dev`.
+  COST IS RUNNING — pause: `az aks stop -g nimatresourceg -n aks-preview`; remove: `bootstrap/teardown.sh --yes`.
 - Tooling lives outside brew: yamllint (~/.local/bin, pipx), kubeconform (~/go/bin), bats (npm).
   `scripts/init.sh` adds those to PATH. Brew blocked until `sudo xcodebuild -license accept`.
 - Hooks (`.claude/settings.json`, DEC-013) enforce the loop: Stop is blocked if you change

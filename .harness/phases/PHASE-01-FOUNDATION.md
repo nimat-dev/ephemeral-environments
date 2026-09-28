@@ -57,8 +57,24 @@ copied from the spec; deviations need a DEC.
 ### Evidence expected
 helm lint/template output; bats render tests.
 
+## F013 — Provision Azure prerequisites
+**Status**: COMPLETE
+
+### Acceptance criteria
+- [x] `bootstrap/provision.sh`: default = dry-run (prints `az` commands, mutates nothing); `--apply` executes.
+- [x] Idempotent: each resource is `show`-checked first; re-run with everything present creates nothing.
+- [x] Preflight (read-only): subscription reachable, resource providers registered, vCPU quota for the node size.
+- [x] Creates in `nimatresourceg`/eastus: Basic ACR; AKS (1 node Standard_B2s, free tier, OIDC issuer + workload identity, ACR attached); Azure DNS zone `preview.nimat.dev`; prints the zone's NS servers for Namecheap.
+- [x] `bootstrap/teardown.sh --yes` deletes AKS, ACR, DNS zone (never the resource group); without `--yes` it only prints.
+- [x] All values from `bootstrap/.env` (gitignored); `bootstrap/.env.example` committed.
+- [x] bats with a fake `az`: dry-run makes no mutating calls; apply skips existing resources; teardown refuses without `--yes`.
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] E2E (online, human-approved): `--apply` run; `az aks show` Succeeded; `kubectl get nodes` Ready; second run no-op.
+
 ## F004 — Cluster bootstrap (Part A)
-**Status**: IN PROGRESS (writing offline; apply blocked on BLK-001/004/005)
+**Status**: IN PROGRESS (A1/A4/A5/A6 workable now; A2/A3 need Namecheap NS delegation, BLK-005)
 
 ### Acceptance criteria
 - [ ] `bootstrap/` scripts for A1 ingress-nginx, A2 wildcard A record, A3 cert-manager + DNS-01 identity + `clusterissuer.yaml` + `wildcard-cert.yaml` + default-ssl-certificate, A4 KEDA core + HTTP add-on (pinned chart version), A5 OIDC app + federated cred + AcrPush/Cluster User/RBAC Writer, A6 `preview` env + vars (documented or `gh` script).

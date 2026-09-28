@@ -64,7 +64,7 @@ fi
 
 need yamllint yamllint && step yamllint yamllint .
 
-sh_files=(scripts/*.sh scripts/lib/*.sh bootstrap/*.sh .claude/hooks/*.sh)
+sh_files=(scripts/*.sh scripts/lib/*.sh bootstrap/*.sh .claude/hooks/*.sh tests/fakes/*)
 if [ ${#sh_files[@]} -gt 0 ]; then
   need shellcheck shellcheck && step shellcheck shellcheck "${sh_files[@]}"
 else log info "skip shellcheck (no shell scripts)"; fi

@@ -18,6 +18,28 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F013 Provision Azure prerequisites — COMPLETE
+Branch/commit: feat/F013 @ (this commit)   PR: not opened (BLK-006)   CI: N/A
+Contract: `verification/contracts/F013.md`
+Evidence:
+  - `bootstrap/provision.sh --apply` (human-approved, DEC-019) -> exit 0: registered Microsoft.ContainerRegistry; created ACR `nimatpreviewacr` (Basic), AKS `aks-preview`, DNS zone `preview.nimat.dev`
+  - `az aks show` -> provisioningState Succeeded, power Running, k8s 1.35.8, tier Free, OIDC issuer + workload identity enabled (`evidence/F013/verify.txt`)
+  - `kubectl get nodes` -> 1 node Ready (Standard_D2as_v7)
+  - `az aks check-acr` -> name resolution, managed identity, image pull permission SUCCEEDED
+  - second `--apply` -> skip ACR / skip AKS / skip DNS zone, exit 0 (`evidence/F013/apply-rerun.txt`)
+  - zone NS: ns1-07.azure-dns.com. ns2-07.azure-dns.net. ns3-07.azure-dns.org. ns4-07.azure-dns.info.
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN, 79 bats tests (17 bootstrap)
+  - mutations killed: dry-run executes; drop surge node; teardown defaults to delete; drop OIDC flags; capacity check on every run
+Evaluator: acceptance=5 correctness=4 boundaries=5 modularity=5 evidence=5 => avg 4.8 (PASS)
+Notes:
+  - Two bugs escaped the fake az and were caught only against real Azure: (1) quota numbers are JSON strings (jq tonumber; fake now mirrors real shape); (2) quota preflight ran on every run and failed re-runs once the node consumed quota — capacity is now checked only when AKS will be created, and before any mutation. Both have regression tests.
+  - Side effects on the operator machine: `--generate-ssh-keys` created ~/.ssh/id_rsa(.pub) (none existed); kubeconfig current-context is now `aks-preview`.
+  - Cost is running (~$90–105/mo est. once ingress LB exists); `az aks stop -g nimatresourceg -n aks-preview` to pause, `bootstrap/teardown.sh --yes` to remove.
+
+## 2026-09-28 — F004 discovery (read-only, no FID completion)
+Evidence: `az account show`, `az account list`, `az group list`, `az aks list`, `az acr list`, `az network dns zone list`, `az graph query` -> 1 subscription, RG `nimatresourceg` empty; 0 AKS / 0 ACR / 0 DNS zones.
+Notes: spec prerequisites absent -> proposed F013 (provision); BLK-001 / BLK-005 updated. Nothing created in Azure.
+
 ## 2026-09-28 — F003 Helm chart deploy/preview — COMPLETE
 Branch/commit: feat/F003 (stacked on feat/F002) @ (this commit)   PR: not opened (BLK-006)   CI: N/A
 Contract: `verification/contracts/F003.md` (written after the extraction step — process slip, noted)
