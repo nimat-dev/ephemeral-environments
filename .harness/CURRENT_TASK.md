@@ -5,15 +5,13 @@
 **Status**: IN PROGRESS (F004 BLOCKED behind it)
 
 ## Exact next step
-1. Branch `feat/F013` from `feat/F004`.
-2. Sprint contract `verification/contracts/F013.md`.
-3. `bootstrap/.env.example` + `.gitignore` for `bootstrap/.env`.
-4. `bootstrap/provision.sh` (dry-run default, `--apply`, preflight, idempotent) and
-   `bootstrap/teardown.sh` (`--yes` required).
-5. `tests/bootstrap.bats` with a fake `az` on PATH.
-6. Show the dry-run to the human; run `--apply` only after an explicit OK (cost, DEC-019).
-7. Human adds NS records in Namecheap; verify `dig NS preview.nimat.dev`.
-Proof: init GREEN; after apply: `az aks show` Succeeded, `kubectl get nodes` Ready, re-run no-op.
+Offline part DONE (scripts + 16 tests + real dry-run). Waiting on the human:
+1. Human approves cost + runs (or OKs Claude running) `bootstrap/provision.sh --apply`
+   (~10 min; registers Microsoft.ContainerRegistry, creates ACR, AKS, DNS zone).
+2. Verify: `az aks show -g nimatresourceg -n aks-preview --query provisioningState` = Succeeded;
+   `kubectl get nodes` Ready; re-run `--apply` → all "skip".
+3. Human adds the printed NS records in Namecheap (host `preview`); verify `dig NS preview.nimat.dev`.
+4. Checker pass → mark F013 COMPLETE → unblock F004.
 
 ## Acceptance (summary)
 See `phases/PHASE-01-FOUNDATION.md` → F013.

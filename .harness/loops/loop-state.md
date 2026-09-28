@@ -12,10 +12,10 @@ active feature also lives in `../CURRENT_TASK.md`; keep them consistent.
 ## Current
 - Round: 0
 - consecutivePasses: 0
-- Last Maker change: none (F013 not started)
+- Last Maker change: provision.sh/teardown.sh + tests (offline)
 - Last Checker verdict: none
 - Standing defects: none
-- Next action: write the sprint contract for F013
+- Next action: human OK → --apply → online evidence → Checker
 
 ## History
 ```

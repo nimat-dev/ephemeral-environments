@@ -18,6 +18,17 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F013 Provision Azure prerequisites — IN PROGRESS (offline part done; awaiting apply OK)
+Branch/commit: feat/F013 @ (this commit)   PR: not opened (BLK-006)
+Contract: `verification/contracts/F013.md`
+Evidence so far:
+  - `bats tests/bootstrap.bats` -> 16/16 (fake az): dry-run makes 0 mutating calls; apply creates; idempotent skip + NS print; partial failure retry; OIDC/WI update on existing AKS; provider register; preflight fails (subscription, RG, quota need=vcpus*(n+1), restricted/missing SKU); config validation exit 2; teardown needs --yes, never deletes the RG
+  - mutations killed: dry-run executes; drop surge node; teardown defaults to delete; drop OIDC flags on create
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN, 78 bats tests
+  - real read-only dry-run vs subscription1: ContainerRegistry provider NotRegistered (register planned); quota StandardDasv7Family 4/4 free, cores 4/4 free; plans ACR `nimatpreviewacr` (Basic), AKS `aks-preview` (1× Standard_D2as_v7, free tier, OIDC+WI, ACR attached), zone `preview.nimat.dev`
+  - bug found by the real dry-run: az returns quota numbers as strings -> jq tonumber; fake now mirrors real JSON shape
+Remaining: human OK -> `--apply` -> nodes Ready -> second run no-op -> Namecheap NS records (human) -> Checker.
+
 ## 2026-09-28 — F004 discovery (read-only, no FID completion)
 Evidence: `az account show`, `az account list`, `az group list`, `az aks list`, `az acr list`, `az network dns zone list`, `az graph query` -> 1 subscription, RG `nimatresourceg` empty; 0 AKS / 0 ACR / 0 DNS zones.
 Notes: spec prerequisites absent -> proposed F013 (provision); BLK-001 / BLK-005 updated. Nothing created in Azure.
