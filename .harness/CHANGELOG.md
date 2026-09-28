@@ -18,6 +18,35 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — PR loop for Phase 01 stack (#1–#7) + A6 apply
+Branch/commit: fixes on feat/F001 @ 73a98ac, feat/F004 (DEC-026); merged up to feat/F005   PRs: https://github.com/nimat-dev/ephemeral-environments/pull/1 … /7 (stacked)   CI: N/A (no workflows yet)
+Evidence:
+  - `gh api repos/nimat-dev/ephemeral-environments` -> permissions.admin true (account nimat-dev); BLK-006 resolved
+  - `bootstrap/a6-github-env.sh --apply` -> env `preview` + 12 vars; `gh variable list --env preview` lists all 12 (INGRESS_CLASS=traefik)
+  - review record: `.harness/reviews/stack-review.md` (2 fixes, 5 accepted notes)
+  - F001 fix: probe workflow with `secrets.GITHUB_TOKEN_ADMIN` + `secrets['AZ_PW']` -> was "clean", now rule 3 exit 1; 3 new bats tests
+  - F004 fix: ClusterRole without secrets; a5 `--apply` -> clusterrole configured; `kubectl auth can-i … --as=<SP>`: secrets get/list/create = no, configmaps/namespaces/httpscaledobjects = yes (`evidence/F004/sp-rbac-no-secrets.txt`); `HELM_DRIVER=configmap helm upgrade --install --kube-as-user <SP>` -> deployed, release in configmap (`evidence/F004/sp-helm-configmap.txt`); new test killed by re-adding secrets
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN on feat/F005 tip
+Notes: F006 workflow MUST export `HELM_DRIVER=configmap` or helm fails with secrets forbidden.
+
+## 2026-09-28 — PHASE 01 FOUNDATION — COMPLETE
+F001, F002, F003, F004, F005, F012, F013 COMPLETE; phase smoke test green twice against aks-preview.
+
+## 2026-09-28 — F005 Smoke test — COMPLETE
+Branch/commit: feat/F005 @ (this commit)   PR: not opened (BLK-006)
+Contract: `verification/contracts/F005.md`
+Evidence:
+  - image: ACR Tasks blocked on this subscription (TasksOperationsNotAllowed) -> `docker buildx --platform linux/amd64 --push` -> `nimatpreviewacr.azurecr.io/todo:ca47e1d`
+  - run 1 (`evidence/F005/smoke-run1.log`): CP1 PASS valid TLS; CP2 PASS cold start 0→1 in 9.5s HTTP 200; CP3 PASS back to 0 after 127s
+  - Checker probe: asleep was read from `.status.replicas` (absent status = 0). Hardened: asleep = `spec.replicas` 0 (absent ≠ 0), CP2 requires `readyReplicas` ≥ 1
+  - run 2 with hardened script (`evidence/F005/smoke-run2.log`): CP1 PASS; CP2 PASS 0→1 ready in 8.3s HTTP 200; CP3 PASS back to 0 after 127s
+  - tests: `bats tests/smoke.bats` 8/8 (happy, never-zero, absent spec, 200-but-not-ready, 502, bad TLS, --keep, usage); mutations killed: absent spec reads 0 (original bug); skip ready check
+  - full suite: `./scripts/init.sh` GREEN, 115 tests
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
+Notes:
+  - Finding: KEDA sets spec.replicas=0 on a never-requested workload immediately ("scaled to 0 after 0s"), so a fresh preview is asleep until its first hit — the deploy workflow's verify step will always exercise a cold start.
+  - bash 3.2: no `;&` case fall-through (fake rewritten).
+
 ## 2026-09-28 — F004 Cluster bootstrap — COMPLETE (A6 apply pending BLK-006)
 Branch/commit: feat/F004 @ (this commit)   PR: not opened (BLK-006)
 Contract: `verification/contracts/F004.md` (adapted: Traefik DEC-021, nimat.dev DEC-020)

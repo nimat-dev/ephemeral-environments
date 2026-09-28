@@ -4,7 +4,7 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 `scripts/lib/preview.sh` instead of inlining the sanitizer (DEC-010).
 
 ## F006 — `preview-deploy.yml`
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 
 ### Acceptance criteria
 - [ ] Inputs/permissions/concurrency exactly per `architecture/API_SURFACE.md`.

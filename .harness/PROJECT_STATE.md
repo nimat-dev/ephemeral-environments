@@ -3,29 +3,30 @@
 > Read this first, every session. Rewrite it for a cold reader before you stop.
 
 ## Where we are
-- **Phase**: Phase 01 — Foundation
-- **Active feature**: F005 — Smoke test (IN PROGRESS)
-- **Overall progress**: 6 / 13 features COMPLETE (46%) — F001–F004, F012, F013 done
+- **Phase**: Phase 02 — Workflows (Phase 01 COMPLETE 2026-09-28)
+- **Active feature**: F006 — preview-deploy.yml (IN PROGRESS; unblocked — A6 vars set, Phase 01 PRs reviewed clean)
+- **Overall progress**: 7 / 13 features COMPLETE (54%) — all of Phase 01
 
 ## Last verified
 - **Date**: 2026-09-28
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-28)
-- **Full suite + check-architecture**: green — `bats tests/` 107/107; check-architecture clean
-- **E2E**: https://anything.preview.nimat.dev → trusted wildcard TLS via Traefik (404); F013 infra green
-- **Git**: branch `feat/F004` (stack … → F013 → F004) — pushed; unreviewed (BLK-006, DEC-016).
+- **Full suite + check-architecture**: green — `bats tests/` 115/115; check-architecture clean
+- **E2E**: `scripts/smoke.sh` 3/3 PASS twice on aks-preview (TLS, cold start ~8–9s, back to 0 after 127s)
+- **Git**: branch `feat/F005` (stack chore/harness-and-todo → F001 → F002 → F003 → F013 → F004 → F005) — pushed; stacked PRs #1–#7 open, reviewed clean round 2 (`reviews/stack-review.md`).
 
 ## Next step
-F005: push todo image to ACR, write scripts/smoke.sh, run 3 checkpoints. Mirrors `CURRENT_TASK.md`.
+Agent: branch `feat/F006` from `feat/F005`, sprint contract, build the deploy workflow (must set `HELM_DRIVER=configmap`, DEC-026). Human: merge PRs #1–#7 in order when ready. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
-See `BLOCKERS.md`. BLK-001 (no Azure values) blocks F004+; BLK-002 now only = F006 build
-context `todo`; BLK-006 blocks opening PRs via `gh`. F001–F003 offline and unblocked.
+See `BLOCKERS.md`. BLK-002 = F006 build context `todo`; BLK-008 = teardown leaves Entra app + UAMI
+(follow-up). BLK-003/BLK-006 resolved.
 
 ## Notes for the next agent
 - Cluster: Traefik LB 74.151.139.236, `*.preview.nimat.dev` wildcard DNS + LE wildcard cert (Traefik default TLSStore).
   KEDA 2.21 + HTTP add-on 0.16 (interceptor-proxy:8080). Chart needs `--set ingressClassName=traefik`.
 - kubectl auth is Entra (kubelogin in ~/go/bin; add to PATH). Break-glass: `az aks get-credentials --admin`.
-- GitHub repo variables NOT set yet (A6, BLK-006) — required before F006.
+- GitHub env `preview` + 12 variables SET (A6, 2026-09-28). `gh` active account must be `nimat-dev` (admin); `nimatrazmjo` also logged in but not a collaborator.
+- CI SP has NO secrets access (DEC-026): every workflow helm call needs `HELM_DRIVER=configmap`.
 - 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
   F013 DONE: AKS `aks-preview` (1× D2as_v7, k8s 1.35.8), ACR `nimatpreviewacr`, zone `preview.nimat.dev`.
   COST IS RUNNING — pause: `az aks stop -g nimatresourceg -n aks-preview`; remove: `bootstrap/teardown.sh --yes`.

@@ -91,17 +91,17 @@ helm lint/template output; bats render tests.
 - [x] E2E: `curl https://anything.preview.nimat.dev` → trusted TLS, Traefik 404.
 
 ## F005 — Smoke test (Part C)
-**Status**: IN PROGRESS
+**Status**: COMPLETE
 
 ### Acceptance criteria
-- [ ] `scripts/smoke.sh` creates `preview-smoke`, installs chart with `idleTimeoutSeconds=120`, cleans up on exit (trap).
-- [ ] Checkpoint 1: HTTPS resolves with valid cert.
-- [ ] Checkpoint 2: first curl returns 200 after cold start (0→1).
-- [ ] Checkpoint 3: pod scales back to 0 after 120s idle.
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: this IS the e2e for Phase 01.
+- [x] `scripts/smoke.sh` creates `preview-smoke`, installs chart with `idleTimeoutSeconds=120`, cleans up on exit (trap).
+- [x] Checkpoint 1: HTTPS resolves with valid cert.
+- [x] Checkpoint 2: first curl returns 200 after cold start (0→1).
+- [x] Checkpoint 3: pod scales back to 0 after 120s idle.
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] E2E: this IS the e2e for Phase 01.
 
 ### Evidence expected
 smoke.sh log with 3 checkpoints PASS; saved to `.harness/evidence/F005/`.
@@ -115,14 +115,14 @@ smoke.sh log with 3 checkpoints PASS; saved to `.harness/evidence/F005/`.
 - [x] SPA fallback: unknown path returns `index.html` (200).
 - [x] Runs non-root.
 - [x] `.dockerignore` excludes `node_modules`, `dist`, `.git`.
-- [ ] Edge/error cases — N/A beyond the above (static site, no inputs).
-- [ ] Boundary invariants — N/A (check-architecture not built yet, F001).
-- [ ] Full verify — N/A until F001 provides `init.sh`.
+- [x] Edge/error cases — N/A beyond the above (static site, no inputs).
+- [x] Boundary invariants — N/A (check-architecture not built yet, F001).
+- [x] Full verify — N/A until F001 provides `init.sh`.
 - [x] E2E: local `docker run` + curl (real-cluster e2e is F005).
 
 ### Evidence expected
 `docker build` + `docker run` + curl output (CHANGELOG 2026-09-28 F012).
 
-## Phase completion criteria
+## Phase completion criteria — MET 2026-09-28 (F001–F005, F012, F013 COMPLETE; smoke 3/3 twice)
 F001–F005 `COMPLETE` with evidence; `scripts/smoke.sh` green against the real cluster
 before Phase 02 starts.
