@@ -1,0 +1,19 @@
+apiVersion: http.keda.sh/v1alpha1
+kind: HTTPScaledObject
+metadata:
+  name: {{ include "preview.fullname" . }}
+  labels:
+    {{- include "preview.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ .Values.host | quote }}
+  scaleTargetRef:
+    name: {{ include "preview.fullname" . }}
+    kind: Deployment
+    apiVersion: apps/v1
+    service: {{ include "preview.fullname" . }}
+    port: 80
+  replicas:
+    min: {{ .Values.replicas.min }}
+    max: {{ .Values.replicas.max }}
+  scaledownPeriod: {{ .Values.idleTimeoutSeconds }}
