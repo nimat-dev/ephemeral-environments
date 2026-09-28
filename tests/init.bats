@@ -21,14 +21,14 @@ header() {
   header
   printf '%s\n' '- [ ] **F001** — a — `NOT STARTED`' >>"$F"
   run "$INIT" --roadmap-only --roadmap "$F"
-  [ "$status" -eq 1 ]; [[ "$output" == *"found 0"* ]]
+  [ "$status" -eq 1 ]; [[ "$output" == *"found 0"* ]] || false
 }
 
 @test "roadmap: two IN PROGRESS fails" {
   header
   printf '%s\n' '- [ ] **F001** — a — `IN PROGRESS`' '- [ ] **F002** — b — `IN PROGRESS`' >>"$F"
   run "$INIT" --roadmap-only --roadmap "$F"
-  [ "$status" -eq 1 ]; [[ "$output" == *"found 2"* ]]
+  [ "$status" -eq 1 ]; [[ "$output" == *"found 2"* ]] || false
 }
 
 @test "roadmap: empty file fails" {
@@ -39,7 +39,7 @@ header() {
 
 @test "roadmap: missing file fails" {
   run "$INIT" --roadmap-only --roadmap "$F.missing"
-  [ "$status" -eq 1 ]; [[ "$output" == *"not found"* ]]
+  [ "$status" -eq 1 ]; [[ "$output" == *"not found"* ]] || false
 }
 
 @test "real ROADMAP passes the gate" {
