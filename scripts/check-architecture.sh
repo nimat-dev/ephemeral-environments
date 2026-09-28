@@ -58,8 +58,8 @@ scan 1 '(^|[^A-Za-z0-9_./-])(az|kubectl|helm|docker|curl|gh)([ \t]|$)' '' ${lib[
 # 2. Single identity implementation: no inline sanitizer in workflows.
 scan 2 '\[\^a-z0-9\]' '' ${wf[@]+"${wf[@]}"}
 
-# 3. No secrets: only secrets.GITHUB_TOKEN allowed; never client-secret.
-scan 3 'client-secret|secrets\.[A-Za-z_]+' 'secrets\.GITHUB_TOKEN' ${wf[@]+"${wf[@]}"}
+# 3. No secrets: only secrets.GITHUB_TOKEN allowed (exact name); never client-secret or secrets[...].
+scan 3 'client-secret|secrets[[:space:]]*(\.|\[)' 'secrets\.GITHUB_TOKEN([^A-Za-z0-9_-]|$)' ${wf[@]+"${wf[@]}"}
 
 # 4. Chart never renders a Namespace.
 scan 4 '^[ \t]*kind:[ \t]*Namespace[ \t]*$' '' ${tpl[@]+"${tpl[@]}"}
