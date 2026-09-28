@@ -13,6 +13,7 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F002** — Pure core `scripts/lib/preview.sh` (preview-id, to_seconds, expires_at, expired filter) + bats tests — `COMPLETE`
 - [x] **F003** — Helm chart `deploy/preview` (Part B), `helm lint` + `helm template` clean — `COMPLETE`
 - [ ] **F004** — Cluster bootstrap (Part A1–A6): `bootstrap/` scripts + `clusterissuer.yaml` + `wildcard-cert.yaml`, applied once — `IN PROGRESS`
+- [ ] **F013** — PROPOSED: provision AKS (OIDC issuer + workload identity) + ACR in `nimatresourceg` — spec prerequisite missing (BLK-001); needs human approval (cost) — `NOT STARTED`
 - [ ] **F005** — Smoke test `scripts/smoke.sh` (Part C): HTTPS valid, cold-start 200, scales back to 0 — `NOT STARTED`
 - [x] **F012** — Sample app container: `todo/Dockerfile` (Vite build → nginx-unprivileged :8080, SPA fallback) — the image F005/F006 deploy — `COMPLETE`
 

@@ -12,7 +12,7 @@
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-28)
 - **Full suite + check-architecture**: green — `bats tests/` 62/62; helm lint + kubeconform active; check-architecture clean (lib=1, templates=8)
 - **E2E**: F012 local docker run + curl green; cluster e2e N/A
-- **Git**: branch `feat/F003` (stack: chore/harness-and-todo → feat/F001 → feat/F002 → feat/F003) — pushed. No PRs open (BLK-006); F001–F003 unreviewed (DEC-016).
+- **Git**: branch `feat/F004` (stack: chore/harness-and-todo → F001 → F002 → F003 → F004) — F001–F003 pushed, unreviewed (BLK-006, DEC-016).
 
 ## Next step
 F004: write bootstrap scripts with `--dry-run` + tests offline; applying needs Azure access (BLK-001). Mirrors `CURRENT_TASK.md`.
@@ -22,6 +22,8 @@ See `BLOCKERS.md`. BLK-001 (no Azure values) blocks F004+; BLK-002 now only = F0
 context `todo`; BLK-006 blocks opening PRs via `gh`. F001–F003 offline and unblocked.
 
 ## Notes for the next agent
+- 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
+  F004 cannot apply until F013 (provision) is approved and a domain is chosen (BLK-001, BLK-005).
 - Tooling lives outside brew: yamllint (~/.local/bin, pipx), kubeconform (~/go/bin), bats (npm).
   `scripts/init.sh` adds those to PATH. Brew blocked until `sudo xcodebuild -license accept`.
 - Hooks (`.claude/settings.json`, DEC-013) enforce the loop: Stop is blocked if you change

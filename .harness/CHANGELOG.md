@@ -18,6 +18,10 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F004 discovery (read-only, no FID completion)
+Evidence: `az account show`, `az account list`, `az group list`, `az aks list`, `az acr list`, `az network dns zone list`, `az graph query` -> 1 subscription, RG `nimatresourceg` empty; 0 AKS / 0 ACR / 0 DNS zones.
+Notes: spec prerequisites absent -> proposed F013 (provision); BLK-001 / BLK-005 updated. Nothing created in Azure.
+
 ## 2026-09-28 — F003 Helm chart deploy/preview — COMPLETE
 Branch/commit: feat/F003 (stacked on feat/F002) @ (this commit)   PR: not opened (BLK-006)   CI: N/A
 Contract: `verification/contracts/F003.md` (written after the extraction step — process slip, noted)
