@@ -5,7 +5,7 @@ finished features to History. A cold agent reads this to know which round it is 
 active feature also lives in `../CURRENT_TASK.md`; keep them consistent.
 
 ## Parameters (current feature)
-- Feature: F004 — Cluster bootstrap
+- Feature: F005 — Smoke test
 - REQUIRED_PASSES: 2
 - MAX_ROUNDS: 6
 
@@ -15,11 +15,12 @@ active feature also lives in `../CURRENT_TASK.md`; keep them consistent.
 - Last Maker change: none (F004 not started)
 - Last Checker verdict: none
 - Standing defects: none
-- Next action: F004 sprint contract (after Namecheap NS delegation for A2/A3)
+- Next action: F005 sprint contract
 
 ## History
 ```
 (feature id | rounds used | final verdict | date)
+F004 | 3 rounds (cpu sizing, can-i fixes) | PASS 4.6 | 2026-09-28
 F013 | 2 rounds (real-apply bugs fixed) | PASS 4.8 | 2026-09-28
 F003 | 1 round (2 consecutive passes) | PASS 4.8 | 2026-09-28
 F002 | 1 round (2 consecutive passes) | PASS 5.0 | 2026-09-28

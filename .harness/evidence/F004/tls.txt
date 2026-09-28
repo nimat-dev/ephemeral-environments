@@ -1,0 +1,4 @@
+subject=CN=*.preview.nimat.dev
+issuer=C=US, O=Let's Encrypt, CN=YR2
+notBefore=Sep 28 18:51:11 2026 GMT
+notAfter=Dec 27 18:51:10 2026 GMT

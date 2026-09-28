@@ -34,4 +34,4 @@ Cron `*/30 * * * *` + manual dispatch. Deletes `managed-by=preview-bot` namespac
 ## Repo / `preview` environment variables (no secrets — OIDC only)
 `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `ACR_NAME`, `ACR_LOGIN_SERVER`,
 `APP_IMAGE_NAME`, `AKS_CLUSTER`, `AKS_RESOURCE_GROUP`, `PREVIEW_DOMAIN`, `INTERCEPTOR_FQDN`,
-`INTERCEPTOR_PORT`.
+`INTERCEPTOR_PORT`, `INGRESS_CLASS` (traefik, DEC-022). Set by `bootstrap/a6-github-env.sh`.

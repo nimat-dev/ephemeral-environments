@@ -1,0 +1,8 @@
+[info] a3-cert-manager: + kubectl apply -f -
+clusterissuer.cert-manager.io/letsencrypt-dns created
+certificate.cert-manager.io/wildcard-preview created
+tlsstore.traefik.io/default created
+[info] a3-cert-manager: + kubectl wait --for=condition=Ready certificate/wildcard-preview -n traefik --timeout 10m
+certificate.cert-manager.io/wildcard-preview condition met
+[info] a3-cert-manager: done
+exit=0

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Fake kubelogin: logs to $KUBECTL_LOG (same log as kubectl, prefixed).
+echo "kubelogin $*" >>"${KUBECTL_LOG:?}"

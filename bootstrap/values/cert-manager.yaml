@@ -1,0 +1,8 @@
+# cert-manager with Azure workload identity for DNS-01 on the preview zone.
+crds:
+  enabled: true
+podLabels:
+  azure.workload.identity/use: "true"
+serviceAccount:
+  labels:
+    azure.workload.identity/use: "true"

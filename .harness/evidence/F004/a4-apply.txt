@@ -1,0 +1,4 @@
+
+INTERCEPTOR_FQDN=keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local
+INTERCEPTOR_PORT=8080
+[info] a4-keda: done

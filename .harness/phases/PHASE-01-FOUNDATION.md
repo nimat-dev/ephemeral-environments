@@ -73,25 +73,25 @@ helm lint/template output; bats render tests.
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 - [x] E2E (online, human-approved): `--apply` run; `az aks show` Succeeded; `kubectl get nodes` Ready; second run no-op.
 
-## F004 — Cluster bootstrap (Part A)
-**Status**: IN PROGRESS (A1/A4/A5/A6 workable now; A2/A3 need Namecheap NS delegation, BLK-005)
+## F004 — Cluster bootstrap (Part A, adapted)
+**Status**: COMPLETE (A6 apply pending BLK-006 — needed before F006)
 
-### Acceptance criteria
-- [ ] `bootstrap/` scripts for A1 ingress-nginx, A2 wildcard A record, A3 cert-manager + DNS-01 identity + `clusterissuer.yaml` + `wildcard-cert.yaml` + default-ssl-certificate, A4 KEDA core + HTTP add-on (pinned chart version), A5 OIDC app + federated cred + AcrPush/Cluster User/RBAC Writer, A6 `preview` env + vars (documented or `gh` script).
-- [ ] Idempotent: re-run makes no changes / no errors.
-- [ ] All env-specific values from a single env file (`bootstrap/.env.example` committed, real `.env` gitignored).
-- [ ] Interceptor svc name/port confirmed (`kubectl get svc -n keda | grep interceptor`) and recorded in `DECISIONS.md` + repo vars.
-- [ ] Wildcard cert `Ready=True`.
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: F005.
-
-### Evidence expected
-Script run logs; `kubectl get certificate -n ingress-nginx`; `dig *.preview…` → LB IP.
+### Acceptance criteria (as adapted by DEC-020/021/023/024)
+- [x] `bootstrap/` scripts: a1-ingress (Traefik, DEC-021), a2-wildcard-dns, a3-cert-manager (+ ClusterIssuer, wildcard Certificate, Traefik TLSStore), a4-keda (pinned, sized), a5-github-oidc, a6-github-env.
+- [x] Idempotent: every script re-run = skip/unchanged.
+- [x] All env-specific values from `bootstrap/.env` (gitignored); `.env.example` committed; versions pinned in `bootstrap/versions.env`.
+- [x] Interceptor svc `keda-add-ons-http-interceptor-proxy:8080` confirmed (a4) and recorded (DEC-023, a6 vars).
+- [x] Wildcard cert `Ready=True`, served by Traefik, trusted by curl.
+- [x] Spec chart accepted server-side by the live CRDs.
+- [x] SP RBAC verified by impersonation (allowed: what previews create; denied: clusterroles, exec, nodes, kube-system).
+- [ ] A6 applied (repo variables set) — blocked on BLK-006 (gh account access).
+- [x] Edge/error cases covered by tests (tests/cluster-bootstrap.bats, 28).
+- [x] Boundary invariants: check-architecture clean.
+- [x] Verification: FULL verify GREEN (107 tests).
+- [x] E2E: `curl https://anything.preview.nimat.dev` → trusted TLS, Traefik 404.
 
 ## F005 — Smoke test (Part C)
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 
 ### Acceptance criteria
 - [ ] `scripts/smoke.sh` creates `preview-smoke`, installs chart with `idleTimeoutSeconds=120`, cleans up on exit (trap).

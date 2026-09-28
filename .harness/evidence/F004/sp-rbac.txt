@@ -1,0 +1,11 @@
+SP can create namespaces                                yes
+SP can delete namespaces                                yes
+SP can create resourcequotas -n preview-x               yes
+SP can create httpscaledobjects.http.keda.sh -n preview-x yes
+SP can create deployments.apps -n preview-x             yes
+SP can create ingresses.networking.k8s.io -n preview-x  yes
+SP can create secrets -n preview-x                      yes
+SP can create clusterroles.rbac.authorization.k8s.io    no - Azure does not have opinion for this non AAD user. If you are an AAD user, please set Extra:oid parameter for impersonated user in the kubeconfig
+SP can create pods/exec -n preview-x                    no - Azure does not have opinion for this non AAD user. If you are an AAD user, please set Extra:oid parameter for impersonated user in the kubeconfig
+SP can delete nodes                                     no - Azure does not have opinion for this non AAD user. If you are an AAD user, please set Extra:oid parameter for impersonated user in the kubeconfig
+SP can create daemonsets.apps -n kube-system            no - Azure does not have opinion for this non AAD user. If you are an AAD user, please set Extra:oid parameter for impersonated user in the kubeconfig

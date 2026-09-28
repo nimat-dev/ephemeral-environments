@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Fake gh: logs to $GH_LOG. FAKE_GH_ADMIN=true|false (repo admin permission).
+echo "$*" >>"${GH_LOG:?}"
+case " $* " in
+  *" .permissions.admin "*) echo "${FAKE_GH_ADMIN:-false}" ;;
+  *" api user "*) echo fake-user ;;
+  *) exit 0 ;;
+esac

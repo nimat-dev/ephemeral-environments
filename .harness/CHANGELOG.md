@@ -18,6 +18,41 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F004 Cluster bootstrap — COMPLETE (A6 apply pending BLK-006)
+Branch/commit: feat/F004 @ (this commit)   PR: not opened (BLK-006)
+Contract: `verification/contracts/F004.md` (adapted: Traefik DEC-021, nimat.dev DEC-020)
+Evidence (stages 1 and 3 in the entries below), plus stage 2:
+  - `bootstrap/a5-github-oidc.sh --apply` -> AKS Entra ID + Azure RBAC enabled; operator RBAC Cluster Admin; app `gh-preview-deployer` (client ecf81f55-…), SP b34bba52-…, federated credential `repo:nimat-dev/ephemeral-environments:environment:preview`; AcrPush + Cluster User Role; ClusterRole/Binding `preview-deployer`
+  - re-run -> every step "skip"/"unchanged" (`evidence/F004/a5-rerun.txt`)
+  - SP impersonation (`evidence/F004/sp-rbac.txt`): yes = create/delete namespaces, create resourcequotas/httpscaledobjects/deployments/ingresses/secrets; no = clusterroles, pods/exec, delete nodes, daemonsets in kube-system
+  - `bootstrap/a6-github-env.sh` dry-run -> environment `preview` + 12 variables (incl. INGRESS_CLASS=traefik); apply refused: gh account `nimatrazmjo` lacks admin (BLK-006)
+  - cluster: all pods Running; node CPU 4% / mem 35%
+  - full suite: `./scripts/init.sh` GREEN, 107 bats tests (28 in tests/cluster-bootstrap.bats); mutations killed: drop context guard; drop AcrPush
+Evaluator: acceptance=4 correctness=4 boundaries=5 modularity=5 evidence=5 => avg 4.6 (PASS)
+Notes:
+  - Spec bug: `Azure Kubernetes Service RBAC Writer` cannot create namespaces/resourcequotas/httpscaledobjects -> DEC-024.
+  - Real-cluster bugs fixed: HTTP add-on defaults unschedulable on 1 node (DEC-023); wildcard `kubectl auth can-i '*' '*'` returns "unknown" under Azure RBAC -> concrete verb.
+  - Operator kubeconfig now uses kubelogin (`~/go/bin/kubelogin`, azurecli mode); break-glass: `az aks get-credentials --admin`.
+  - SP may delete ANY namespace (k8s RBAC can't prefix-match) -> F009 adds an admission guard.
+
+## 2026-09-28 — F004 stage 3 (wildcard DNS + TLS) — progress, feature still IN PROGRESS
+Evidence:
+  - `bootstrap/a2-wildcard-dns.sh --apply` -> `*.preview.nimat.dev A 74.151.139.236`; `dig anything.preview.nimat.dev @1.1.1.1` -> 74.151.139.236
+  - `bootstrap/a3-cert-manager.sh --apply` -> cert-manager v1.21.2, UAMI `cert-manager-dns` (DNS Zone Contributor on zone, federated to cert-manager SA), ClusterIssuer `letsencrypt-dns` (no ACME email), Certificate `wildcard-preview` Ready, Traefik TLSStore `default` (`evidence/F004/a3-apply.txt`)
+  - `openssl s_client anything.preview.nimat.dev:443` -> CN=*.preview.nimat.dev, issuer Let's Encrypt YR2, valid to 2026-12-27 (`evidence/F004/tls.txt`); `curl https://anything.preview.nimat.dev/` -> 404, ssl_verify_result=0 (trusted)
+  - tests: 98/98 (A2: add/skip/stale-replace/no-LB/dry-run; A3: dry-run no mutation, MI client id + zone + no email in manifests, idempotent identity/role/federation, cert never Ready fails)
+
+## 2026-09-28 — F004 stage 1 (Traefik + KEDA) — progress, feature still IN PROGRESS
+Branch/commit: feat/F004 @ (this commit)
+Evidence:
+  - `bootstrap/a1-ingress.sh --apply` -> Traefik v3.7.13 deployed, LB_IP=74.151.139.236 (`evidence/F004/a1-apply.txt`)
+  - `curl http://74.151.139.236/ -H 'Host: x.preview.nimat.dev'` -> 301 → https; https -> 404 (Traefik default)
+  - `bootstrap/a4-keda.sh --apply` -> KEDA 2.21.0 + HTTP add-on 0.16.0 Running; interceptor `keda-add-ons-http-interceptor-proxy:8080` verified (`evidence/F004/a4-apply.txt`)
+  - first A4 attempt failed: `context deadline exceeded` — 3 external-scaler pods Pending (Insufficient cpu, node at 88% requests). Fixed with sized values (DEC-023); re-run converged
+  - spec chart `helm template … --set ingressClassName=traefik | kubectl apply --dry-run=server` -> all 6 objects accepted incl. HTTPScaledObject (`evidence/F004/chart-server-dry-run.txt`) — closes the spec's version-drift risk
+  - tests: `bats tests/` 89/89 (10 new in tests/cluster-bootstrap.bats); mutation (drop context guard) killed; init GREEN
+  - NS delegation live at Namecheap (BLK-005 resolved)
+
 ## 2026-09-28 — F013 Provision Azure prerequisites — COMPLETE
 Branch/commit: feat/F013 @ (this commit)   PR: not opened (BLK-006)   CI: N/A
 Contract: `verification/contracts/F013.md`
