@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "preview.fullname" . }}
+  labels:
+    {{- include "preview.labels" . | nindent 4 }}
+  annotations:
+    preview.branch: {{ .Values.branch | quote }}
+    preview.commit: {{ .Values.commit | quote }}
+spec:
+  # No replicas field: KEDA owns the replica count. Setting it here fights the autoscaler.
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "preview.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "preview.fullname" . }}
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probePath }}
+              port: {{ .Values.containerPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probePath }}
+              port: {{ .Values.containerPort }}
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}

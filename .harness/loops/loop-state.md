@@ -5,21 +5,22 @@ finished features to History. A cold agent reads this to know which round it is 
 active feature also lives in `../CURRENT_TASK.md`; keep them consistent.
 
 ## Parameters (current feature)
-- Feature: F003 — Helm chart deploy/preview
+- Feature: F004 — Cluster bootstrap
 - REQUIRED_PASSES: 2
 - MAX_ROUNDS: 6
 
 ## Current
 - Round: 0
 - consecutivePasses: 0
-- Last Maker change: none (F003 not started)
+- Last Maker change: none (F004 not started)
 - Last Checker verdict: none
 - Standing defects: none
-- Next action: write the sprint contract for F003
+- Next action: write the sprint contract for F004
 
 ## History
 ```
 (feature id | rounds used | final verdict | date)
+F003 | 1 round (2 consecutive passes) | PASS 4.8 | 2026-09-28
 F002 | 1 round (2 consecutive passes) | PASS 5.0 | 2026-09-28
 F001 | 1 round (2 consecutive passes: checker run + post-tracking init) | PASS 4.8 | 2026-09-28
 ```

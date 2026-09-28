@@ -1,0 +1,7 @@
+{{- /*
+Fail the render when per-deploy values are missing. Additive to the spec's templates
+(DEC-018): without these, defaults render host "" and image ":" and still pass schema checks.
+*/ -}}
+{{- $_ := required "host is required (e.g. <id>.<PREVIEW_DOMAIN>)" .Values.host -}}
+{{- $_ := required "image.repository is required (<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>)" .Values.image.repository -}}
+{{- $_ := required "image.tag is required (short git sha)" .Values.image.tag -}}

@@ -1,0 +1,11 @@
+# Sample per-deploy values (what preview-deploy.yml passes via --set).
+name: feature-login
+host: feature-login.preview.example.com
+image:
+  repository: example.azurecr.io/todo
+  tag: abc1234
+idleTimeoutSeconds: 1800
+replicas:
+  max: 3
+commit: abc1234
+branch: feature-login

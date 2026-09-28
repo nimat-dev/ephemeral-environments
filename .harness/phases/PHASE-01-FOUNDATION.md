@@ -40,24 +40,25 @@ copied from the spec; deviations need a DEC.
 `bats tests/` output; shellcheck clean.
 
 ## F003 — Helm chart `deploy/preview` (verbatim Part B)
-**Status**: IN PROGRESS
+**Status**: COMPLETE
 
 ### Acceptance criteria
-- [ ] Chart.yaml, values.yaml, _helpers.tpl, deployment, service, interceptor-externalname, httpscaledobject, ingress, resourcequota exactly per spec.
-- [ ] `helm lint ./deploy/preview` clean.
-- [ ] `helm template` with sample values renders; kubeconform strict passes (HTTPScaledObject via CRD schema or `-ignore-missing-schemas` noted).
-- [ ] Render assertions (bats): no `kind: Namespace`; Deployment has no `replicas`; Ingress backend = `keda-http-interceptor`; `upstream-vhost` = host; HTTPScaledObject `hosts[0]` = host, `scaledownPeriod` = idleTimeoutSeconds; no Ingress `secretName`.
-- [ ] Long `name` (>50) truncated by `preview.fullname`.
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: covered by F005.
+- [x] Chart.yaml, values.yaml, _helpers.tpl, deployment, service, interceptor-externalname, httpscaledobject, ingress, resourcequota exactly per spec.
+- [x] `helm lint ./deploy/preview` clean.
+- [x] `helm template` with sample values renders; kubeconform strict passes (HTTPScaledObject via CRD schema or `-ignore-missing-schemas` noted).
+- [x] Render assertions (bats): no `kind: Namespace`; Deployment has no `replicas`; Ingress backend = `keda-http-interceptor`; `upstream-vhost` = host; HTTPScaledObject `hosts[0]` = host, `scaledownPeriod` = idleTimeoutSeconds; no Ingress `secretName`.
+- [x] Long `name` (>50) truncated by `preview.fullname`.
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] Missing host/image.repository/image.tag fails the render (additive `templates/validate.yaml`, DEC-018).
+- [x] E2E: covered by F005.
 
 ### Evidence expected
 helm lint/template output; bats render tests.
 
 ## F004 — Cluster bootstrap (Part A)
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (writing offline; apply blocked on BLK-001/004/005)
 
 ### Acceptance criteria
 - [ ] `bootstrap/` scripts for A1 ingress-nginx, A2 wildcard A record, A3 cert-manager + DNS-01 identity + `clusterissuer.yaml` + `wildcard-cert.yaml` + default-ssl-certificate, A4 KEDA core + HTTP add-on (pinned chart version), A5 OIDC app + federated cred + AcrPush/Cluster User/RBAC Writer, A6 `preview` env + vars (documented or `gh` script).
