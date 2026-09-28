@@ -1,0 +1,94 @@
+# Phase 01 — Foundation
+
+Tooling, pure core, chart, one-time cluster bootstrap, manual smoke test. Source:
+`../preview-environments-implementation.md` Parts A, B, C. Files marked "verbatim" are
+copied from the spec; deviations need a DEC.
+
+## F001 — Repo tooling
+**Status**: IN PROGRESS
+
+### Acceptance criteria
+- [ ] `scripts/init.sh` runs: tool check → yamllint → shellcheck → actionlint (if workflows exist) → helm lint/template + kubeconform (if chart exists) → bats (if tests exist) → check-architecture. Exit non-zero on any failure.
+- [ ] `scripts/check-architecture.sh` implements all 9 rules in `rules/layer-boundaries.md`; each rule skips cleanly when its target dir doesn't exist yet.
+- [ ] Deliberately violating each rule (fixture) makes check-architecture exit non-zero naming the rule.
+- [ ] `.yamllint` config tolerates Helm templates (exclude `deploy/preview/templates`).
+- [ ] Structured log lines (`[level] component: msg`) at start/end/failure.
+- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [ ] E2E: N/A — not user-facing.
+
+### Evidence expected
+`./scripts/init.sh` output green; per-rule violation fixture output.
+
+## F002 — Pure core `scripts/lib/preview.sh`
+**Status**: NOT STARTED
+
+### Acceptance criteria
+- [ ] `preview_id <branch>` matches spec sanitizer exactly (lowercase, `[^a-z0-9]+`→`-`, trim, cut 40, trim trailing `-`); empty → exit 1.
+- [ ] `to_seconds` handles `Nm`, `Nh`, `Nd`; `never` handled by caller → 31536000.
+- [ ] `expires_at <lifetime> [now]` = now + seconds; `custom` + empty → exit 1.
+- [ ] `expired_namespaces <json> <now>` (jq) returns names with `expires-at < now`; missing label → expired.
+- [ ] No adapter calls (rule 1). Bash strict mode.
+- [ ] bats tests: uppercase, slashes, underscores, leading/trailing symbols, >40 chars ending in `-` after cut, unicode, all-symbol branch (→ fail), each duration unit, invalid unit, boundary `expires-at == now`.
+- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [ ] E2E: N/A — library.
+
+### Evidence expected
+`bats tests/` output; shellcheck clean.
+
+## F003 — Helm chart `deploy/preview` (verbatim Part B)
+**Status**: NOT STARTED
+
+### Acceptance criteria
+- [ ] Chart.yaml, values.yaml, _helpers.tpl, deployment, service, interceptor-externalname, httpscaledobject, ingress, resourcequota exactly per spec.
+- [ ] `helm lint ./deploy/preview` clean.
+- [ ] `helm template` with sample values renders; kubeconform strict passes (HTTPScaledObject via CRD schema or `-ignore-missing-schemas` noted).
+- [ ] Render assertions (bats): no `kind: Namespace`; Deployment has no `replicas`; Ingress backend = `keda-http-interceptor`; `upstream-vhost` = host; HTTPScaledObject `hosts[0]` = host, `scaledownPeriod` = idleTimeoutSeconds; no Ingress `secretName`.
+- [ ] Long `name` (>50) truncated by `preview.fullname`.
+- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [ ] E2E: covered by F005.
+
+### Evidence expected
+helm lint/template output; bats render tests.
+
+## F004 — Cluster bootstrap (Part A)
+**Status**: NOT STARTED
+
+### Acceptance criteria
+- [ ] `bootstrap/` scripts for A1 ingress-nginx, A2 wildcard A record, A3 cert-manager + DNS-01 identity + `clusterissuer.yaml` + `wildcard-cert.yaml` + default-ssl-certificate, A4 KEDA core + HTTP add-on (pinned chart version), A5 OIDC app + federated cred + AcrPush/Cluster User/RBAC Writer, A6 `preview` env + vars (documented or `gh` script).
+- [ ] Idempotent: re-run makes no changes / no errors.
+- [ ] All env-specific values from a single env file (`bootstrap/.env.example` committed, real `.env` gitignored).
+- [ ] Interceptor svc name/port confirmed (`kubectl get svc -n keda | grep interceptor`) and recorded in `DECISIONS.md` + repo vars.
+- [ ] Wildcard cert `Ready=True`.
+- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [ ] E2E: F005.
+
+### Evidence expected
+Script run logs; `kubectl get certificate -n ingress-nginx`; `dig *.preview…` → LB IP.
+
+## F005 — Smoke test (Part C)
+**Status**: NOT STARTED
+
+### Acceptance criteria
+- [ ] `scripts/smoke.sh` creates `preview-smoke`, installs chart with `idleTimeoutSeconds=120`, cleans up on exit (trap).
+- [ ] Checkpoint 1: HTTPS resolves with valid cert.
+- [ ] Checkpoint 2: first curl returns 200 after cold start (0→1).
+- [ ] Checkpoint 3: pod scales back to 0 after 120s idle.
+- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [ ] E2E: this IS the e2e for Phase 01.
+
+### Evidence expected
+smoke.sh log with 3 checkpoints PASS; saved to `.harness/evidence/F005/`.
+
+## Phase completion criteria
+F001–F005 `COMPLETE` with evidence; `scripts/smoke.sh` green against the real cluster
+before Phase 02 starts.
