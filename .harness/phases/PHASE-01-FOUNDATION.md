@@ -22,25 +22,25 @@ copied from the spec; deviations need a DEC.
 `./scripts/init.sh` output green; per-rule violation fixture output.
 
 ## F002 — Pure core `scripts/lib/preview.sh`
-**Status**: IN PROGRESS
+**Status**: COMPLETE
 
 ### Acceptance criteria
-- [ ] `preview_id <branch>` matches spec sanitizer exactly (lowercase, `[^a-z0-9]+`→`-`, trim, cut 40, trim trailing `-`); empty → exit 1.
-- [ ] `to_seconds` handles `Nm`, `Nh`, `Nd`; `never` handled by caller → 31536000.
-- [ ] `expires_at <lifetime> [now]` = now + seconds; `custom` + empty → exit 1.
-- [ ] `expired_namespaces <json> <now>` (jq) returns names with `expires-at < now`; missing label → expired.
-- [ ] No adapter calls (rule 1). Bash strict mode.
-- [ ] bats tests: uppercase, slashes, underscores, leading/trailing symbols, >40 chars ending in `-` after cut, unicode, all-symbol branch (→ fail), each duration unit, invalid unit, boundary `expires-at == now`.
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: N/A — library.
+- [x] `preview_id <branch>` matches spec sanitizer exactly (lowercase, `[^a-z0-9]+`→`-`, trim, cut 40, trim trailing `-`); empty → exit 1.
+- [x] `to_seconds` handles `Nm`, `Nh`, `Nd`; `never` handled by caller → 31536000.
+- [x] `expires_at <lifetime> [now]` = now + seconds; `custom` + empty → exit 1.
+- [x] `expired_namespaces <now>` (JSON on stdin; jq) returns names with `expires-at < now`; missing label → expired.
+- [x] No adapter calls (rule 1). Bash strict mode.
+- [x] bats tests: uppercase, slashes, underscores, leading/trailing symbols, >40 chars ending in `-` after cut, unicode, all-symbol branch (→ fail), each duration unit, invalid unit, boundary `expires-at == now`.
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] E2E: N/A — library.
 
 ### Evidence expected
 `bats tests/` output; shellcheck clean.
 
 ## F003 — Helm chart `deploy/preview` (verbatim Part B)
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 
 ### Acceptance criteria
 - [ ] Chart.yaml, values.yaml, _helpers.tpl, deployment, service, interceptor-externalname, httpscaledobject, ingress, resourcequota exactly per spec.

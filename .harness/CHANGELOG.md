@@ -18,6 +18,21 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F002 Pure core scripts/lib/preview.sh — COMPLETE
+Branch/commit: feat/F002 (stacked on feat/F001) @ (this commit)   PR: not opened (BLK-006)   CI: N/A
+Contract: `verification/contracts/F002.md`
+Evidence:
+  - `./scripts/init.sh` -> BASELINE GREEN; check-architecture now scans lib=1 -> clean (rule 1 holds)
+  - full suite: `bats tests/` -> 46 passed, 0 failed (21 new in tests/preview.bats; F001's 25 still green)
+  - spec parity: `preview_id` == spec inline pipeline over a 14-branch corpus
+  - edge cases: empty/whitespace/all-symbol/emoji-only -> fail; exactly 40 chars; >40 with `-` at cut; unicode; `-n`/`-e`; `08h` decimal; malformed durations (12, h, 1w, 1.5h, -1h, 1hm, " 1h", 1H); 0h lifetime; custom+empty; expires-at == now not expired; missing/garbage label expired; foreign namespace ignored; empty list; malformed JSON; bad now; sourcing leaves caller shell options untouched
+  - checker probes (mutations, each killed): `<`→`<=`; missing label→not expired; drop base-10; drop managed-by filter; printf→echo
+  - e2e: N/A — library (consumed by F006–F008)
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
+Notes:
+  - Stricter than spec on purpose (DEC-017): printf not echo; invalid/zero durations rejected; non-numeric expires-at = expired; managed-by re-checked in jq.
+  - Also hardened F001 tests: bash 3.2 (macOS) ignores failing non-final `[[ ]]`, so every `[[ ]]` assert now ends `|| false`.
+
 ## 2026-09-28 — F001 Repo tooling — COMPLETE
 Branch/commit: feat/F001 @ (this commit)   PR: not opened (BLK-006)   CI: N/A (no CI yet)
 Contract: `verification/contracts/F001.md`
