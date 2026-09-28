@@ -18,6 +18,24 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F003 Helm chart deploy/preview — COMPLETE
+Branch/commit: feat/F003 (stacked on feat/F002) @ (this commit)   PR: not opened (BLK-006)   CI: N/A
+Contract: `verification/contracts/F003.md` (written after the extraction step — process slip, noted)
+Evidence:
+  - chart = spec Part B, byte-identical (9 files extracted by script; bats diffs each against the spec)
+  - `helm lint ./deploy/preview` -> 0 failed (INFO: icon recommended)
+  - `helm template t ./deploy/preview -f tests/fixtures/values.yaml | kubeconform -strict -summary -ignore-missing-schemas` -> Valid 5, Invalid 0, Errors 0, Skipped 1 (HTTPScaledObject: no bundled CRD schema)
+  - `./scripts/init.sh` -> BASELINE GREEN, helm steps active (no longer skipped); check-architecture templates=8 clean
+  - full suite: `bats tests/` -> 62 passed, 0 failed (16 new in tests/chart.bats)
+  - render assertions: no Namespace; no Deployment replicas; image repo:tag; Ingress → keda-http-interceptor:8080, upstream-vhost = host; no secretName; HTTPScaledObject host/scaledownPeriod/min/max; ExternalName + port overrides; ResourceQuota values
+  - edge cases: name exactly 50 kept; >50 truncated with trailing `-` trimmed; idle "never" (31536000) renders as int; missing host / image.repository / image.tag each fail the render
+  - checker probes (mutations, each killed): add replicas; add secretName; add Namespace template; drop validate guard
+  - e2e: N/A here — F005
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=4 => avg 4.8 (PASS)
+Notes:
+  - Finding: with defaults only, the spec chart renders `host: ""` / `image: ":"` and kubeconform still accepts it. Added `templates/validate.yaml` (required guards) instead of editing spec files (DEC-018).
+  - Test hygiene: `! cmd` never fails a bats test under `set -e`; negative asserts use grep -c == 0.
+
 ## 2026-09-28 — F002 Pure core scripts/lib/preview.sh — COMPLETE
 Branch/commit: feat/F002 (stacked on feat/F001) @ (this commit)   PR: not opened (BLK-006)   CI: N/A
 Contract: `verification/contracts/F002.md`
