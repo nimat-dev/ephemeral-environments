@@ -18,7 +18,7 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F012** — Sample app container: `todo/Dockerfile` (Vite build → nginx-unprivileged :8080, SPA fallback) — the image F005/F006 deploy — `COMPLETE`
 
 ## Phase 02 — Workflows (Part D)
-- [ ] **F006** — `preview-deploy.yml`: dispatch → build/push → ns+labels → helm → verify → summary — `IN PROGRESS` (real e2e needs A6 vars, BLK-006)
+- [ ] **F006** — `preview-deploy.yml`: dispatch → build/push → ns+labels → helm → verify → summary — `IN PROGRESS` (A6 vars set)
 - [ ] **F007** — `preview-destroy.yml`: dispatch → delete ns — `NOT STARTED`
 - [ ] **F008** — `preview-reap.yml`: cron */30 → delete expired ns — `NOT STARTED`
 
