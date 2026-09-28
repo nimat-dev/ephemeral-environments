@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# CI entrypoint for the preview workflows (.github/workflows/preview-*.yml). Each workflow step is
+# one subcommand; inputs come from env (never interpolated into shell by the workflow).
+# Usage: scripts/preview-ci.sh plan|namespace|deploy|verify|summary
+# Exit: 0 ok, 1 step failed, 2 usage/config error.
+set -euo pipefail
+
+log() { printf '[%s] preview-ci: %s\n' "$1" "$2" >&2; }
+root="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/preview.sh
+. "$root/scripts/lib/preview.sh"
+
+# need VAR... -- fail with exit 2 naming every unset/empty variable
+need() {
+  local v missing=()
+  for v in "$@"; do [ -n "${!v-}" ] || missing+=("$v"); done
+  [ ${#missing[@]} -eq 0 ] || { log error "missing env: ${missing[*]}"; exit 2; }
+}
+
+# out KEY=VALUE... -> $GITHUB_OUTPUT (stdout when unset)
+out() { printf '%s\n' "$@" >>"${GITHUB_OUTPUT:-/dev/stdout}"; }
+
+# plan: validate dispatch inputs, derive identity. Env: BRANCH LIFETIME LIFETIME_CUSTOM
+# IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR (checkout of BRANCH).
+cmd_plan() {
+  need BRANCH LIFETIME IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR
+  local sha plan
+  sha=$(git -C "$SRC_DIR" rev-parse --short HEAD) || { log error "cannot read HEAD of $SRC_DIR"; exit 1; }
+  plan=$(preview_plan "$BRANCH" "$LIFETIME" "${LIFETIME_CUSTOM-}" "$IDLE_TIMEOUT" "$MAX_REPLICAS" \
+    "$PREVIEW_DOMAIN" "$sha") || exit 1
+  log info "plan $(printf '%s' "$plan" | tr '\n' ' ')"
+  # shellcheck disable=SC2086 # one KEY=VALUE per line, no spaces by construction
+  out $plan
+}
+
+# namespace: apply the Namespace with the reaper's label contract (workflow owns it, DEC-007).
+# Env: NAMESPACE PREVIEW_ID SHORT_SHA EXPIRES_AT BRANCH
+cmd_namespace() {
+  need NAMESPACE PREVIEW_ID SHORT_SHA EXPIRES_AT BRANCH
+  log info "apply namespace $NAMESPACE expires-at=$EXPIRES_AT"
+  namespace_manifest "$NAMESPACE" "$PREVIEW_ID" "$SHORT_SHA" "$EXPIRES_AT" "$BRANCH" | kubectl apply -f -
+}
+
+# deploy: helm upgrade --install. Strings go through --set-string so an id/sha like "1234e56" is
+# not parsed as a float. Env: PREVIEW_ID NAMESPACE HOST SHORT_SHA IDLE_SECONDS MAX_REPLICAS IMAGE_REPOSITORY
+# INTERCEPTOR_FQDN INTERCEPTOR_PORT INGRESS_CLASS [HELM_TIMEOUT]
+cmd_deploy() {
+  need PREVIEW_ID NAMESPACE HOST SHORT_SHA IDLE_SECONDS MAX_REPLICAS IMAGE_REPOSITORY \
+    INTERCEPTOR_FQDN INTERCEPTOR_PORT INGRESS_CLASS
+  export HELM_DRIVER=configmap   # DEC-026: the CI identity has no access to Secrets
+  log info "helm upgrade --install $PREVIEW_ID -n $NAMESPACE image=$IMAGE_REPOSITORY:$SHORT_SHA"
+  helm upgrade --install "$PREVIEW_ID" "$root/deploy/preview" -n "$NAMESPACE" \
+    --set-string name="$PREVIEW_ID" \
+    --set-string host="$HOST" \
+    --set-string image.repository="$IMAGE_REPOSITORY" \
+    --set-string image.tag="$SHORT_SHA" \
+    --set idleTimeoutSeconds="$IDLE_SECONDS" \
+    --set replicas.max="$MAX_REPLICAS" \
+    --set-string interceptor.fqdn="$INTERCEPTOR_FQDN" \
+    --set interceptor.port="$INTERCEPTOR_PORT" \
+    --set-string ingressClassName="$INGRESS_CLASS" \
+    --set-string commit="$SHORT_SHA" \
+    --set-string branch="$PREVIEW_ID" \
+    --wait --timeout "${HELM_TIMEOUT:-4m}"
+}
+
+# verify: cold-start proof -- HTTP 200 from the public URL within VERIFY_ATTEMPTS x VERIFY_SLEEP.
+# Env: HOST [VERIFY_ATTEMPTS=30] [VERIFY_SLEEP=5]
+cmd_verify() {
+  need HOST
+  local url="https://$HOST/" n="${VERIFY_ATTEMPTS:-30}" i code
+  for i in $(seq 1 "$n"); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$url" || true)
+    log info "verify attempt $i/$n: ${code:-000}"
+    [ "$code" = 200 ] && { log info "verify ok $url"; return 0; }
+    [ "$i" -eq "$n" ] || sleep "${VERIFY_SLEEP:-5}"
+  done
+  log error "preview did not return 200 within timeout: $url"
+  exit 1
+}
+
+# summary: job summary; runs even after a failed step, so every value may be missing.
+# Env: BRANCH [SHORT_SHA NAMESPACE HOST IMAGE_REPOSITORY IDLE_TIMEOUT LIFETIME JOB_STATUS]
+cmd_summary() {
+  local sha="${SHORT_SHA:--}" url="-"
+  [ -z "${HOST-}" ] || url="https://$HOST"
+  {
+    echo "## Preview deployment ${JOB_STATUS:+(${JOB_STATUS})}"
+    echo ""
+    echo "| | |"
+    echo "|---|---|"
+    echo "| Branch | \`${BRANCH:--}\` |"
+    echo "| Commit | \`$sha\` |"
+    echo "| Image | \`${IMAGE_REPOSITORY:--}:$sha\` |"
+    echo "| Namespace | \`${NAMESPACE:--}\` |"
+    echo "| Idle timeout | ${IDLE_TIMEOUT:--} |"
+    echo "| Lifetime | ${LIFETIME:--} |"
+    echo ""
+    echo "### URL"
+    echo "$url"
+  } >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+}
+
+case "${1-}" in
+  plan|namespace|deploy|verify|summary) "cmd_$1" ;;
+  -h|--help) sed -n '2,5p' "$0" ;;
+  *) log error "unknown command '${1-}' (want plan|namespace|deploy|verify|summary)"; exit 2 ;;
+esac

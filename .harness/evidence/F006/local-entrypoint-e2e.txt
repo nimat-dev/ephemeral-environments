@@ -1,0 +1,53 @@
+== plan
+[info] preview-ci: plan preview_id=feat-f006 namespace=preview-feat-f006 host=feat-f006.preview.nimat.dev short_sha=85b116b idle=900 max_replicas=2 lifetime=2h expires_at=1790639248
+preview_id=feat-f006
+namespace=preview-feat-f006
+host=feat-f006.preview.nimat.dev
+short_sha=85b116b
+idle=900
+max_replicas=2
+lifetime=2h
+expires_at=1790639248
+== build+push nimatpreviewacr.azurecr.io/todo:85b116b
+pushed
+== namespace
+[info] preview-ci: apply namespace preview-feat-f006 expires-at=1790639248
+namespace/preview-feat-f006 created
+== deploy
+[info] preview-ci: helm upgrade --install feat-f006 -n preview-feat-f006 image=nimatpreviewacr.azurecr.io/todo:85b116b
+Release "feat-f006" does not exist. Installing it now.
+NAME: feat-f006
+LAST DEPLOYED: Mon Sep 28 17:47:39 2026
+NAMESPACE: preview-feat-f006
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+== verify
+[info] preview-ci: verify attempt 1/30: 200
+[info] preview-ci: verify ok https://feat-f006.preview.nimat.dev/
+== summary
+## Preview deployment 
+
+| | |
+|---|---|
+| Branch | `feat/F006` |
+| Commit | `85b116b` |
+| Image | `nimatpreviewacr.azurecr.io/todo:85b116b` |
+| Namespace | `preview-feat-f006` |
+| Idle timeout | 15m |
+| Lifetime | custom |
+
+### URL
+https://feat-f006.preview.nimat.dev
+== state
+NAME                STATUS   AGE   LABELS
+preview-feat-f006   Active   17s   kubernetes.io/metadata.name=preview-feat-f006,managed-by=preview-bot,preview.branch=feat-f006,preview.commit=85b116b,preview.expires-at=1790639248
+NAME                              DATA   AGE
+sh.helm.release.v1.feat-f006.v1   1      14s
+No resources found in preview-feat-f006 namespace.
+== redeploy (same branch)
+[info] preview-ci: helm upgrade --install feat-f006 -n preview-feat-f006 image=nimatpreviewacr.azurecr.io/todo:85b116b
+STATUS: deployed
+REVISION: 2
+NAME     	NAMESPACE        	REVISION	UPDATED                             	STATUS  	CHART        	APP VERSION
+feat-f006	preview-feat-f006	2       	2026-09-28 17:48:44.757111 -0400 EDT	deployed	preview-0.1.0	1.0.0      

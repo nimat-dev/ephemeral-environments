@@ -2,16 +2,14 @@
 
 **Feature**: F006 — `.github/workflows/preview-deploy.yml`
 **Phase**: Phase 02 — Workflows
-**Status**: IN PROGRESS (not started; unblocked — A6 applied, Phase 01 PR stack reviewed clean)
+**Status**: IN REVIEW (code + tests + local e2e done; only the dispatch e2e is open — BLK-009)
 
 ## Exact next step
-1. (done 2026-09-28) A6 applied; PRs #1–#7 open + reviewed clean.
-2. Branch `feat/F006` from `feat/F005`; sprint contract.
-3. Workflow per spec Part D, adapted: source `scripts/lib/preview.sh` (DEC-010), build context `todo`
-   (BLK-002), buildx linux/amd64 (DEC-025), `--set ingressClassName=${{ vars.INGRESS_CLASS }}` (DEC-022),
-   `HELM_DRIVER=configmap` (DEC-026 — SP cannot touch secrets).
-4. actionlint + check-architecture (rules 2, 3, 6, 7, 8) clean; dispatch against a test branch.
-Proof: Actions run green, job summary URL returns 200 after cold start.
+1. Human: merge PR #8 (Phase 01 → main), then the F006 PR (DEC-028: feature PRs target `main`).
+2. Agent: `gh workflow run preview-deploy.yml -f branch=<test branch> -f lifetime=24h -f idle_timeout=15m`;
+   job summary URL returns 200 after cold start; record run URL in CHANGELOG; mark F006 COMPLETE.
+3. Meanwhile (unblocked, same phase): F007 destroy, F008 reap — add `destroy`/`reap` to
+   `scripts/preview-ci.sh`, thin workflows, bats, local e2e.
 
 ## Acceptance (summary)
 See `phases/PHASE-02-WORKFLOWS.md` → F006.

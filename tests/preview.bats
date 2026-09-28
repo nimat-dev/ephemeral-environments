@@ -146,3 +146,55 @@ JSON
   run bash -c 'set +euo pipefail; before=$(set +o); . "'"$BATS_TEST_DIRNAME"'/../scripts/lib/preview.sh"; [ "$before" = "$(set +o)" ]'
   [ "$status" -eq 0 ]
 }
+
+# --- max_replicas ---
+@test "max_replicas: 1..6 accepted, leading zero decimal" {
+  [ "$(max_replicas 1)" = 1 ]
+  [ "$(max_replicas 6)" = 6 ]
+  [ "$(max_replicas 03)" = 3 ]
+}
+
+@test "max_replicas: 0, over quota, negative, non-numeric, empty rejected" {
+  for v in 0 7 100 -1 '' abc 2.5 ' 3' 99999999999999999999; do
+    run max_replicas "$v"; [ "$status" -eq 1 ] || { echo "expected fail for '$v'"; return 1; }
+  done
+}
+
+# --- preview_plan ---
+@test "preview_plan: happy path emits the full identity" {
+  out=$(preview_plan 'Feature/JIRA-1' 48h '' 30m 3 preview.example.com abc1234 1000)
+  [ "$out" = "$(printf '%s\n' preview_id=feature-jira-1 namespace=preview-feature-jira-1 \
+    host=feature-jira-1.preview.example.com short_sha=abc1234 idle=1800 max_replicas=3 \
+    lifetime=48h expires_at=173800)" ]
+}
+
+@test "preview_plan: custom lifetime and never idle" {
+  out=$(preview_plan main custom 12h never 1 d.example abc1234 0)
+  [[ "$out" == *"lifetime=12h"* ]] || false
+  [[ "$out" == *"expires_at=43200"* ]] || false
+  [[ "$out" == *"idle=31536000"* ]] || false
+}
+
+@test "preview_plan: every invalid input fails and prints nothing on stdout" {
+  bad() { run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; preview_plan \"\$@\" 2>/dev/null" _ "$@"
+          [ "$status" -eq 1 ] && [ -z "$output" ] || { echo "expected fail: $*"; return 1; }; }
+  bad '///' 48h '' 30m 3 d.example abc1234 0      # empty id
+  bad main custom '' 30m 3 d.example abc1234 0    # custom without value
+  bad main custom 1w 30m 3 d.example abc1234 0    # bad custom unit
+  bad main custom 0h 30m 3 d.example abc1234 0    # zero lifetime
+  bad main 48h '' forever 3 d.example abc1234 0   # bad idle
+  bad main 48h '' 30m 0 d.example abc1234 0       # bad replicas
+  bad main 48h '' 30m 3 '' abc1234 0              # no domain
+  bad main 48h '' 30m 3 d.example '' 0            # no sha
+  bad main 48h '' 30m 3 d.example 'ab;rm' 0       # non-hex sha
+}
+
+# --- namespace_manifest ---
+@test "namespace_manifest: label contract + raw branch escaped into annotation" {
+  br='Feat/"quoted" $(x) `y`'
+  m=$(namespace_manifest preview-feat-quoted feat-quoted abc1234 1700000000 "$br")
+  [ "$(jq -r .kind <<<"$m")" = Namespace ]
+  [ "$(jq -r .metadata.name <<<"$m")" = preview-feat-quoted ]
+  [ "$(jq -c .metadata.labels <<<"$m")" = '{"managed-by":"preview-bot","preview.branch":"feat-quoted","preview.commit":"abc1234","preview.expires-at":"1700000000"}' ]
+  [ "$(jq -r '.metadata.annotations["preview.branch-original"]' <<<"$m")" = "$br" ]
+}

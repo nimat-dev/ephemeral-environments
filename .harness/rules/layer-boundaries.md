@@ -9,7 +9,8 @@ import-direction rules — dependencies point one way only.
 
 ## Allowed dependency direction
 
-    .github/workflows/*.yml, scripts/smoke.sh   (entrypoints)
+.github/workflows/*.yml  ──► scripts/preview-ci.sh   (thin steps → CI entrypoint, DEC-027)
+    scripts/preview-ci.sh, scripts/smoke.sh     (entrypoints)
         ├──► scripts/lib/preview.sh              (pure core — depends on nothing)
         ├──► deploy/preview (Helm chart)         (declarative; values injected)
         └──► adapters: az / kubectl / helm / docker actions / curl
