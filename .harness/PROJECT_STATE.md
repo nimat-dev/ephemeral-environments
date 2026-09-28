@@ -12,15 +12,15 @@
 - **init**: N/A — `scripts/init.sh` not written yet (F001)
 - **Full suite + check-architecture**: N/A — not built yet (F001)
 - **E2E**: F012 local docker run + curl green; cluster e2e N/A
-- **Git**: branch `chore/harness-and-todo` @ (see `git log -1`; last feature commit 8f4ef86 F012, aa73f65 root CLAUDE.md) — pushed; PR not opened. Working tree: `README.md` deletion unstaged (user's, pending decision)
+- **Git**: branch `chore/harness-and-todo` @ 3bae845+ — pushed, tree clean. PR NOT opened (BLK-006: gh account lacks access). Open manually: https://github.com/nimat-dev/ephemeral-environments/pull/new/chore/harness-and-todo
 
 ## Next step
 Write `scripts/check-architecture.sh` (9 rules in `rules/layer-boundaries.md`, each skipping
 when target dir absent), then `scripts/init.sh`. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
-See `BLOCKERS.md`. BLK-001 (no Azure values) and BLK-002 (app repo location) block Phase 01
-F004+ and Phase 02; F001–F003 are offline and unblocked.
+See `BLOCKERS.md`. BLK-001 (no Azure values) blocks F004+; BLK-002 now only = F006 build
+context `todo`; BLK-006 blocks opening PRs via `gh`. F001–F003 offline and unblocked.
 
 ## Notes for the next agent
 - Hooks (`.claude/settings.json`, DEC-013) enforce the loop: Stop is blocked if you change

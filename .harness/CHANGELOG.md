@@ -19,7 +19,7 @@ Notes: <anything the next agent should know>
 <!-- entries go below, newest first -->
 
 ## 2026-09-28 — chore: confirm todo target, drop placeholder README, open PR (harness-only, no FID)
-Branch/commit: chore/harness-and-todo   PR: see PROJECT_STATE
+Branch/commit: chore/harness-and-todo @ 3bae845   PR: NOT OPENED — `gh pr create` -> "must be a collaborator" (BLK-006)
 Evidence:
   - user confirmed `todo/` is long-term preview target -> DEC-012 updated, BLK-002 narrowed to F006 build context
   - root `README.md` (one line: `# ephemeral-environments`) deleted by user; committed — root `CLAUDE.md` + `.harness/README.md` cover it
