@@ -4,18 +4,18 @@
 
 ## Where we are
 - **Phase**: Phase 03 — Hardening (Phase 01 COMPLETE 2026-09-28, Phase 02 COMPLETE 2026-09-29)
-- **Active feature**: F009 — scoped ClusterRole / `preview-*` admission guard (IN PROGRESS: VAP `preview-deployer-guard` in a5 + bats done; live apply BLOCKED BLK-010). F006–F008 COMPLETE via real GitHub runs.
-- **Overall progress**: 10 / 13 features COMPLETE (77%)
+- **Active feature**: F010 — ResourceQuota enforced (IN PROGRESS, not started; waits on F009 PR). F009 COMPLETE: VAP `preview-deployer-guard` live (DEC-031).
+- **Overall progress**: 11 / 13 features COMPLETE (85%)
 
 ## Last verified
 - **Date**: 2026-09-29
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-29)
 - **Full suite + check-architecture**: green — `bats tests/` 157/157; check-architecture clean
-- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404 (`evidence/F006`–`F008`)
-- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). Now on `feat/F009` (guard code committed, not yet applied live).
+- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green (`evidence/F006`–`F009`)
+- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). `feat/F009` pushed, PR open (guard applied live 2026-09-29).
 
 ## Next step
-Human applies a5 (BLK-010), then Deploy/Destroy dispatch under the guard → F009 COMPLETE. Mirrors `CURRENT_TASK.md`.
+Review + merge F009 PR, then F010 on `feat/F010`. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
@@ -30,6 +30,7 @@ See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
 - Workflows are thin: each step = `scripts/preview-ci.sh <cmd>`, inputs via `env:` only (DEC-027).
 - No live previews (all test namespaces destroyed/reaped 2026-09-29); test branches `e2e/*` deleted from origin.
 - GitHub OIDC for this repo uses immutable subjects (DEC-030) — both federated credentials exist.
+- CI SP writes are confined to `preview-*` by VAP `preview-deployer-guard` (DEC-031); a new resource type in the chart still needs a ClusterRole rule in a5.
 - 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
   F013 DONE: AKS `aks-preview` (1× D2as_v7, k8s 1.35.8), ACR `nimatpreviewacr`, zone `preview.nimat.dev`.
   COST IS RUNNING — pause: `az aks stop -g nimatresourceg -n aks-preview`; remove: `bootstrap/teardown.sh --yes`.

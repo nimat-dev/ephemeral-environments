@@ -1,0 +1,9 @@
+# F009 e2e under guard — 2026-09-29
+deploy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36637186203 (success: ns created, helm rev 1, verify 200 attempt 1)
+pre-destroy GET -> 200
+destroy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36637334313 (exit=0)
+destroy	Delete namespace	2026-09-29T22:04:43.7495826Z [info] preview-ci: destroy: deleting preview-e2e-guard-test
+destroy	Delete namespace	2026-09-29T22:04:44.3870687Z namespace "preview-e2e-guard-test" deleted
+post-destroy GET -> 404
+ns after: Error from server (NotFound): namespaces "preview-e2e-guard-test" not found
+identity: SP Azure roles = AcrPush + AKS Cluster User (no data-plane role) -> k8s access comes only from ClusterRoleBinding User=<oid>, so the real token's username == oid == guard matchCondition

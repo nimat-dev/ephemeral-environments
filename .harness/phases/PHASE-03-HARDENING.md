@@ -3,16 +3,16 @@
 Spec Part E step 6 + A5 hardening note.
 
 ## F009 — Scoped k8s ClusterRole
-**Status**: IN PROGRESS
+**Status**: COMPLETE (2026-09-29)
 - [x] SP AAD object bound to k8s `ClusterRole` limited to namespaces, deployments, services, ingresses, httpscaledobjects, resourcequotas (DEC-024/026; + `preview-deployer-guard` VAP confines writes to `preview-*`, DEC-031).
-- [ ] Azure `RBAC Writer` assignment removed; F006–F008 still pass. (never assigned — verified; dispatch under guard pending BLK-010)
-- [ ] Negative test: SP cannot write e.g. secrets in `kube-system`. (bats done; live a5 probes pending BLK-010)
+- [x] Azure `RBAC Writer` assignment removed; F006–F008 still pass. (never assigned; Deploy 36637186203 + Destroy 36637334313 green under the guard)
+- [x] Negative test: SP cannot write e.g. secrets in `kube-system`. (bats + live probes `evidence/F009/live-probes.txt`)
 - [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
 - [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 
 ## F010 — ResourceQuota enforced
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 - [ ] Scaling beyond `quota.pods` / cpu / memory is rejected in a preview ns (evidence captured).
 - [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
 - [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
