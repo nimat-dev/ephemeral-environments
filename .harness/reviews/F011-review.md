@@ -17,3 +17,5 @@ Round 2 (`/code-review medium 15` on 47f5c81):
 | 2 | image ref parse (low) | `repo:tag@sha256:…` yielded the digest hex | fixed: strip `@sha256:` first; bats case added |
 
 Live dry-run after fixes (`evidence/F011/local-dry-run.txt`): unchanged selection (real digests unique). `./scripts/init.sh` BASELINE GREEN 185/185 after round 2; real `az acr repository show --query lastUpdateTime` + `iso_epoch` checked.
+
+Round 3 (`/code-review medium 15` on c4ccf35): no findings. Clean. (Noted, not raised: identical-digest race is unlikely — buildx provenance makes each build digest unique.)
