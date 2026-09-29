@@ -1,0 +1,25 @@
+{
+  "issuer": "https://eastus.oic.prod-aks.azure.com/4d0316fd-aae8-410b-8ab1-393e4c3d28c6/d8d1f9b4-ae51-489f-bb58-8e7166d784e3/",
+  "k8s": "1.35.8",
+  "oidc": true,
+  "power": "Running",
+  "state": "Succeeded",
+  "tier": "Free",
+  "wi": true
+}
+{
+  "name": "nimatpreviewacr",
+  "server": "nimatpreviewacr.azurecr.io",
+  "sku": "Basic"
+}
+{
+  "ns": [
+    "ns1-07.azure-dns.com.",
+    "ns2-07.azure-dns.net.",
+    "ns3-07.azure-dns.org.",
+    "ns4-07.azure-dns.info."
+  ],
+  "zone": "preview.nimat.dev"
+}
+NAME                                STATUS   ROLES    AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+aks-nodepool1-38714034-vmss000000   Ready    <none>   2m26s   v1.35.8   10.224.0.4    <none>        Ubuntu 24.04.5 LTS   6.8.0-1067-azure   containerd://2.3.3-2

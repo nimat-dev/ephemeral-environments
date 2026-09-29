@@ -25,6 +25,7 @@ code=$(grep -v '^\.harness/' <<<"$changed" || true)
 [ -n "$code" ] || exit 0
 grep -qx '\.harness/PROJECT_STATE\.md' <<<"$changed" && exit 0
 
+# shellcheck disable=SC2001  # prefix every line of a multi-line list
 reason="Harness guard: files changed outside .harness/ this session without updating .harness/PROJECT_STATE.md:
 $(sed 's/^/  - /' <<<"$code")
 Run the Session-completion protocol (AGENTS.md): CHANGELOG evidence, ROADMAP/phase status, PROJECT_STATE, CURRENT_TASK, BLOCKERS/DECISIONS."

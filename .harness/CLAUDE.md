@@ -40,15 +40,15 @@ Toolchain: helm, kubectl, az, actionlint, shellcheck, yamllint, kubeconform, bat
 
 | Action | Command |
 |---|---|
-| Install | `brew install helm kubectl azure-cli actionlint shellcheck yamllint kubeconform bats-core jq` |
+| Install | `brew install helm kubectl azure-cli actionlint shellcheck yamllint kubeconform bats-core jq` (no brew: `pipx install yamllint`, `go install github.com/yannh/kubeconform/cmd/kubeconform@latest`, `npm i -g bats`) |
 | Dev server | N/A (infra repo) |
 | Typecheck | `helm template t ./deploy/preview -f tests/fixtures/values.yaml \| kubeconform -strict -summary -ignore-missing-schemas` |
-| Lint | `yamllint . && shellcheck scripts/*.sh scripts/lib/*.sh bootstrap/*.sh && actionlint && helm lint ./deploy/preview` |
+| Lint | `yamllint . && shellcheck scripts/*.sh scripts/lib/*.sh bootstrap/*.sh .claude/hooks/*.sh && actionlint && helm lint ./deploy/preview` |
 | Test (full suite) | `bats tests/` |
 | E2E | `./scripts/smoke.sh` (real cluster, Part C); Phase 02+: dispatch `Deploy Preview` on a test branch |
 | Build | `helm template t ./deploy/preview -f tests/fixtures/values.yaml` |
-| Verify baseline | `./scripts/init.sh` (lint + template + kubeconform + bats + check-architecture) |
-| Check boundaries | `./scripts/check-architecture.sh` |
+| Verify baseline | `./scripts/init.sh` (roadmap gate + lint + template + kubeconform + bats + check-architecture); `--roadmap-only` for just the gate |
+| Check boundaries | `./scripts/check-architecture.sh [--root DIR]` |
 | Progress % | see `scripts/SCRIPTS.md` → progress-counter |
 
 (Commands for paths that don't exist yet are skipped by `init.sh` until their feature lands.)

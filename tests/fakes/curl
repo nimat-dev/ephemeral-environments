@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Fake curl for smoke tests: prints $FAKE_CURL_OUT ("<http_code> <ssl_verify_result> <time>").
+echo "curl $*" >>"${KUBECTL_LOG:?}"
+printf '%s' "${FAKE_CURL_OUT:-200 0 1.0}"

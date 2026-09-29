@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Fake helm for bootstrap tests. Logs to $HELM_LOG. FAKE_HELM_FAIL="<substring>" -> exit 1.
+echo "$*" >>"${HELM_LOG:?}"
+if [ -n "${FAKE_HELM_FAIL:-}" ] && [[ " $* " == *"$FAKE_HELM_FAIL"* ]]; then echo "fake helm failure" >&2; exit 1; fi
+exit 0

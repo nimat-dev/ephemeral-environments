@@ -1,0 +1,39 @@
+# All overridden per-deploy from the workflow via --set.
+name: preview            # release name; used as app/deployment/service name
+host: ""                 # e.g. branch-123.preview.alleghenycounty.us
+
+image:
+  repository: ""         # ACR_LOGIN_SERVER/APP_IMAGE_NAME
+  tag: ""                # short git sha
+  pullPolicy: IfNotPresent
+
+containerPort: 8080
+probePath: /             # set to a real health endpoint if / doesn't 200
+
+replicas:
+  min: 0
+  max: 3
+
+idleTimeoutSeconds: 1800 # scale to 0 after this much no-traffic (KEDA scaledownPeriod)
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# One quota per preview namespace so 40 abandoned branches can't eat the cluster.
+quota:
+  cpu: "2"
+  memory: 4Gi
+  pods: "6"
+
+interceptor:
+  fqdn: keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local
+  port: 8080
+
+ingressClassName: nginx
+commit: ""
+branch: ""

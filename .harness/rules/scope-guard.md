@@ -5,21 +5,18 @@ the leash. The active phase is whatever `PROJECT_STATE.md` says. Building ahead 
 defect, not initiative. Phases are gated (ROADMAP.md order); a phase's features may not start
 until the previous phase's completion criteria pass.
 
-## Current phase: Phase 01 — Foundation
+## Current phase: Phase 02 — Workflows (Phase 01 COMPLETE 2026-09-28)
 
 ### In scope (current phase only)
-- F001 — repo tooling: `init.sh`, `check-architecture.sh`, lint configs
-- F002 — pure core `scripts/lib/preview.sh` + bats tests
-- F003 — Helm chart `deploy/preview` (Part B)
-- F004 — bootstrap scripts + manifests (Part A)
-- F005 — smoke test script (Part C)
+- F006 — `preview-deploy.yml`
+- F007 — `preview-destroy.yml`
+- F008 — `preview-reap.yml`
 
 ### Off-limits until their phase (do NOT build now)
-- **Phase 02 — Workflows**: `preview-deploy.yml`, `preview-destroy.yml`, `preview-reap.yml`.
-- **Phase 03 — Hardening**: scoped k8s `ClusterRole` replacing Azure RBAC Writer, quota
-  enforcement proof, `preview` env reviewers, ACR retention policy.
-- **Never (non-goals)**: Knative, external-dns, hard force-to-0 CronJob, per-commit
-  previews — unless a new DEC supersedes.
+- **Phase 03 — Hardening**: F009 namespace-prefix admission guard, F010 quota enforcement proof,
+  F011 env reviewers + ACR retention.
+- **Never (non-goals)**: Knative, external-dns, hard force-to-0 CronJob, per-commit previews —
+  unless a new DEC supersedes.
 
 ## Rules of the guard
 1. If a task tempts you outside the current phase, stop. Note it in `BLOCKERS.md` (or as a

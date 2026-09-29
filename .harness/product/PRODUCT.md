@@ -7,7 +7,7 @@
 Ephemeral **per-branch preview environments on AKS**. A developer dispatches a GitHub
 Actions workflow with a branch name; the pipeline builds the image, pushes it to ACR
 (tagged with the short Git SHA), deploys it into its own namespace, and returns a stable
-HTTPS URL: `https://<sanitized-branch>.preview.alleghenycounty.us`.
+HTTPS URL: `https://<sanitized-branch>.preview.nimat.dev`.
 
 ## The problem
 Reviewers and QA need to click through a branch before merge. Long-lived shared staging

@@ -1,0 +1,18 @@
+extends: default
+
+ignore: |
+  deploy/preview/templates/
+  node_modules/
+  **/node_modules/
+  **/pnpm-lock.yaml
+  .git/
+
+rules:
+  document-start: disable
+  line-length:
+    max: 160
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false   # GitHub Actions `on:` key
+  comments:
+    min-spaces-from-content: 1

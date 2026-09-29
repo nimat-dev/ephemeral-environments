@@ -20,8 +20,8 @@ Request path when live:
           → app Service → pod   (interceptor scales 0→1 and holds the request if asleep)
 
 Wildcard, created once:
-  *.preview.alleghenycounty.us  A   → nginx LoadBalancer IP
-  *.preview.alleghenycounty.us  TLS → cert-manager (DNS-01), set as nginx default cert
+  *.preview.nimat.dev  A   → nginx LoadBalancer IP
+  *.preview.nimat.dev  TLS → cert-manager (DNS-01), set as nginx default cert
 
 Teardown:
   preview-destroy.yml (manual)  ─┐
