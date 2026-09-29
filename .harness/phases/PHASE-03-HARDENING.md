@@ -20,8 +20,8 @@ Spec Part E step 6 + A5 hardening note.
 
 ## F011 — Env gate + ACR retention
 **Status**: IN PROGRESS
-- [ ] (Optional, per BLK) required reviewers on `preview` env.
-- [ ] ACR retention/purge policy for preview SHA tags; documented schedule.
+- [x] (Optional, per BLK) required reviewers on `preview` env. — SKIPPED by user decision (DEC-033).
+- [ ] ACR retention/purge policy for preview SHA tags; documented schedule. (daily 03:17 UTC `preview-acr-purge.yml`, DEC-034; code + bats + local dry-run done; post-merge dispatch pending)
 - [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
 - [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
 - [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.

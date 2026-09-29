@@ -199,3 +199,62 @@ JSON
   [ "$(jq -c .metadata.labels <<<"$m")" = '{"managed-by":"preview-bot","preview.branch":"feat-quoted","preview.commit":"abc1234","preview.expires-at":"1700000000"}' ]
   [ "$(jq -r '.metadata.annotations["preview.branch-original"]' <<<"$m")" = "$br" ]
 }
+
+# --- preview_commits / purge_tags (F011) ---
+# now = 2026-09-30T00:00:00Z = 1790726400; day = 86400
+tags_json() {
+  cat <<'JSON'
+[
+ {"name":"aaaaaaa","lastUpdateTime":"2026-09-01T00:00:00.1234567Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"bbbbbbb","lastUpdateTime":"2026-09-02T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"ccccccc","lastUpdateTime":"2026-09-03T00:00:00Z","changeableAttributes":{"deleteEnabled":false}},
+ {"name":"ddddddd","lastUpdateTime":"2026-09-04T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"latest","lastUpdateTime":"2026-09-01T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"eeeeeee","lastUpdateTime":"2026-09-28T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"fffffff","lastUpdateTime":"2026-09-29T00:00:00Z","changeableAttributes":{"deleteEnabled":true}}
+]
+JSON
+}
+purge() { bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags \"\$@\"" _ "$@" < <(tags_json); }
+
+@test "purge_tags: old sha tags only; skips in-use, locked, non-sha, newest KEEP, recent" {
+  run purge 1790726400 604800 1 bbbbbbb
+  [ "$status" -eq 0 ]
+  [ "$output" = "$(printf '%s\n' ddddddd aaaaaaa)" ]
+}
+
+@test "purge_tags: KEEP larger than the tag count -> nothing" {
+  run purge 1790726400 0 99
+  [ "$status" -eq 0 ]; [ -z "$output" ]
+}
+
+@test "purge_tags: KEEP 0, age 0 -> every deletable sha tag (none locked/non-sha)" {
+  run purge 1790726400 0 0
+  [ "$status" -eq 0 ]
+  [ "$(sort <<<"$output" | tr '\n' ' ')" = "aaaaaaa bbbbbbb ddddddd eeeeeee fffffff " ]
+}
+
+@test "purge_tags: empty tag list -> nothing; malformed json -> non-zero" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1 0 0 <<<'[]'"
+  [ "$status" -eq 0 ]; [ -z "$output" ]
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1 0 0 <<<'[{bad'"
+  [ "$status" -ne 0 ]
+}
+
+@test "purge_tags: invalid now / age / keep -> non-zero" {
+  run purge x 1 1; [ "$status" -ne 0 ]
+  run purge 1 -5 1; [ "$status" -ne 0 ]
+  run purge 1 1 ''; [ "$status" -ne 0 ]
+}
+
+@test "preview_commits: labels of preview-bot preview-* namespaces only" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; preview_commits" <<'JSON'
+{"items":[
+ {"metadata":{"name":"preview-a","labels":{"managed-by":"preview-bot","preview.commit":"aaaaaaa"}}},
+ {"metadata":{"name":"preview-b","labels":{"managed-by":"preview-bot"}}},
+ {"metadata":{"name":"default","labels":{"managed-by":"preview-bot","preview.commit":"bbbbbbb"}}},
+ {"metadata":{"name":"preview-c","labels":{"preview.commit":"ccccccc"}}}
+]}
+JSON
+  [ "$status" -eq 0 ]; [ "$output" = aaaaaaa ]
+}

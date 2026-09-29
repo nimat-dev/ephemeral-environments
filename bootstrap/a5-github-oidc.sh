@@ -3,7 +3,7 @@
 #  - AKS: Entra ID integration + Azure RBAC (needed for kubelogin); operator gets RBAC Cluster Admin
 #  - Entra app + SP + federated credential repo:<GH_REPO>:environment:preview (+ the repo's
 #    immutable-id subject when GitHub issues one)
-#  - SP: AcrPush (ACR), AKS Cluster User Role (kubeconfig)
+#  - SP: AcrPush + AcrDelete (ACR; purge of stale preview tags, F011), AKS Cluster User Role (kubeconfig)
 #  - k8s ClusterRole `preview-deployer` bound to the SP (spec's RBAC Writer can't create
 #    namespaces, resourcequotas or HTTPScaledObjects — DEC-024); no secrets (DEC-026)
 #  - ValidatingAdmissionPolicy `preview-deployer-guard`: SP writes only preview-* (F009), self-verified
@@ -100,6 +100,7 @@ esac
 
 # 4. Azure roles for the SP
 ensure_role "$sp_id" AcrPush "$acr_id"
+ensure_role "$sp_id" AcrDelete "$acr_id"
 ensure_role "$sp_id" "Azure Kubernetes Service Cluster User Role" "$aks_id"
 
 # 5. Kubernetes RBAC: exactly what preview deploy/destroy/reap touch

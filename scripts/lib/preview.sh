@@ -126,3 +126,32 @@ expired_namespaces() {
     | select(((.metadata.labels["preview.expires-at"] // "0") | tonumber? // 0) < $now)
     | .metadata.name'
 }
+
+# preview_commits < namespace-list.json -> `preview.commit` label of each preview-bot `preview-*`
+# namespace, one per line (the image tags live previews run).
+preview_commits() {
+  jq -r '.items[]
+    | select(.metadata.labels["managed-by"] == "preview-bot")
+    | select(.metadata.name | startswith("preview-"))
+    | .metadata.labels["preview.commit"] // empty'
+}
+
+# purge_tags NOW MAX_AGE_SECONDS KEEP [IN_USE...] < show-tags-detail.json -> tags to delete, one per
+# line. Only short-sha tags (7-40 hex) qualify; never one IN_USE by a live preview, never the KEEP
+# newest sha tags, never a delete-locked tag; only tags last updated before NOW - MAX_AGE.
+purge_tags() {
+  local now="${1-}" age="${2-}" keep="${3-}"
+  case "$now" in ''|*[!0-9]*) _preview_err "invalid now '$now'"; return 1 ;; esac
+  case "$age" in ''|*[!0-9]*) _preview_err "invalid max age '$age'"; return 1 ;; esac
+  case "$keep" in ''|*[!0-9]*) _preview_err "invalid keep '$keep'"; return 1 ;; esac
+  shift 3
+  jq -r --argjson now "$now" --argjson age "$age" --argjson keep "$keep" \
+    --argjson inuse "$(printf '%s\n' "$@" | jq -R 'select(length > 0)' | jq -s .)" '
+    [ .[] | select(.name | test("^[0-9a-f]{7,40}$"))
+          | .ts = (.lastUpdateTime | sub("\\.[0-9]+"; "") | fromdateiso8601) ]
+    | sort_by(.ts) | reverse | .[$keep:][]
+    | select(.ts < $now - $age)
+    | select(.changeableAttributes.deleteEnabled != false)
+    | select(.name as $n | $inuse | index($n) | not)
+    | .name'
+}

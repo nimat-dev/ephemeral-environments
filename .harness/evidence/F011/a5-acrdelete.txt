@@ -1,0 +1,42 @@
+[info] a5-github-oidc: skip AKS Entra ID + Azure RBAC (enabled)
+[info] a5-github-oidc: skip role 'Azure Kubernetes Service RBAC Cluster Admin' (assigned)
+[info] a5-github-oidc: + az aks get-credentials -g nimatresourceg -n aks-preview --overwrite-existing --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+WARNING: Merged "aks-preview" as current context in /Users/nimatullahrazmjo/.kube/config
+WARNING: Converted kubeconfig to use Azure CLI authentication.
+[info] a5-github-oidc: + kubelogin convert-kubeconfig -l azurecli
+[info] a5-github-oidc: skip app gh-preview-deployer (exists: ecf81f55-698c-4ffd-9c15-3150f6928718)
+[info] a5-github-oidc: skip service principal (exists)
+[info] a5-github-oidc: skip federated credential gh-preview-env (exists)
+[info] a5-github-oidc: skip federated credential gh-preview-env-immutable (exists)
+[info] a5-github-oidc: skip role 'AcrPush' (assigned)
+[info] a5-github-oidc: + az role assignment create --assignee-object-id b34bba52-17f6-4b85-9b1b-9724ae59236c --assignee-principal-type ServicePrincipal --role AcrDelete --scope /subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.ContainerRegistry/registries/nimatpreviewacr --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "condition": null,
+  "conditionVersion": null,
+  "createdBy": null,
+  "createdOn": "2026-09-29T23:35:14.849502+00:00",
+  "delegatedManagedIdentityResourceId": null,
+  "description": null,
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.ContainerRegistry/registries/nimatpreviewacr/providers/Microsoft.Authorization/roleAssignments/6a35e32a-6fb8-4e15-b12b-bc60b69568b9",
+  "name": "6a35e32a-6fb8-4e15-b12b-bc60b69568b9",
+  "principalId": "b34bba52-17f6-4b85-9b1b-9724ae59236c",
+  "principalType": "ServicePrincipal",
+  "resourceGroup": "nimatresourceg",
+  "roleDefinitionId": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/providers/Microsoft.Authorization/roleDefinitions/c2f4ef07-c644-48eb-af81-4b1b4947fb11",
+  "scope": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.ContainerRegistry/registries/nimatpreviewacr",
+  "systemData": null,
+  "type": "Microsoft.Authorization/roleAssignments",
+  "updatedBy": "732ce8a2-c831-4654-b753-24da581ee38f",
+  "updatedOn": "2026-09-29T23:35:15.010511+00:00"
+}
+[info] a5-github-oidc: skip role 'Azure Kubernetes Service Cluster User Role' (assigned)
+[info] a5-github-oidc: + kubectl apply -f -
+clusterrole.rbac.authorization.k8s.io/preview-deployer unchanged
+clusterrolebinding.rbac.authorization.k8s.io/preview-deployer unchanged
+validatingadmissionpolicy.admissionregistration.k8s.io/preview-deployer-guard configured
+validatingadmissionpolicybinding.admissionregistration.k8s.io/preview-deployer-guard unchanged
+[info] a5-github-oidc: guard verified: SP writes confined to preview-* namespaces
+AZURE_CLIENT_ID=ecf81f55-698c-4ffd-9c15-3150f6928718
+AZURE_TENANT_ID=4d0316fd-aae8-410b-8ab1-393e4c3d28c6
+AZURE_SUBSCRIPTION_ID=1325f79b-c2c1-437c-a8c7-a0746ab748d4
+[info] a5-github-oidc: done
