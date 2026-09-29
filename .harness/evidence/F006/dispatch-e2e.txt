@@ -1,0 +1,24 @@
+== run 36522067800 (success)
+deploy	Compute preview identity	2026-09-29T04:32:31.9588379Z [info] preview-ci: plan preview_id=e2e-preview-test namespace=preview-e2e-preview-test host=e2e-preview-test.preview.nimat.dev short_sha=425ccb8 idle=900 max_replicas=3 lifetime=1h expires_at=1790659951
+deploy	Create/label namespace	2026-09-29T04:33:38.0921386Z [info] preview-ci: apply namespace preview-e2e-preview-test expires-at=1790659951
+deploy	Deploy chart	2026-09-29T04:33:43.3937991Z [info] preview-ci: helm upgrade --install e2e-preview-test -n preview-e2e-preview-test image=nimatpreviewacr.azurecr.io/todo:425ccb8
+deploy	Deploy chart	2026-09-29T04:33:50.9019480Z STATUS: deployed
+deploy	Deploy chart	2026-09-29T04:33:50.9019711Z REVISION: 1
+deploy	Verify (cold-start proof)	2026-09-29T04:33:59.4336207Z [info] preview-ci: verify attempt 1/30: 200
+deploy	Verify (cold-start proof)	2026-09-29T04:33:59.4337110Z [info] preview-ci: verify ok https://e2e-preview-test.preview.nimat.dev/
+== summary
+n/a
+== cluster
+NAME                       STATUS   AGE   LABELS
+preview-e2e-preview-test   Active   38s   kubernetes.io/metadata.name=preview-e2e-preview-test,managed-by=preview-bot,preview.branch=e2e-preview-test,preview.commit=425ccb8,preview.expires-at=1790659951
+NAME                                     DATA   AGE
+sh.helm.release.v1.e2e-preview-test.v1   1      34s
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+e2e-preview-test   1/1     1            1           35s
+== scaled to 0 at 2026-09-29T04:49:05Z (idle 15m)
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+e2e-preview-test   0/0     0            0           15m
+== wake request
+HTTP 200 in 8.985361s
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+e2e-preview-test   1/1     1            1           15m

@@ -3,22 +3,22 @@
 > Read this first, every session. Rewrite it for a cold reader before you stop.
 
 ## Where we are
-- **Phase**: Phase 02 — Workflows (Phase 01 COMPLETE 2026-09-28)
-- **Active feature**: F008 — preview-reap.yml (IN PROGRESS, only e2e on `main` open). F006 PR #9 + F007 PR #10 IN REVIEW. All three built, local e2e green; GitHub-run e2e waits on `main` (BLK-009)
-- **Overall progress**: 7 / 13 features COMPLETE (54%) — all of Phase 01
+- **Phase**: Phase 03 — Hardening (Phase 01 COMPLETE 2026-09-28, Phase 02 COMPLETE 2026-09-29)
+- **Active feature**: F009 — scoped ClusterRole / `preview-*` admission guard (IN PROGRESS, no code yet; starts after `feat/F006-oidc` PR merges). F006–F008 COMPLETE via real GitHub runs.
+- **Overall progress**: 10 / 13 features COMPLETE (77%)
 
 ## Last verified
-- **Date**: 2026-09-28
-- **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-28)
-- **Full suite + check-architecture**: green — `bats tests/` 151/151; check-architecture clean
-- **E2E**: `scripts/smoke.sh` 3/3 PASS twice on aks-preview; Phase 02 entrypoint deploy/destroy/reap run locally vs aks-preview green (`evidence/F006–F008`)
-- **Git**: branches feat/F006 → feat/F007 → feat/F008 (each PR targets `main`: #9, #10, #11 — each reviewed round 1 clean, `reviews/F00{6,7,8}-review.md`). PRs #1–#7 merged — but #2–#7 into their parent branches, so `main` only has #1. PR #8 (feat/F005 → main) lands Phase 01; agent merge denied by auto-mode → human must merge #8, then the F006 PR.
+- **Date**: 2026-09-29
+- **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-29)
+- **Full suite + check-architecture**: green — `bats tests/` 154/154; check-architecture clean
+- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404 (`evidence/F006`–`F008`)
+- **Git**: PRs #8–#11 merged to `main` (425ccb8). Branch `feat/F006-oidc` = a5 immutable OIDC subject fix (DEC-030) + F007/Phase 02 tracking, pushed, PR open (see CURRENT_TASK).
 
 ## Next step
-Human: merge PRs #8 → #9 → #10 → #11 into `main` in that order (BLK-009; agent merge denied by auto-mode). Agent: dispatch Deploy → wake → Destroy, and a 1m-lifetime deploy + Reap run; mark F006–F008 + Phase 02 COMPLETE. Phase 03 stays gated until then. Mirrors `CURRENT_TASK.md`.
+Merge `feat/F006-oidc` PR, then start F009 on `feat/F009`. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
-See `BLOCKERS.md`. BLK-009 = dispatch needs Phase 01 + workflows on `main` (human merge); BLK-008 = teardown leaves Entra app + UAMI
+See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
 (follow-up). BLK-003/BLK-006 resolved.
 
 ## Notes for the next agent
@@ -28,7 +28,8 @@ See `BLOCKERS.md`. BLK-009 = dispatch needs Phase 01 + workflows on `main` (huma
 - GitHub env `preview` + 12 variables SET (A6, 2026-09-28). `gh` active account must be `nimat-dev` (admin); `nimatrazmjo` also logged in but not a collaborator.
 - CI SP has NO secrets access (DEC-026): `scripts/preview-ci.sh deploy` forces `HELM_DRIVER=configmap`.
 - Workflows are thin: each step = `scripts/preview-ci.sh <cmd>`, inputs via `env:` only (DEC-027).
-- `preview-feat-f006` was deployed (F006 local e2e) then destroyed (F007 local e2e).
+- No live previews (all test namespaces destroyed/reaped 2026-09-29); test branches `e2e/*` deleted from origin.
+- GitHub OIDC for this repo uses immutable subjects (DEC-030) — both federated credentials exist.
 - 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
   F013 DONE: AKS `aks-preview` (1× D2as_v7, k8s 1.35.8), ACR `nimatpreviewacr`, zone `preview.nimat.dev`.
   COST IS RUNNING — pause: `az aks stop -g nimatresourceg -n aks-preview`; remove: `bootstrap/teardown.sh --yes`.

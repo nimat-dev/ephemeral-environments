@@ -1,10 +1,10 @@
-# Phase 02 — Workflows
+# Phase 02 — Workflows — COMPLETE (2026-09-29)
 
 GitHub Actions per spec Part D, on the default branch. Workflows source
 `scripts/lib/preview.sh` instead of inlining the sanitizer (DEC-010).
 
 ## F006 — `preview-deploy.yml`
-**Status**: IN REVIEW (only the dispatch e2e is open — BLK-009)
+**Status**: COMPLETE (2026-09-29)
 
 ### Acceptance criteria
 - [x] Inputs/permissions/concurrency exactly per `architecture/API_SURFACE.md`.
@@ -17,10 +17,10 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 - [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
 - [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: dispatch against a test branch; URL works; wakes after idle.
+- [x] E2E: dispatch against a test branch; URL works; wakes after idle.
 
 ## F007 — `preview-destroy.yml`
-**Status**: IN REVIEW (local e2e green; dispatch e2e open — BLK-009)
+**Status**: COMPLETE (2026-09-29)
 
 ### Acceptance criteria
 - [x] Destroys `preview-<id>` where id is computed by the same lib as deploy.
@@ -28,10 +28,10 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 - [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
 - [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: deploy then destroy test branch; ns gone; URL 404.
+- [x] E2E: deploy then destroy test branch; ns gone; URL 404.
 
 ## F008 — `preview-reap.yml`
-**Status**: IN PROGRESS (local e2e green; e2e on `main` open — BLK-009)
+**Status**: COMPLETE (2026-09-29)
 
 ### Acceptance criteria
 - [x] Cron `*/30 * * * *` + manual dispatch.
@@ -40,7 +40,7 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 - [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
 - [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: deploy with `custom` lifetime `1h` (or shorter for test), confirm next reap deletes it.
+- [x] E2E: deploy with `custom` lifetime `1h` (or shorter for test), confirm next reap deletes it.
 
 ## Phase completion criteria
 F006–F008 `COMPLETE`; full lifecycle deploy → sleep → wake → destroy/reap proven on real

@@ -1,0 +1,9 @@
+== deploy e2e/reap-test lifetime 1m: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36522237996 (success)
+== reap: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36522361188 (success)
+reap	Delete expired preview namespaces	2026-09-29T04:36:29.8560726Z [info] preview-ci: reap: deleting preview-e2e-reap-test
+reap	Delete expired preview namespaces	2026-09-29T04:36:30.3667380Z namespace "preview-e2e-reap-test" deleted
+reap	Delete expired preview namespaces	2026-09-29T04:36:30.3697299Z [info] preview-ci: reap: deleted 1 namespace(s)
+== after
+NAME                       STATUS   AGE     PREVIEW.EXPIRES-AT
+preview-e2e-preview-test   Active   3m17s   1790659951
+reaped url: 404

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Fake gh: logs to $GH_LOG. FAKE_GH_ADMIN=true|false (repo admin permission).
+# FAKE_GH_SUB_PREFIX=<oidc sub_claim_prefix> (empty = legacy). FAKE_GH_SUB_FAIL=1 = lookup fails.
 echo "$*" >>"${GH_LOG:?}"
 case " $* " in
   *" .permissions.admin "*) echo "${FAKE_GH_ADMIN:-false}" ;;
   *" api user "*) echo fake-user ;;
+  *"/actions/oidc/customization/sub "*) [ -z "${FAKE_GH_SUB_FAIL:-}" ] || exit 1; echo "${FAKE_GH_SUB_PREFIX-}" ;;
   *) exit 0 ;;
 esac

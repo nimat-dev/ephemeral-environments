@@ -1,0 +1,5 @@
+2026-09-29T10:52:30.4733778Z ##[group]Run ./scripts/preview-ci.sh reap
+2026-09-29T10:52:30.4734410Z ^[[36;1m./scripts/preview-ci.sh reap^[[0m
+2026-09-29T10:52:34.5282647Z [info] preview-ci: reap: deleting preview-e2e-preview-test
+2026-09-29T10:52:36.0938515Z namespace "preview-e2e-preview-test" deleted
+2026-09-29T10:52:36.0973509Z [info] preview-ci: reap: deleted 1 namespace(s)
