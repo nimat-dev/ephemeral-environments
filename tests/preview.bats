@@ -258,3 +258,44 @@ purge() { bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 
 JSON
   [ "$status" -eq 0 ]; [ "$output" = aaaaaaa ]
 }
+
+@test "purge_tags: digest shared with a protected tag (in-use / latest) is never deleted; shared victims once" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1790726400 0 0 1111111" <<'JSON'
+[
+ {"name":"1111111","digest":"sha256:x","lastUpdateTime":"2026-09-01T00:00:00Z"},
+ {"name":"2222222","digest":"sha256:x","lastUpdateTime":"2026-09-02T00:00:00Z"},
+ {"name":"latest","digest":"sha256:y","lastUpdateTime":"2026-09-01T00:00:00Z"},
+ {"name":"3333333","digest":"sha256:y","lastUpdateTime":"2026-09-03T00:00:00Z"},
+ {"name":"4444444","digest":"sha256:z","lastUpdateTime":"2026-09-04T00:00:00Z"},
+ {"name":"5555555","digest":"sha256:z","lastUpdateTime":"2026-09-05T00:00:00Z"},
+ {"name":"6666666","digest":"sha256:w","lastUpdateTime":"2026-09-06T00:00:00Z"}
+]
+JSON
+  [ "$status" -eq 0 ]
+  [ "$output" = "$(printf '%s\n' 6666666 5555555)" ]   # x: in-use shares; y: latest shares; z: once
+}
+
+@test "purge_tags: digest shared with a KEEP-newest tag is protected" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1790726400 0 1" <<'JSON'
+[
+ {"name":"aaaaaaa","digest":"sha256:x","lastUpdateTime":"2026-09-01T00:00:00Z"},
+ {"name":"bbbbbbb","digest":"sha256:x","lastUpdateTime":"2026-09-29T00:00:00Z"},
+ {"name":"ccccccc","digest":"sha256:c","lastUpdateTime":"2026-09-02T00:00:00Z"}
+]
+JSON
+  [ "$status" -eq 0 ]; [ "$output" = ccccccc ]
+}
+
+@test "image_tags_in_use: deployment templates + pods in preview-* only, this image only" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; image_tags_in_use todo" <<'JSON'
+{"items":[
+ {"kind":"Deployment","metadata":{"namespace":"preview-a"},"spec":{"template":{"spec":{"containers":[{"image":"acr.io/todo:aaaaaaa"}]}}}},
+ {"kind":"Pod","metadata":{"namespace":"preview-a"},"spec":{"containers":[{"image":"acr.io/todo:0ld0ld0"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-a"},"spec":{"initContainers":[{"image":"acr.io/todo:1111111"}],"containers":[{"image":"busybox:1.36"}]}},
+ {"kind":"Pod","metadata":{"namespace":"kube-system"},"spec":{"containers":[{"image":"acr.io/todo:bbbbbbb"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-b"},"spec":{"containers":[{"image":"acr.io/nottodo:ccccccc"}]}}
+]}
+JSON
+  [ "$status" -eq 0 ]
+  [ "$output" = "$(printf '%s\n' 0ld0ld0 1111111 aaaaaaa)" ]
+}

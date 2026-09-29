@@ -301,6 +301,17 @@ purge_env() {
   [[ "$output" == *"in use [bbbbbbb]"* ]] || false
 }
 
+@test "purge: image still run by a pod (failed upgrade relabeled ns) is protected" {
+  purge_env
+  FAKE_WORKLOADS_JSON='{"items":[{"kind":"Pod","metadata":{"namespace":"preview-x"},"spec":{"containers":[{"image":"acr1.azurecr.io/todo:aaaaaaa"}]}}]}' \
+    PURGE_KEEP=0 run "$CI" purge
+  [ "$status" -eq 0 ]
+  grep -qx 'get deployments,pods -A -o json' "$KUBECTL_LOG"
+  ! grep -q 'todo:aaaaaaa' "$AZ_LOG"
+  grep -q 'todo:ccccccc' "$AZ_LOG"
+  [[ "$output" == *"in use [aaaaaaa bbbbbbb]"* ]] || false
+}
+
 @test "purge: dry run lists, deletes nothing" {
   purge_env
   PURGE_KEEP=0 PURGE_DRY_RUN=true run "$CI" purge
@@ -315,6 +326,9 @@ purge_env() {
   [[ "$output" == *"cannot list previews; deleting nothing"* ]] || false
   FAKE_NS_LIST_JSON='{bad' run "$CI" purge; [ "$status" -eq 1 ]
   FAKE_TAGS_FAIL=1 run "$CI" purge; [ "$status" -eq 1 ]
+  FAKE_WORKLOADS_FAIL=1 run "$CI" purge; [ "$status" -eq 1 ]
+  [[ "$output" == *"cannot list preview workloads; deleting nothing"* ]] || false
+  FAKE_WORKLOADS_JSON='{bad' run "$CI" purge; [ "$status" -eq 1 ]
   ! grep -q '^acr repository delete' "$AZ_LOG"
 }
 

@@ -136,9 +136,25 @@ preview_commits() {
     | .metadata.labels["preview.commit"] // empty'
 }
 
+# image_tags_in_use IMAGE_NAME < deployments+pods-list.json -> tags of IMAGE_NAME referenced by
+# Deployment templates or pods (incl. an old ReplicaSet's pods after a failed upgrade) in `preview-*`
+# namespaces, one per line.
+image_tags_in_use() {
+  local name="${1-}"
+  [ -n "$name" ] || { _preview_err "image name required"; return 1; }
+  jq -r --arg name "$name" '
+    .items[]
+    | select(.metadata.namespace // "" | startswith("preview-"))
+    | (.spec.template.spec // .spec) | ((.containers // []) + (.initContainers // []))[] | .image
+    | select(test("(^|/)" + $name + ":[^/]+$"))
+    | sub(".*:"; "")' | sort -u
+}
+
 # purge_tags NOW MAX_AGE_SECONDS KEEP [IN_USE...] < show-tags-detail.json -> tags to delete, one per
-# line. Only short-sha tags (7-40 hex) qualify; never one IN_USE by a live preview, never the KEEP
-# newest sha tags, never a delete-locked tag; only tags last updated before NOW - MAX_AGE.
+# manifest. Only short-sha tags (7-40 hex) qualify; never one IN_USE by a live preview, never the KEEP
+# newest sha tags, never a delete-locked tag; only tags last updated before NOW - MAX_AGE. Deleting a
+# tag deletes its manifest and every tag on it, so a candidate whose digest any protected tag shares is
+# skipped, and each digest is emitted once.
 purge_tags() {
   local now="${1-}" age="${2-}" keep="${3-}"
   case "$now" in ''|*[!0-9]*) _preview_err "invalid now '$now'"; return 1 ;; esac
@@ -147,11 +163,14 @@ purge_tags() {
   shift 3
   jq -r --argjson now "$now" --argjson age "$age" --argjson keep "$keep" \
     --argjson inuse "$(printf '%s\n' "$@" | jq -R 'select(length > 0)' | jq -s .)" '
-    [ .[] | select(.name | test("^[0-9a-f]{7,40}$"))
-          | .ts = (.lastUpdateTime | sub("\\.[0-9]+"; "") | fromdateiso8601) ]
-    | sort_by(.ts) | reverse | .[$keep:][]
-    | select(.ts < $now - $age)
-    | select(.changeableAttributes.deleteEnabled != false)
-    | select(.name as $n | $inuse | index($n) | not)
-    | .name'
+    [ .[] | .ts = (.lastUpdateTime | sub("\\.[0-9]+"; "") | fromdateiso8601) ] as $all
+    | ([ $all[] | select(.name | test("^[0-9a-f]{7,40}$")) ] | sort_by(.ts) | reverse | .[:$keep] | map(.name)) as $newest
+    | [ $all[] | .victim = (
+          (.name | test("^[0-9a-f]{7,40}$"))
+          and (.ts < $now - $age)
+          and (.changeableAttributes.deleteEnabled != false)
+          and (.name as $n | ($inuse | index($n) | not) and ($newest | index($n) | not))) ] as $tagged
+    | ([ $tagged[] | select(.victim | not) | .digest // empty ]) as $protected
+    | [ $tagged[] | select(.victim) | select((.digest // "") as $d | $d == "" or ($protected | index($d) | not)) ]
+    | sort_by(.ts) | reverse | unique_by(.digest // .name) | sort_by(.ts) | reverse | .[].name'
 }

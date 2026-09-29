@@ -7,3 +7,13 @@
 [info] preview-ci: purge: [dry-run] would delete todo:85b116b
 [info] preview-ci: purge: [dry-run] would delete todo:ca47e1d
 [info] preview-ci: purge: deleted 0 tag(s)
+
+## after PR #15 review fixes (digest-aware, workload in-use) 2026-09-29T23:39:51Z
+## PURGE_MAX_AGE=7d PURGE_KEEP=3 PURGE_DRY_RUN=true
+[info] preview-ci: purge: in use [], keep newest 3, older than 7d
+[info] preview-ci: purge: nothing to purge
+## PURGE_MAX_AGE=1h PURGE_KEEP=3 PURGE_DRY_RUN=true
+[info] preview-ci: purge: in use [], keep newest 3, older than 1h
+[info] preview-ci: purge: [dry-run] would delete todo:85b116b
+[info] preview-ci: purge: [dry-run] would delete todo:ca47e1d
+[info] preview-ci: purge: deleted 0 tag(s)

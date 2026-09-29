@@ -153,10 +153,12 @@ summary_line() { printf '%s\n' "$1" >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"; }
 
 # purge: delete stale preview image tags from ACR (Basic SKU has no retention policy, ACR Tasks are
 # blocked — DEC-025/DEC-034). Never a tag a live preview runs: if the namespace list can't be read,
-# nothing is deleted. Env: ACR_NAME APP_IMAGE_NAME [PURGE_MAX_AGE=7d PURGE_KEEP=3 PURGE_DRY_RUN=false]
+# nothing is deleted. In use = namespace `preview.commit` labels + images of Deployment templates and
+# pods in preview-* (an old ReplicaSet can still run after a failed upgrade relabeled the namespace).
+# Env: ACR_NAME APP_IMAGE_NAME [PURGE_MAX_AGE=7d PURGE_KEEP=3 PURGE_DRY_RUN=false]
 cmd_purge() {
   need ACR_NAME APP_IMAGE_NAME
-  local now age keep dry list tags in_use victims tag failed=0 n=0
+  local now age keep dry list workloads running tags in_use victims tag failed=0 n=0
   now="${PURGE_NOW:-$(date -u +%s)}"
   age=$(to_seconds "${PURGE_MAX_AGE:-7d}") || exit 2
   keep="${PURGE_KEEP:-3}"
@@ -165,6 +167,10 @@ cmd_purge() {
     *) log error "PURGE_DRY_RUN must be true|false: ${PURGE_DRY_RUN}"; exit 2 ;; esac
   list=$(kubectl get namespaces -l managed-by=preview-bot -o json) || { log error "purge: cannot list previews; deleting nothing"; exit 1; }
   in_use=$(preview_commits <<<"$list") || { log error "purge: malformed namespace list; deleting nothing"; exit 1; }
+  workloads=$(kubectl get deployments,pods -A -o json) || { log error "purge: cannot list preview workloads; deleting nothing"; exit 1; }
+  running=$(image_tags_in_use "$APP_IMAGE_NAME" <<<"$workloads") ||
+    { log error "purge: malformed workload list; deleting nothing"; exit 1; }
+  in_use=$(printf '%s\n%s\n' "$in_use" "$running" | sed '/^$/d' | sort -u)
   tags=$(az acr repository show-tags -n "$ACR_NAME" --repository "$APP_IMAGE_NAME" --detail -o json) ||
     { log error "purge: cannot list tags of $APP_IMAGE_NAME"; exit 1; }
   # shellcheck disable=SC2086  # in_use: one sha per word
