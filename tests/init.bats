@@ -38,6 +38,17 @@ header() {
   [ "$status" -eq 1 ]; [[ "$output" == *"found 0"* ]] || false
 }
 
+@test "roadmap: status is the last backtick span (description mentioning COMPLETE / IN PROGRESS ignored)" {
+  header
+  printf '%s\n' '- [x] **F001** — a — `COMPLETE`' '- [ ] **F002** — flip `COMPLETE` badge — `NOT STARTED`' >>"$F"
+  run "$INIT" --roadmap-only --roadmap "$F"
+  [ "$status" -eq 1 ]; [[ "$output" != *"roadmap complete"* ]] || false
+  header
+  printf '%s\n' '- [ ] **F001** — show `IN PROGRESS` chip — `IN PROGRESS`' '- [x] **F002** — `IN PROGRESS` doc — `COMPLETE` (note)' >>"$F"
+  run "$INIT" --roadmap-only --roadmap "$F"
+  [ "$status" -eq 0 ]
+}
+
 @test "roadmap: two IN PROGRESS fails" {
   header
   printf '%s\n' '- [ ] **F001** — a — `IN PROGRESS`' '- [ ] **F002** — b — `IN PROGRESS`' >>"$F"

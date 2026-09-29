@@ -10,7 +10,7 @@
 ## Last verified
 - **Date**: 2026-09-29
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-29)
-- **Full suite + check-architecture**: green — `bats tests/` 187/187; check-architecture clean
+- **Full suite + check-architecture**: green — `bats tests/` 188/188; check-architecture clean
 - **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags) (`evidence/F006`–`F011`)
 - **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`.
 
