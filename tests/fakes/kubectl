@@ -6,6 +6,7 @@
 #   FAKE_GUARD=1 (server dry-runs as --as=<sp> hit preview-deployer-guard; unset = no guard, permissive)
 #   FAKE_QUOTA=on|off|wrong (quota-check: admission enforces / admits all / denies for another reason)
 #     FAKE_QUOTA_JSON=<get resourcequota -o json> (empty = not found)  FAKE_QUOTA_USED=<used pods>  FAKE_FILL_FAIL=1
+#   FAKE_WORKLOADS_JSON=<get deployments,pods -A output> (default no items)  FAKE_WORKLOADS_FAIL=1
 #   FAKE_PROBE_NS_EXISTS=1 (allowed preview-* namespace create returns AlreadyExists)
 #   FAKE_WAIT_FAIL=1 (kubectl wait fails)  FAKE_CANI_FAIL=1 (auth can-i denies). `apply -f -` stdin is appended to $KUBECTL_LOG.apply
 echo "$*" >>"${KUBECTL_LOG:?}"
@@ -35,6 +36,7 @@ case " $* " in
     [[ " $* " == *" create namespace preview-"* ]] && { [ -n "${FAKE_PROBE_NS_EXISTS:-}" ] && { echo 'Error from server (AlreadyExists): namespaces "preview-guard-probe" already exists' >&2; exit 1; }; exit 0; }
     echo 'Error from server (Forbidden): ... denied request: preview-deployer-guard: CI identity may only write preview-* namespaces' >&2; exit 1 ;;
   *" config current-context "*) [ -n "${FAKE_CTX:-}" ] && echo "$FAKE_CTX" || exit 1 ;;
+  *" get deployments,pods -A "*) [ -n "${FAKE_WORKLOADS_FAIL:-}" ] && exit 1; w='{"items":[]}'; printf '%s' "${FAKE_WORKLOADS_JSON:-$w}" ;;
   *" get namespaces -l "*) printf '%s' "${FAKE_NS_LIST_JSON-}"; exit "${FAKE_GET_FAIL:-0}" ;;
   *" delete namespace "*) [ -n "${FAKE_DELETE_FAIL:-}" ] && [[ " $* " == *" $FAKE_DELETE_FAIL "* ]] && exit 1; exit 0 ;;
   *" get namespace "*) printf '%s' "${FAKE_NS_JSON-}"; exit "${FAKE_GET_FAIL:-0}" ;;

@@ -179,6 +179,7 @@ a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-prev
   [[ "$output" == *"[dry-run] az ad app create --display-name gh-preview-deployer"* ]] || false
   [[ "$output" == *'"subject":"repo:nimat-dev/ephemeral-environments:environment:preview"'* ]] || false
   [[ "$output" == *"--role AcrPush --scope /acr-id"* ]] || false
+  [[ "$output" == *"--role AcrDelete --scope /acr-id"* ]] || false
   [[ "$output" == *"--role Azure Kubernetes Service Cluster User Role --scope /aks-id"* ]] || false
   [[ "$output" == *"kind: ClusterRole"* ]] || false
   [ "$(grep -cE ' create | update ' "$AZ_LOG" || true)" -eq 0 ]

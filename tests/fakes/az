@@ -3,6 +3,8 @@
 #   FAKE_EXISTS="acr aks zone"  FAKE_UNREG="Microsoft.X"  FAKE_ACCOUNT_FAIL=1  FAKE_RG_MISSING=1
 #   FAKE_LIMIT=4  FAKE_RESTRICT=NotAvailableForSubscription  FAKE_NO_SKU=1  FAKE_AKS_OIDC=false
 #   FAKE_FAIL="aks create"  FAKE_A_IPS="1.2.3.4"  FAKE_ROLE_COUNT=1  (FAKE_EXISTS also: uami fic app sp ghfic)  FAKE_AZURE_RBAC=true
+#   FAKE_TAG_UPDATED=<lastUpdateTime of any tag on re-read before delete>
+#   FAKE_TAGS_JSON=<acr show-tags --detail output>  FAKE_TAGS_FAIL=1  (delete of one tag: FAKE_FAIL="todo:<tag>")
 #   FAKE_GHFIC_SUBJECT / FAKE_GHFIC_IMM_SUBJECT = stored subject of gh-preview-env / -immutable (with ghfic)
 echo "$*" >>"$AZ_LOG"
 args=" $* "
@@ -35,6 +37,8 @@ case "$args" in
   *" aks show "*" --query id "*) echo /aks-id ;;
   *" aks show "*"enableAzureRbac"*) echo "${FAKE_AZURE_RBAC:-}" ;;
   *" ad signed-in-user show "*) echo me-oid ;;
+  *" acr repository show "*) echo "${FAKE_TAG_UPDATED:-2000-01-01T00:00:00.1234567Z}" ;;
+  *" acr repository show-tags "*) [ -n "${FAKE_TAGS_FAIL:-}" ] && exit 1; printf '%s' "${FAKE_TAGS_JSON:-[]}" ;;
   *" ad app federated-credential list "*)
     has ghfic || exit 0
     if [[ "$args" == *gh-preview-env-immutable* ]]; then echo "${FAKE_GHFIC_IMM_SUBJECT:-}"

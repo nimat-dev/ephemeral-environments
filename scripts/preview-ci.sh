@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CI entrypoint for the preview workflows (.github/workflows/preview-*.yml). Each workflow step is
 # one subcommand; inputs come from env (never interpolated into shell by the workflow).
-# Usage: scripts/preview-ci.sh plan|namespace|deploy|verify|summary|destroy|reap
+# Usage: scripts/preview-ci.sh plan|namespace|deploy|verify|summary|destroy|reap|purge
 # Exit: 0 ok, 1 step failed, 2 usage/config error.
 set -euo pipefail
 
@@ -151,8 +151,60 @@ cmd_reap() {
 
 summary_line() { printf '%s\n' "$1" >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"; }
 
+# purge: delete stale preview image tags from ACR (Basic SKU has no retention policy, ACR Tasks are
+# blocked — DEC-025/DEC-034). Never a tag a live preview runs: if the namespace list can't be read,
+# nothing is deleted. In use = namespace `preview.commit` labels + images of Deployment templates and
+# pods in preview-* (an old ReplicaSet can still run after a failed upgrade relabeled the namespace).
+# Env: ACR_NAME APP_IMAGE_NAME [PURGE_MAX_AGE=7d PURGE_KEEP=3 PURGE_DRY_RUN=false]
+cmd_purge() {
+  need ACR_NAME APP_IMAGE_NAME
+  local now age keep dry list workloads running tags in_use victims tag updated failed=0 n=0
+  now="${PURGE_NOW:-$(date -u +%s)}"
+  age=$(to_seconds "${PURGE_MAX_AGE:-7d}") || exit 2
+  keep="${PURGE_KEEP:-3}"
+  [[ "$keep" =~ ^[0-9]+$ ]] || { log error "PURGE_KEEP must be a non-negative integer: $keep"; exit 2; }
+  case "${PURGE_DRY_RUN:-false}" in true) dry=1 ;; false) dry=0 ;;
+    *) log error "PURGE_DRY_RUN must be true|false: ${PURGE_DRY_RUN}"; exit 2 ;; esac
+  list=$(kubectl get namespaces -l managed-by=preview-bot -o json) || { log error "purge: cannot list previews; deleting nothing"; exit 1; }
+  in_use=$(preview_commits <<<"$list") || { log error "purge: malformed namespace list; deleting nothing"; exit 1; }
+  workloads=$(kubectl get deployments,pods -A -o json) || { log error "purge: cannot list preview workloads; deleting nothing"; exit 1; }
+  running=$(image_tags_in_use "$APP_IMAGE_NAME" <<<"$workloads") ||
+    { log error "purge: malformed workload list; deleting nothing"; exit 1; }
+  in_use=$(printf '%s\n%s\n' "$in_use" "$running" | sed '/^$/d' | sort -u)
+  tags=$(az acr repository show-tags -n "$ACR_NAME" --repository "$APP_IMAGE_NAME" --detail -o json) ||
+    { log error "purge: cannot list tags of $APP_IMAGE_NAME"; exit 1; }
+  # shellcheck disable=SC2086  # in_use: one sha per word
+  victims=$(purge_tags "$now" "$age" "$keep" $in_use <<<"$tags") || exit 1
+  log info "purge: in use [${in_use//$'\n'/ }], keep newest $keep, older than ${PURGE_MAX_AGE:-7d}"
+  if [ -z "$victims" ]; then
+    log info "purge: nothing to purge"; summary_line "Nothing to purge."; return 0
+  fi
+  while read -r tag; do
+    if [ "$dry" -eq 1 ]; then
+      log info "purge: [dry-run] would delete $APP_IMAGE_NAME:$tag"; summary_line "Would purge \`$APP_IMAGE_NAME:$tag\`."; continue
+    fi
+    # A deploy re-pushes its tag (refreshing lastUpdateTime) before relabeling the namespace; re-read
+    # right before deleting so a redeploy racing this run keeps its image.
+    if ! updated=$(az acr repository show -n "$ACR_NAME" --image "$APP_IMAGE_NAME:$tag" --query lastUpdateTime -o tsv) ||
+      ! updated=$(iso_epoch "$updated"); then
+      log error "purge: cannot re-read $APP_IMAGE_NAME:$tag; skipped"; failed=1; continue
+    fi
+    if [ "$updated" -ge $(( now - age )) ]; then
+      log info "purge: $APP_IMAGE_NAME:$tag refreshed since listing (redeployed); skipped"; continue
+    fi
+    log info "purge: deleting $APP_IMAGE_NAME:$tag"
+    if az acr repository delete -n "$ACR_NAME" --image "$APP_IMAGE_NAME:$tag" --yes >/dev/null; then
+      summary_line "Purged \`$APP_IMAGE_NAME:$tag\`."; n=$((n + 1))
+    else
+      log error "purge: failed to delete $APP_IMAGE_NAME:$tag"; summary_line "FAILED to purge \`$APP_IMAGE_NAME:$tag\`."; failed=1
+    fi
+  done <<<"$victims"
+  log info "purge: deleted $n tag(s)"
+  [ "$failed" -eq 0 ] || exit 1
+}
+
 case "${1-}" in
-  plan|namespace|deploy|verify|summary|destroy|reap) "cmd_$1" ;;
+  plan|namespace|deploy|verify|summary|destroy|reap|purge) "cmd_$1" ;;
   -h|--help) sed -n '2,5p' "$0" ;;
-  *) log error "unknown command '${1-}' (want plan|namespace|deploy|verify|summary|destroy|reap)"; exit 2 ;;
+  *) log error "unknown command '${1-}' (want plan|namespace|deploy|verify|summary|destroy|reap|purge)"; exit 2 ;;
 esac

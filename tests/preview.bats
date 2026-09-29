@@ -199,3 +199,110 @@ JSON
   [ "$(jq -c .metadata.labels <<<"$m")" = '{"managed-by":"preview-bot","preview.branch":"feat-quoted","preview.commit":"abc1234","preview.expires-at":"1700000000"}' ]
   [ "$(jq -r '.metadata.annotations["preview.branch-original"]' <<<"$m")" = "$br" ]
 }
+
+# --- preview_commits / purge_tags (F011) ---
+# now = 2026-09-30T00:00:00Z = 1790726400; day = 86400
+tags_json() {
+  cat <<'JSON'
+[
+ {"name":"aaaaaaa","lastUpdateTime":"2026-09-01T00:00:00.1234567Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"bbbbbbb","lastUpdateTime":"2026-09-02T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"ccccccc","lastUpdateTime":"2026-09-03T00:00:00Z","changeableAttributes":{"deleteEnabled":false}},
+ {"name":"ddddddd","lastUpdateTime":"2026-09-04T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"latest","lastUpdateTime":"2026-09-01T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"eeeeeee","lastUpdateTime":"2026-09-28T00:00:00Z","changeableAttributes":{"deleteEnabled":true}},
+ {"name":"fffffff","lastUpdateTime":"2026-09-29T00:00:00Z","changeableAttributes":{"deleteEnabled":true}}
+]
+JSON
+}
+purge() { bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags \"\$@\"" _ "$@" < <(tags_json); }
+
+@test "purge_tags: old sha tags only; skips in-use, locked, non-sha, newest KEEP, recent" {
+  run purge 1790726400 604800 1 bbbbbbb
+  [ "$status" -eq 0 ]
+  [ "$output" = "$(printf '%s\n' ddddddd aaaaaaa)" ]
+}
+
+@test "purge_tags: KEEP larger than the tag count -> nothing" {
+  run purge 1790726400 0 99
+  [ "$status" -eq 0 ]; [ -z "$output" ]
+}
+
+@test "purge_tags: KEEP 0, age 0 -> every deletable sha tag (none locked/non-sha)" {
+  run purge 1790726400 0 0
+  [ "$status" -eq 0 ]
+  [ "$(sort <<<"$output" | tr '\n' ' ')" = "aaaaaaa bbbbbbb ddddddd eeeeeee fffffff " ]
+}
+
+@test "purge_tags: empty tag list -> nothing; malformed json -> non-zero" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1 0 0 <<<'[]'"
+  [ "$status" -eq 0 ]; [ -z "$output" ]
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1 0 0 <<<'[{bad'"
+  [ "$status" -ne 0 ]
+}
+
+@test "purge_tags: invalid now / age / keep -> non-zero" {
+  run purge x 1 1; [ "$status" -ne 0 ]
+  run purge 1 -5 1; [ "$status" -ne 0 ]
+  run purge 1 1 ''; [ "$status" -ne 0 ]
+}
+
+@test "preview_commits: labels of preview-bot preview-* namespaces only" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; preview_commits" <<'JSON'
+{"items":[
+ {"metadata":{"name":"preview-a","labels":{"managed-by":"preview-bot","preview.commit":"aaaaaaa"}}},
+ {"metadata":{"name":"preview-b","labels":{"managed-by":"preview-bot"}}},
+ {"metadata":{"name":"default","labels":{"managed-by":"preview-bot","preview.commit":"bbbbbbb"}}},
+ {"metadata":{"name":"preview-c","labels":{"preview.commit":"ccccccc"}}}
+]}
+JSON
+  [ "$status" -eq 0 ]; [ "$output" = aaaaaaa ]
+}
+
+@test "purge_tags: digest shared with a protected tag (in-use / latest) is never deleted; shared victims once" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1790726400 0 0 1111111" <<'JSON'
+[
+ {"name":"1111111","digest":"sha256:x","lastUpdateTime":"2026-09-01T00:00:00Z"},
+ {"name":"2222222","digest":"sha256:x","lastUpdateTime":"2026-09-02T00:00:00Z"},
+ {"name":"latest","digest":"sha256:y","lastUpdateTime":"2026-09-01T00:00:00Z"},
+ {"name":"3333333","digest":"sha256:y","lastUpdateTime":"2026-09-03T00:00:00Z"},
+ {"name":"4444444","digest":"sha256:z","lastUpdateTime":"2026-09-04T00:00:00Z"},
+ {"name":"5555555","digest":"sha256:z","lastUpdateTime":"2026-09-05T00:00:00Z"},
+ {"name":"6666666","digest":"sha256:w","lastUpdateTime":"2026-09-06T00:00:00Z"}
+]
+JSON
+  [ "$status" -eq 0 ]
+  [ "$output" = "$(printf '%s\n' 6666666 5555555)" ]   # x: in-use shares; y: latest shares; z: once
+}
+
+@test "purge_tags: digest shared with a KEEP-newest tag is protected" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; purge_tags 1790726400 0 1" <<'JSON'
+[
+ {"name":"aaaaaaa","digest":"sha256:x","lastUpdateTime":"2026-09-01T00:00:00Z"},
+ {"name":"bbbbbbb","digest":"sha256:x","lastUpdateTime":"2026-09-29T00:00:00Z"},
+ {"name":"ccccccc","digest":"sha256:c","lastUpdateTime":"2026-09-02T00:00:00Z"}
+]
+JSON
+  [ "$status" -eq 0 ]; [ "$output" = ccccccc ]
+}
+
+@test "image_tags_in_use: deployment templates + pods in preview-* only, this image only" {
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; image_tags_in_use todo" <<'JSON'
+{"items":[
+ {"kind":"Deployment","metadata":{"namespace":"preview-a"},"spec":{"template":{"spec":{"containers":[{"image":"acr.io/todo:aaaaaaa"}]}}}},
+ {"kind":"Pod","metadata":{"namespace":"preview-a"},"spec":{"containers":[{"image":"acr.io/todo:0ld0ld0"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-a"},"spec":{"initContainers":[{"image":"acr.io/todo:1111111"}],"containers":[{"image":"busybox:1.36"}]}},
+ {"kind":"Pod","metadata":{"namespace":"kube-system"},"spec":{"containers":[{"image":"acr.io/todo:bbbbbbb"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-b"},"spec":{"containers":[{"image":"acr.io/nottodo:ccccccc"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-c"},"spec":{"containers":[{"image":"acr.io/todo:ddddddd@sha256:0123abcd"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-c"},"spec":{"containers":[{"image":"acr.io/todo@sha256:0123abcd"}]}}
+]}
+JSON
+  [ "$status" -eq 0 ]
+  [ "$output" = "$(printf '%s\n' 0ld0ld0 1111111 aaaaaaa ddddddd)" ]
+}
+
+@test "iso_epoch: fractional seconds dropped; garbage -> non-zero" {
+  run iso_epoch 2026-09-30T00:00:00.9876543Z; [ "$status" -eq 0 ]; [ "$output" = 1790726400 ]
+  run iso_epoch nope; [ "$status" -ne 0 ]
+}

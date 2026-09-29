@@ -2,14 +2,14 @@
 
 **Feature**: F011 — `preview` env required reviewers (optional) + ACR retention for SHA tags
 **Phase**: Phase 03 — Hardening
-**Status**: IN PROGRESS (starts after F010 PR is merged)
+**Status**: IN PROGRESS (code + bats + local dry-run done on `feat/F011`; PR → merge → dispatch e2e)
 
 ## Exact next step
-1. Branch `feat/F011` off main; write `verification/contracts/F011.md`.
-2. Decide env reviewers (optional per phase file) — ask human; don't enable silently (it gates every deploy).
-3. ACR retention for preview SHA tags on Basic SKU (no built-in retention policy on Basic — check;
-   likely a scheduled `az acr run --cmd "acr purge …"` or workflow) + documented schedule + tests.
-4. Phase 03 completion: F009–F011 COMPLETE + Phase 02 e2e green under least privilege (done in F009).
+1. PR `feat/F011` → review → merge (reviewers skipped DEC-033; purge DEC-034).
+2. On main: `gh workflow run preview-acr-purge.yml -f dry_run=true -f max_age=1h -f keep=3`, then
+   `-f dry_run=false -f max_age=1h -f keep=3` → oldest tags deleted by the SP, 3 newest kept; record runs
+   in CHANGELOG (`evidence/F011/dispatch-purge.txt`).
+3. Mark F011 + Phase 03 COMPLETE (13/13) in a harness PR.
 
 ## Acceptance (summary)
 See `phases/PHASE-03-HARDENING.md` → F011.

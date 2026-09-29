@@ -1,0 +1,62 @@
+name: Purge Stale Preview Images
+on:
+  schedule:
+    - cron: "17 3 * * *" # daily 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: List what would be purged, delete nothing
+        required: false
+        default: false
+        type: boolean
+      max_age:
+        description: Purge tags last updated longer ago than this (Nm, Nh, Nd)
+        required: false
+        default: "7d"
+        type: string
+      keep:
+        description: Always keep this many newest tags
+        required: false
+        default: "3"
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: preview-acr-purge
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    environment: preview
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: v0.2.20
+
+      - uses: azure/aks-set-context@v4
+        with:
+          cluster-name: ${{ vars.AKS_CLUSTER }}
+          resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
+          admin: false
+          use-kubelogin: true
+
+      - name: Delete stale preview image tags (keeps tags live previews run)
+        env:
+          ACR_NAME: ${{ vars.ACR_NAME }}
+          APP_IMAGE_NAME: ${{ vars.APP_IMAGE_NAME }}
+          PURGE_DRY_RUN: ${{ inputs.dry_run || false }}
+          PURGE_MAX_AGE: ${{ inputs.max_age || '7d' }}
+          PURGE_KEEP: ${{ inputs.keep || '3' }}
+        run: ./scripts/preview-ci.sh purge

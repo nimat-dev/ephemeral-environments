@@ -275,3 +275,114 @@ JSON
   grep -qx '  group: preview-reap' "$RWF"
   grep -qx '        run: ./scripts/preview-ci.sh reap' "$RWF"
 }
+
+# --- purge (F011) ---
+PWF="$ROOT/.github/workflows/preview-acr-purge.yml"
+purge_env() {
+  export AZ_LOG="$T/az.log" ACR_NAME=acr1 APP_IMAGE_NAME=todo PURGE_NOW=1790726400; : >"$AZ_LOG"
+  export FAKE_TAGS_JSON='[
+    {"name":"aaaaaaa","lastUpdateTime":"2026-09-01T00:00:00Z"},
+    {"name":"bbbbbbb","lastUpdateTime":"2026-09-02T00:00:00Z"},
+    {"name":"ccccccc","lastUpdateTime":"2026-09-03T00:00:00Z"},
+    {"name":"ddddddd","lastUpdateTime":"2026-09-29T00:00:00Z"}]'
+  export FAKE_NS_LIST_JSON='{"items":[{"metadata":{"name":"preview-x","labels":{"managed-by":"preview-bot","preview.commit":"bbbbbbb"}}}]}'
+}
+
+@test "purge: deletes old unused sha tags, keeps in-use + newest, summary" {
+  purge_env
+  PURGE_KEEP=1 run "$CI" purge
+  [ "$status" -eq 0 ]
+  grep -qx 'get namespaces -l managed-by=preview-bot -o json' "$KUBECTL_LOG"
+  grep -q '^acr repository show-tags -n acr1 --repository todo --detail -o json' "$AZ_LOG"
+  [ "$(grep '^acr repository delete' "$AZ_LOG")" = "$(printf '%s\n' \
+    'acr repository delete -n acr1 --image todo:ccccccc --yes' \
+    'acr repository delete -n acr1 --image todo:aaaaaaa --yes')" ]
+  grep -qF 'Purged `todo:aaaaaaa`' "$GITHUB_STEP_SUMMARY"
+  [[ "$output" == *"in use [bbbbbbb]"* ]] || false
+}
+
+@test "purge: image still run by a pod (failed upgrade relabeled ns) is protected" {
+  purge_env
+  FAKE_WORKLOADS_JSON='{"items":[{"kind":"Pod","metadata":{"namespace":"preview-x"},"spec":{"containers":[{"image":"acr1.azurecr.io/todo:aaaaaaa"}]}}]}' \
+    PURGE_KEEP=0 run "$CI" purge
+  [ "$status" -eq 0 ]
+  grep -qx 'get deployments,pods -A -o json' "$KUBECTL_LOG"
+  ! grep -q 'todo:aaaaaaa' "$AZ_LOG"
+  grep -q 'todo:ccccccc' "$AZ_LOG"
+  [[ "$output" == *"in use [aaaaaaa bbbbbbb]"* ]] || false
+}
+
+@test "purge: tag refreshed by a racing redeploy after listing -> re-read, skipped" {
+  purge_env
+  FAKE_TAG_UPDATED=2026-09-29T23:59:00Z PURGE_KEEP=0 run "$CI" purge
+  [ "$status" -eq 0 ]
+  grep -q '^acr repository show -n acr1 --image todo:aaaaaaa --query lastUpdateTime -o tsv' "$AZ_LOG"
+  ! grep -q '^acr repository delete' "$AZ_LOG"
+  [[ "$output" == *"todo:aaaaaaa refreshed since listing (redeployed); skipped"* ]] || false
+}
+
+@test "purge: re-read fails -> tag skipped, run fails, others continue" {
+  purge_env
+  PURGE_KEEP=0 FAKE_FAIL='--image todo:ccccccc --query' run "$CI" purge
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"cannot re-read todo:ccccccc; skipped"* ]] || false
+  ! grep -q 'delete -n acr1 --image todo:ccccccc' "$AZ_LOG"
+  grep -q 'delete -n acr1 --image todo:aaaaaaa' "$AZ_LOG"
+}
+
+@test "purge: dry run lists, deletes nothing" {
+  purge_env
+  PURGE_KEEP=0 PURGE_DRY_RUN=true run "$CI" purge
+  [ "$status" -eq 0 ]
+  ! grep -q '^acr repository delete' "$AZ_LOG"
+  grep -qF 'Would purge `todo:aaaaaaa`' "$GITHUB_STEP_SUMMARY"
+}
+
+@test "purge: namespace list or tag list unreadable -> exit 1, deletes nothing" {
+  purge_env
+  FAKE_GET_FAIL=1 run "$CI" purge; [ "$status" -eq 1 ]
+  [[ "$output" == *"cannot list previews; deleting nothing"* ]] || false
+  FAKE_NS_LIST_JSON='{bad' run "$CI" purge; [ "$status" -eq 1 ]
+  FAKE_TAGS_FAIL=1 run "$CI" purge; [ "$status" -eq 1 ]
+  FAKE_WORKLOADS_FAIL=1 run "$CI" purge; [ "$status" -eq 1 ]
+  [[ "$output" == *"cannot list preview workloads; deleting nothing"* ]] || false
+  FAKE_WORKLOADS_JSON='{bad' run "$CI" purge; [ "$status" -eq 1 ]
+  ! grep -q '^acr repository delete' "$AZ_LOG"
+}
+
+@test "purge: nothing stale -> 'nothing to purge', exit 0" {
+  purge_env
+  PURGE_KEEP=10 run "$CI" purge
+  [ "$status" -eq 0 ]; [[ "$output" == *"nothing to purge"* ]] || false
+  ! grep -q '^acr repository delete' "$AZ_LOG"
+}
+
+@test "purge: one delete fails -> others still deleted, run fails" {
+  purge_env
+  PURGE_KEEP=0 FAKE_FAIL='--image todo:ccccccc --yes' run "$CI" purge
+  [ "$status" -eq 1 ]
+  grep -q 'delete -n acr1 --image todo:aaaaaaa' "$AZ_LOG"
+  grep -qF 'FAILED to purge `todo:ccccccc`' "$GITHUB_STEP_SUMMARY"
+}
+
+@test "purge: config errors -> exit 2, nothing listed" {
+  purge_env
+  ACR_NAME= run "$CI" purge; [ "$status" -eq 2 ]
+  PURGE_MAX_AGE=soon run "$CI" purge; [ "$status" -eq 2 ]
+  PURGE_KEEP=-1 run "$CI" purge; [ "$status" -eq 2 ]
+  PURGE_DRY_RUN=yes run "$CI" purge; [ "$status" -eq 2 ]
+  [ ! -s "$AZ_LOG" ]
+}
+
+@test "purge workflow: daily cron + dispatch dry_run, own concurrency, env-only inputs, entrypoint" {
+  grep -qx 'name: Purge Stale Preview Images' "$PWF"
+  grep -qF -- '- cron: "17 3 * * *"' "$PWF"
+  grep -qx '      dry_run:' "$PWF"
+  grep -qx '  group: preview-acr-purge' "$PWF"
+  grep -qx '    environment: preview' "$PWF"
+  grep -qx '          PURGE_DRY_RUN: ${{ inputs.dry_run || false }}' "$PWF"
+  grep -qx "          PURGE_MAX_AGE: \${{ inputs.max_age || '7d' }}" "$PWF"
+  grep -qx "          PURGE_KEEP: \${{ inputs.keep || '3' }}" "$PWF"
+  ! grep -q 'run:.*\${{' "$PWF"
+  grep -qx '        run: ./scripts/preview-ci.sh purge' "$PWF"
+}
