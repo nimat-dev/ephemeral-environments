@@ -187,11 +187,14 @@ YAML
 
 # guard_probe EXPECT ARGS... -- server-side dry-run as the SP; EXPECT allow|guard|rbac. A denial
 # must come from the named layer, not an unrelated error (e.g. NotFound, immortal namespace).
+# Probes only touch objects that always exist (default) or never need to (AlreadyExists = allowed).
 guard_probe() {
   local expect=$1 out rc; shift
   out=$(kubectl "$@" --as="$sp_id" --dry-run=server 2>&1) && rc=0 || rc=$?
   case "$expect:$rc" in
     allow:0) return 0 ;;
+    allow:*) [[ "$out" == *AlreadyExists* || "$out" == *"already exists"* ]] && return 0
+             log error "guard: denied but must be allowed: kubectl $*: $out"; return 1 ;;
     guard:0|rbac:0) log error "guard: allowed but must be denied: kubectl $*"; return 1 ;;
     guard:*) [[ "$out" == *preview-deployer-guard* ]] && return 0
              log error "guard: unexpected error for kubectl $*: $out"; return 1 ;;
@@ -207,7 +210,7 @@ verify_guard() {
   guard_probe guard create configmap guard-probe -n kube-system --from-literal=a=b &&
   guard_probe rbac create secret generic guard-probe -n kube-system --from-literal=a=b &&
   guard_probe guard create deployment guard-probe -n default --image=guard-probe &&
-  guard_probe guard delete namespace keda   # A4 namespace; kube-* are immortal anyway
+  guard_probe guard label namespace default preview-guard-probe=1   # namespace UPDATE; default always exists
 }
 
 if [ "$APPLY" -eq 1 ]; then

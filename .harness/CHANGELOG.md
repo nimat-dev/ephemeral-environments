@@ -29,6 +29,7 @@ Evidence (`evidence/F009/`):
   - edge cases: prefix boundaries (preview, previewguard-probe), bulk deletecollection, other identities unaffected, auth reviews excluded, propagation retry, dry-run no mutation
 Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=4 evidence=5 => avg 4.8 (PASS)
 Notes: reap under guard exercised by the next scheduled run (deletes only preview-* labeled ns).
+  - PR #13 review (`reviews/F009-review.md`): probes no longer depend on `keda`/absent probe ns (label `default` UPDATE; AlreadyExists = allowed); live re-apply "guard verified"; bats 158/158. Settings-file finding left for user.
 
 ## 2026-09-29 — F007 preview-destroy.yml — COMPLETE (Phase 02 COMPLETE)
 Branch/commit: feat/F007 merged to main @ 1bde2f9; tracking on feat/F006-oidc   PR: https://github.com/nimat-dev/ephemeral-environments/pull/10

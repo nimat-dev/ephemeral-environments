@@ -227,7 +227,7 @@ a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-prev
   [ "$(grep -c 'dry-run=server' "$KUBECTL_LOG" 2>/dev/null || true)" -eq 0 ]
 }
 
-@test "A5 apply: guard effective -> probes as SP pass (preview-* allowed; kube-system, default, foo, keda denied)" {
+@test "A5 apply: guard effective -> probes as SP pass (preview-* allowed; kube-system, default, foo denied)" {
   setup_az; a5_env
   FAKE_EXISTS="app sp ghfic" FAKE_AZURE_RBAC=true FAKE_ROLE_COUNT=1 run "$A5" --env "$ENV" --apply
   [ "$status" -eq 0 ]
@@ -237,8 +237,16 @@ a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-prev
   grep -q '^create configmap guard-probe -n kube-system .*--as=sp-oid --dry-run=server' "$KUBECTL_LOG"
   grep -q '^create secret generic guard-probe -n kube-system .*--as=sp-oid --dry-run=server' "$KUBECTL_LOG"
   grep -q '^create deployment guard-probe -n default .*--as=sp-oid --dry-run=server' "$KUBECTL_LOG"
-  grep -q '^delete namespace keda --as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+  grep -q '^label namespace default preview-guard-probe=1 --as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+  ! grep -q 'keda' "$KUBECTL_LOG"
   grep -q '^create namespace previewguard-probe --as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+}
+
+@test "A5 apply: probe namespace already exists -> still allowed, guard verified" {
+  setup_az; a5_env
+  FAKE_PROBE_NS_EXISTS=1 FAKE_EXISTS="app sp ghfic" FAKE_AZURE_RBAC=true FAKE_ROLE_COUNT=1 run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"guard verified"* ]] || false
 }
 
 @test "A5 apply: guard not effective (permissive) -> exit 1 after retries" {
