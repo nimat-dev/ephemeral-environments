@@ -1,0 +1,27 @@
+# F009 live probe matrix (--dry-run=server), 2026-09-29T22:02:34Z
+## as SP (b34bba52-17f6-4b85-9b1b-9724ae59236c)
+rc=0 | kubectl create namespace preview-guard-probe --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    namespace/preview-guard-probe created (server dry run)
+rc=1 | kubectl create namespace guard-probe --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    The namespaces "guard-probe" is invalid: : ValidatingAdmissionPolicy 'preview-deployer-guard' with binding 'preview-deployer-guard' denied request: preview-deployer-guard: CI identity may only write preview-* namespaces 
+rc=1 | kubectl create namespace previewguard-probe --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    The namespaces "previewguard-probe" is invalid: : ValidatingAdmissionPolicy 'preview-deployer-guard' with binding 'preview-deployer-guard' denied request: preview-deployer-guard: CI identity may only write preview-* name
+rc=1 | kubectl create namespace preview --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    The namespaces "preview" is invalid: : ValidatingAdmissionPolicy 'preview-deployer-guard' with binding 'preview-deployer-guard' denied request: preview-deployer-guard: CI identity may only write preview-* namespaces (nam
+rc=1 | kubectl create configmap guard-probe -n kube-system --from-literal=a=b --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    error: failed to create configmap: configmaps "guard-probe" is forbidden: ValidatingAdmissionPolicy 'preview-deployer-guard' with binding 'preview-deployer-guard' denied request: preview-deployer-guard: CI identity may o
+rc=1 | kubectl create secret generic guard-probe -n kube-system --from-literal=a=b --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    error: failed to create secret secrets is forbidden: User "b34bba52-17f6-4b85-9b1b-9724ae59236c" cannot create resource "secrets" in API group "" in the namespace "kube-system": Azure does not have opinion for this non A
+rc=1 | kubectl create deployment guard-probe -n default --image=x --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    error: failed to create deployment: deployments.apps "guard-probe" is forbidden: ValidatingAdmissionPolicy 'preview-deployer-guard' with binding 'preview-deployer-guard' denied request: preview-deployer-guard: CI identit
+rc=1 | kubectl delete namespace keda --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    The namespaces "keda" is invalid: : ValidatingAdmissionPolicy 'preview-deployer-guard' with binding 'preview-deployer-guard' denied request: preview-deployer-guard: CI identity may only write preview-* namespaces (namesp
+rc=1 | kubectl delete configmaps --all -n kube-system --as=b34bba52-17f6-4b85-9b1b-9724ae59236c
+    Error from server (Invalid): configmaps "azure-ip-masq-agent-config-reconciled" is forbidden: ValidatingAdmissionPolicy 'preview-deployer-guard' with binding 'preview-deployer-guard' denied request: preview-deployer-guar
+## as operator (unaffected)
+rc=0 | kubectl create configmap guard-probe -n kube-system --from-literal=a=b
+    configmap/guard-probe created (server dry run)
+rc=0 | kubectl create namespace guard-probe
+    namespace/guard-probe created (server dry run)
+## SP can-i still works (auth reviews excluded)
+can-i list pods -n default: yes

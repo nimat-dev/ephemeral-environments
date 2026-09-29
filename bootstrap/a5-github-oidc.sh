@@ -6,6 +6,7 @@
 #  - SP: AcrPush (ACR), AKS Cluster User Role (kubeconfig)
 #  - k8s ClusterRole `preview-deployer` bound to the SP (spec's RBAC Writer can't create
 #    namespaces, resourcequotas or HTTPScaledObjects — DEC-024); no secrets (DEC-026)
+#  - ValidatingAdmissionPolicy `preview-deployer-guard`: SP writes only preview-* (F009), self-verified
 # Usage: bootstrap/a5-github-oidc.sh [--apply] [--env FILE]   (default: dry-run)
 set -euo pipefail
 export SCRIPT_NAME=a5-github-oidc
@@ -142,9 +143,85 @@ subjects:
   - apiGroup: rbac.authorization.k8s.io
     kind: User
     name: $sp_id
+---
+# The ClusterRole is cluster-wide; this confines the SP's writes to preview-* (F009). Matched
+# only for the SP, so operators/controllers are unaffected. Auth reviews stay allowed (can-i).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: preview-deployer-guard
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["*"]
+        apiVersions: ["*"]
+        operations: [CREATE, UPDATE, DELETE, CONNECT]
+        resources: ["*/*"]
+    excludeResourceRules:
+      - apiGroups: [authorization.k8s.io, authentication.k8s.io]
+        apiVersions: ["*"]
+        operations: [CREATE]
+        resources: ["*"]
+  matchConditions:
+    - name: ci-identity
+      expression: request.userInfo.username == '$sp_id'
+  validations:
+    - expression: >-
+        request.resource.group == '' && request.resource.resource == 'namespaces'
+        ? request.name.startsWith('preview-')
+        : request.namespace.startsWith('preview-')
+      messageExpression: >-
+        'preview-deployer-guard: CI identity may only write preview-* namespaces (' +
+        request.resource.resource + ' ' + request.namespace + '/' + request.name + ')'
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: preview-deployer-guard
+spec:
+  policyName: preview-deployer-guard
+  validationActions: [Deny]
 YAML
 }
-if [ "$APPLY" -eq 1 ]; then rbac_manifest | run kubectl apply -f -
+
+# guard_probe EXPECT ARGS... -- server-side dry-run as the SP; EXPECT allow|guard|rbac. A denial
+# must come from the named layer, not an unrelated error (e.g. NotFound, immortal namespace).
+# Probes only touch objects that always exist (default) or never need to (AlreadyExists = allowed).
+guard_probe() {
+  local expect=$1 out rc; shift
+  out=$(kubectl "$@" --as="$sp_id" --dry-run=server 2>&1) && rc=0 || rc=$?
+  case "$expect:$rc" in
+    allow:0) return 0 ;;
+    allow:*) [[ "$out" == *AlreadyExists* || "$out" == *"already exists"* ]] && return 0
+             log error "guard: denied but must be allowed: kubectl $*: $out"; return 1 ;;
+    guard:0|rbac:0) log error "guard: allowed but must be denied: kubectl $*"; return 1 ;;
+    guard:*) [[ "$out" == *preview-deployer-guard* ]] && return 0
+             log error "guard: unexpected error for kubectl $*: $out"; return 1 ;;
+    rbac:*) [[ "$out" == *forbidden* && "$out" != *preview-deployer-guard* ]] && return 0
+            log error "guard: unexpected error for kubectl $*: $out"; return 1 ;;
+    *) log error "guard: denied but must be allowed: kubectl $*: $out"; return 1 ;;
+  esac
+}
+verify_guard() {
+  guard_probe allow create namespace preview-guard-probe &&
+  guard_probe guard create namespace guard-probe &&
+  guard_probe guard create namespace previewguard-probe &&
+  guard_probe guard create configmap guard-probe -n kube-system --from-literal=a=b &&
+  guard_probe rbac create secret generic guard-probe -n kube-system --from-literal=a=b &&
+  guard_probe guard create deployment guard-probe -n default --image=guard-probe &&
+  guard_probe guard label namespace default preview-guard-probe=1   # namespace UPDATE; default always exists
+}
+
+if [ "$APPLY" -eq 1 ]; then
+  rbac_manifest | run kubectl apply -f -
+  ok=0
+  for _ in $(seq 1 "${GUARD_WAIT_TRIES:-12}"); do   # policy takes a few seconds to load
+    if verify_guard 2>/dev/null; then ok=1; break; fi
+    sleep "${GUARD_WAIT_SECONDS:-5}"
+  done
+  [ "$ok" -eq 1 ] || { verify_guard || true; log error "preview-deployer-guard not effective"; exit 1; }
+  log info "guard verified: SP writes confined to preview-* namespaces"
 else echo "[dry-run] kubectl apply -f - <<EOF"; rbac_manifest; echo "EOF"; fi
 
 echo "AZURE_CLIENT_ID=$app_id"

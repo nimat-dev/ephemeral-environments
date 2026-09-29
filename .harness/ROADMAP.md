@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 10 / 13 COMPLETE (77%) — Phase 01 + Phase 02 COMPLETE
+**Progress**: 11 / 13 COMPLETE (85%) — Phase 01 + Phase 02 COMPLETE
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -23,6 +23,6 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F008** — `preview-reap.yml`: cron */30 → delete expired ns — `COMPLETE`
 
 ## Phase 03 — Hardening (Part E step 6)
-- [ ] **F009** — Scoped ClusterRole already in F004 (DEC-024); remaining: restrict SP namespace create/delete to `preview-*` (ValidatingAdmissionPolicy) + negative tests — `IN PROGRESS`
-- [ ] **F010** — Prove per-namespace `ResourceQuota` enforced — `NOT STARTED`
+- [x] **F009** — Scoped ClusterRole already in F004 (DEC-024); remaining: restrict SP namespace create/delete to `preview-*` (ValidatingAdmissionPolicy) + negative tests — `COMPLETE`
+- [ ] **F010** — Prove per-namespace `ResourceQuota` enforced — `IN PROGRESS`
 - [ ] **F011** — `preview` env required reviewers (optional gate) + ACR retention policy for SHA tags — `NOT STARTED`

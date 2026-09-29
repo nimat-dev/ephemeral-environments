@@ -18,6 +18,19 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-29 — F009 scoped ClusterRole / preview-* guard — COMPLETE
+Branch/commit: feat/F009   PR: see PROJECT_STATE   Contract: `verification/contracts/F009.md`   DEC-031
+Evidence (`evidence/F009/`):
+  - baseline gap (`offline-verify.txt`): SP could create configmaps in kube-system, deployments in default, create/delete any ns; secrets already no; Azure roles AcrPush + AKS Cluster User only (no RBAC Writer)
+  - `./bootstrap/a5-github-oidc.sh --apply` (`live-apply.txt`): VAP + binding created, "guard verified"
+  - live probe matrix as SP, `--dry-run=server` (`live-probes.txt`): ns preview-guard-probe allowed; ns guard-probe / previewguard-probe / preview denied by guard; configmap kube-system, deployment default, delete ns keda, deletecollection kube-system denied by guard; secret kube-system denied by RBAC; operator unaffected; SP can-i still works
+  - e2e under guard (`dispatch-under-guard.txt`): Deploy https://github.com/nimat-dev/ephemeral-environments/actions/runs/36637186203 (verify 200) -> Destroy https://github.com/nimat-dev/ephemeral-environments/actions/runs/36637334313 -> ns NotFound, URL 404
+  - bats: `A5: renders preview-deployer-guard…`, `A5 apply: guard effective…`, `A5 apply: guard not effective -> exit 1`; full suite `./scripts/init.sh` -> BASELINE GREEN 157/157
+  - edge cases: prefix boundaries (preview, previewguard-probe), bulk deletecollection, other identities unaffected, auth reviews excluded, propagation retry, dry-run no mutation
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=4 evidence=5 => avg 4.8 (PASS)
+Notes: reap under guard exercised by the next scheduled run (deletes only preview-* labeled ns).
+  - PR #13 review (`reviews/F009-review.md`): probes no longer depend on `keda`/absent probe ns (label `default` UPDATE; AlreadyExists = allowed); live re-apply "guard verified"; bats 158/158. Settings-file finding left for user.
+
 ## 2026-09-29 — F007 preview-destroy.yml — COMPLETE (Phase 02 COMPLETE)
 Branch/commit: feat/F007 merged to main @ 1bde2f9; tracking on feat/F006-oidc   PR: https://github.com/nimat-dev/ephemeral-environments/pull/10
 Evidence (`evidence/F007/dispatch-destroy-e2e.txt`, `evidence/F007/scheduled-reap.txt`):

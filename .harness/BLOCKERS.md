@@ -12,6 +12,7 @@ BLK-008 | 2026-09-28 | F013 follow-up | `bootstrap/teardown.sh` leaves Entra app
 ## Resolved
 ```
 (id | resolved | how)
+BLK-010 | 2026-09-29 | user granted permission; `a5 --apply` applied `preview-deployer-guard`, probes "guard verified" (`evidence/F009/live-apply.txt`)
 BLK-009 | 2026-09-29 | user merged PRs #8–#11 into `main`; workflows listed active; dispatch runs executed
 BLK-002 | 2026-09-28 | F006 builds `context: src/todo` (app branch checked out into `src/`); bats `workflow: … todo context`
 BLK-006 | 2026-09-28 | user switched gh to `nimat-dev` (admin); A6 applied (`preview` env + 12 vars); PRs #1–#7 opened
