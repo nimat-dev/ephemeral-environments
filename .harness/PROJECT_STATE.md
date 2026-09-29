@@ -4,7 +4,7 @@
 
 ## Where we are
 - **Phase**: Phase 03 — Hardening (Phase 01 COMPLETE 2026-09-28, Phase 02 COMPLETE 2026-09-29)
-- **Active feature**: F009 — scoped ClusterRole / `preview-*` admission guard (IN PROGRESS, no code yet; starts after `feat/F006-oidc` PR merges). F006–F008 COMPLETE via real GitHub runs.
+- **Active feature**: F009 — scoped ClusterRole / `preview-*` admission guard (IN PROGRESS, no code yet; branch `feat/F009`). F006–F008 COMPLETE via real GitHub runs.
 - **Overall progress**: 10 / 13 features COMPLETE (77%)
 
 ## Last verified
@@ -12,10 +12,10 @@
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-29)
 - **Full suite + check-architecture**: green — `bats tests/` 154/154; check-architecture clean
 - **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404 (`evidence/F006`–`F008`)
-- **Git**: PRs #8–#11 merged to `main` (425ccb8). Branch `feat/F006-oidc` = a5 immutable OIDC subject fix (DEC-030) + F007/Phase 02 tracking, pushed, PR open (see CURRENT_TASK).
+- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). Now on `feat/F009` (no code yet).
 
 ## Next step
-Merge `feat/F006-oidc` PR, then start F009 on `feat/F009`. Mirrors `CURRENT_TASK.md`.
+Start F009 on `feat/F009`: write contract, then admission policy. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
