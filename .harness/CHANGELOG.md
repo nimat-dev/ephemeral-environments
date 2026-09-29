@@ -18,6 +18,17 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-29 — F010 ResourceQuota enforced — COMPLETE
+Branch/commit: feat/F010   PR: see PROJECT_STATE   Contract: `verification/contracts/F010.md`   DEC-032
+Evidence (`evidence/F010/live-quota-check.txt`):
+  - Deploy `e2e/quota-test`: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36638763992 (success)
+  - `scripts/quota-check.sh preview-e2e-quota-test` -> ALL PASS: CP0 small pod fits; CP1 `exceeded quota … limits.cpu=1k`; CP2 `… limits.memory=1Ti`; CP3 `must specify limits.cpu`; CP4 filled 1->6, 7th `exceeded quota … pods=6`; fill pods 0 after, used back to pods=1
+  - scaling path: `kubectl scale deploy --replicas=8` -> ReplicaSet FailedCreate `exceeded quota: preview-quota, requested: limits.cpu=500m, used: limits.cpu=2` (ceiling 4 pods)
+  - Destroy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36639043063 (success); branch deleted
+  - bats `tests/quota-check.bats` 7/7 (enforced, not-enforced, wrong-reason, fill failure, already full, no quota, usage/foreign ns); full suite `./scripts/init.sh` -> BASELINE GREEN 165/165
+  - PR #14 review (`reviews/F010-review.md`): cleanup waits for fill pods (+ clears leftovers first), fill errors logged; live back-to-back reruns ALL PASS, 0 leftovers
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
+
 ## 2026-09-29 — F009 scoped ClusterRole / preview-* guard — COMPLETE
 Branch/commit: feat/F009   PR: see PROJECT_STATE   Contract: `verification/contracts/F009.md`   DEC-031
 Evidence (`evidence/F009/`):

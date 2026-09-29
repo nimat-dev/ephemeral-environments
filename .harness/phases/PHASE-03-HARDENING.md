@@ -12,14 +12,14 @@ Spec Part E step 6 + A5 hardening note.
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 
 ## F010 — ResourceQuota enforced
-**Status**: IN PROGRESS
-- [ ] Scaling beyond `quota.pods` / cpu / memory is rejected in a preview ns (evidence captured).
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+**Status**: COMPLETE (2026-09-29)
+- [x] Scaling beyond `quota.pods` / cpu / memory is rejected in a preview ns (evidence captured: `evidence/F010/live-quota-check.txt`).
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests (`tests/quota-check.bats`).
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 
 ## F011 — Env gate + ACR retention
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 - [ ] (Optional, per BLK) required reviewers on `preview` env.
 - [ ] ACR retention/purge policy for preview SHA tags; documented schedule.
 - [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.

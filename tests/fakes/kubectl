@@ -4,9 +4,30 @@
 #   FAKE_NS_JSON=<get namespace output>  FAKE_NS_LIST_JSON=<get namespaces -l output>  FAKE_GET_FAIL=1
 #   FAKE_DELETE_FAIL=<ns> (delete of that ns fails)
 #   FAKE_GUARD=1 (server dry-runs as --as=<sp> hit preview-deployer-guard; unset = no guard, permissive)
+#   FAKE_QUOTA=on|off|wrong (quota-check: admission enforces / admits all / denies for another reason)
+#     FAKE_QUOTA_JSON=<get resourcequota -o json> (empty = not found)  FAKE_QUOTA_USED=<used pods>  FAKE_FILL_FAIL=1
 #   FAKE_PROBE_NS_EXISTS=1 (allowed preview-* namespace create returns AlreadyExists)
 #   FAKE_WAIT_FAIL=1 (kubectl wait fails)  FAKE_CANI_FAIL=1 (auth can-i denies). `apply -f -` stdin is appended to $KUBECTL_LOG.apply
 echo "$*" >>"${KUBECTL_LOG:?}"
+if [ -n "${FAKE_QUOTA:-}" ]; then
+  case " $* " in
+    *" get resourcequota "*" -o json "*) [ -n "${FAKE_QUOTA_JSON:-}" ] || exit 1; printf '%s' "$FAKE_QUOTA_JSON"; exit 0 ;;
+    *" get resourcequota "*) printf '%s' "${FAKE_QUOTA_USED-}"; exit 0 ;;
+    *" --dry-run=server -f - "*)
+      m=$(cat); echo "$m" >>"$KUBECTL_LOG.apply"
+      [ "$FAKE_QUOTA" = off ] && exit 0
+      if [[ "$m" == *quota-probe-fits* ]]; then exit 0; fi
+      [ "$FAKE_QUOTA" = wrong ] && { echo 'Error from server (NotFound): namespaces not found' >&2; exit 1; }
+      if [[ "$m" == *'cpu: "1000"'* ]]; then echo 'Error from server (Forbidden): exceeded quota: preview-quota, requested: limits.cpu=1k' >&2; exit 1; fi
+      if [[ "$m" == *1Ti* ]]; then echo 'Error from server (Forbidden): exceeded quota: preview-quota, requested: limits.memory=1Ti' >&2; exit 1; fi
+      if [[ "$m" != *resources:* ]]; then echo 'Error from server (Forbidden): failed quota: preview-quota: must specify limits.cpu' >&2; exit 1; fi
+      if [[ "$m" == *quota-probe-pods* ]]; then echo 'Error from server (Forbidden): exceeded quota: preview-quota, requested: pods=1, used: pods=6, limited: pods=6' >&2; exit 1; fi
+      exit 0 ;;
+    *" apply "*" -f - "*) cat >>"$KUBECTL_LOG.apply"; [ -z "${FAKE_FILL_FAIL:-}" ] && exit 0
+      echo 'Error from server (Forbidden): exceeded quota: preview-quota, requested: limits.cpu=1m' >&2; exit 1 ;;
+    *" delete pods "*) exit 0 ;;
+  esac
+fi
 case " $* " in
   *" --dry-run=server "*)
     [[ " $* " == *" secret "* ]] && { echo 'Error from server (Forbidden): secrets is forbidden: User cannot create' >&2; exit 1; }
