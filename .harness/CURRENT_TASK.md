@@ -3,7 +3,8 @@
 **Feature**: none — roadmap COMPLETE (13/13, Phases 01–03, 2026-09-29)
 **Status**: —
 
-## Follow-ups (not on the roadmap; each needs a new FID in ROADMAP + phase file before work starts)
+## Exact next step
+Roadmap done. Follow-ups (not on the roadmap; each needs a new FID in ROADMAP + phase file before work starts):
 1. BLK-008: `bootstrap/teardown.sh` leaves Entra app `gh-preview-deployer` (+SP, federated creds) and UAMI
    `cert-manager-dns`.
 2. Untagged ACR manifests (buildx platform/attestation children) are never purged (F011 contract §5).
