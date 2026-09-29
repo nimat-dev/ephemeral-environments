@@ -1,0 +1,16 @@
+== destroy feat/F006
+[info] preview-ci: destroy: deleting preview-feat-f006
+namespace "preview-feat-f006" deleted
+Destroyed `preview-feat-f006` (branch `feat/F006`).
+== ns after
+Error from server (NotFound): namespaces "preview-feat-f006" not found
+== url after
+404
+== destroy again (idempotent)
+[info] preview-ci: destroy: preview-feat-f006 not found, nothing to do
+Nothing to destroy: `preview-feat-f006` does not exist.
+exit=0
+== foreign ns refused
+[error] preview-ci: destroy: refusing preview-e2e-foreign (managed-by='', want preview-bot)
+exit=1
+preview-e2e-foreign   Active   1s

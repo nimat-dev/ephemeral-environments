@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CI entrypoint for the preview workflows (.github/workflows/preview-*.yml). Each workflow step is
 # one subcommand; inputs come from env (never interpolated into shell by the workflow).
-# Usage: scripts/preview-ci.sh plan|namespace|deploy|verify|summary
+# Usage: scripts/preview-ci.sh plan|namespace|deploy|verify|summary|destroy
 # Exit: 0 ok, 1 step failed, 2 usage/config error.
 set -euo pipefail
 
@@ -101,8 +101,33 @@ cmd_summary() {
   } >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 }
 
+# destroy: delete preview-<id> for BRANCH (same identity as deploy). Absent -> success; a namespace
+# of that name not labeled managed-by=preview-bot is refused, never deleted. Env: BRANCH
+cmd_destroy() {
+  need BRANCH
+  local id ns json owner
+  id=$(preview_id "$BRANCH") || exit 1
+  ns=$(preview_namespace "$id")
+  json=$(kubectl get namespace "$ns" --ignore-not-found -o json)
+  if [ -z "$json" ]; then
+    log info "destroy: $ns not found, nothing to do"
+    summary_line "Nothing to destroy: \`$ns\` does not exist."
+    return 0
+  fi
+  owner=$(jq -r '.metadata.labels["managed-by"] // ""' <<<"$json")
+  if [ "$owner" != preview-bot ]; then
+    log error "destroy: refusing $ns (managed-by='$owner', want preview-bot)"
+    exit 1
+  fi
+  log info "destroy: deleting $ns"
+  kubectl delete namespace "$ns" --ignore-not-found --wait=false
+  summary_line "Destroyed \`$ns\` (branch \`$BRANCH\`)."
+}
+
+summary_line() { printf '%s\n' "$1" >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"; }
+
 case "${1-}" in
-  plan|namespace|deploy|verify|summary) "cmd_$1" ;;
+  plan|namespace|deploy|verify|summary|destroy) "cmd_$1" ;;
   -h|--help) sed -n '2,5p' "$0" ;;
-  *) log error "unknown command '${1-}' (want plan|namespace|deploy|verify|summary)"; exit 2 ;;
+  *) log error "unknown command '${1-}' (want plan|namespace|deploy|verify|summary|destroy)"; exit 2 ;;
 esac

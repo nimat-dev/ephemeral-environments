@@ -1,0 +1,46 @@
+name: Destroy Preview
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch whose preview to destroy
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+# Same group as Deploy Preview: a destroy never races a deploy of the same branch.
+concurrency:
+  group: preview-${{ inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    environment: preview
+    env:
+      BRANCH: ${{ inputs.branch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: v0.2.20
+
+      - uses: azure/aks-set-context@v4
+        with:
+          cluster-name: ${{ vars.AKS_CLUSTER }}
+          resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
+          admin: false
+          use-kubelogin: true
+
+      - name: Delete namespace
+        run: ./scripts/preview-ci.sh destroy
