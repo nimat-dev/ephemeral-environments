@@ -24,6 +24,20 @@ header() {
   [ "$status" -eq 1 ]; [[ "$output" == *"found 0"* ]] || false
 }
 
+@test "roadmap: all COMPLETE/DEPRECATED passes (roadmap finished)" {
+  header
+  printf '%s\n' '- [x] **F001** — a — `COMPLETE`' '- [x] **F002** — b — `DEPRECATED`' >>"$F"
+  run "$INIT" --roadmap-only --roadmap "$F"
+  [ "$status" -eq 0 ]; [[ "$output" == *"roadmap complete: all 2 features"* ]] || false
+}
+
+@test "roadmap: zero IN PROGRESS with one NOT STARTED left still fails" {
+  header
+  printf '%s\n' '- [x] **F001** — a — `COMPLETE`' '- [ ] **F002** — b — `NOT STARTED`' >>"$F"
+  run "$INIT" --roadmap-only --roadmap "$F"
+  [ "$status" -eq 1 ]; [[ "$output" == *"found 0"* ]] || false
+}
+
 @test "roadmap: two IN PROGRESS fails" {
   header
   printf '%s\n' '- [ ] **F001** — a — `IN PROGRESS`' '- [ ] **F002** — b — `IN PROGRESS`' >>"$F"

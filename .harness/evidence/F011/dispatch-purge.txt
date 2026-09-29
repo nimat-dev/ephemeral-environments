@@ -1,0 +1,13 @@
+# F011 purge dispatch on main (SP identity) 2026-09-29T23:45:19Z
+tags before: 425ccb8 85b116b ca47e1d d069825 ec256f8 
+## dry_run=true max_age=1h keep=3: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36646867534 (exit=0)
+2026-09-29T23:45:55.3621919Z [info] preview-ci: purge: in use [], keep newest 3, older than 1h
+2026-09-29T23:45:55.3622837Z [info] preview-ci: purge: [dry-run] would delete todo:85b116b
+2026-09-29T23:45:55.3623278Z [info] preview-ci: purge: [dry-run] would delete todo:ca47e1d
+2026-09-29T23:45:55.3623904Z [info] preview-ci: purge: deleted 0 tag(s)
+## dry_run=false max_age=1h keep=3: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36646924565 (exit=0)
+2026-09-29T23:46:29.7190667Z [info] preview-ci: purge: in use [], keep newest 3, older than 1h
+2026-09-29T23:46:30.7509020Z [info] preview-ci: purge: deleting todo:85b116b
+2026-09-29T23:46:34.3357620Z [info] preview-ci: purge: deleting todo:ca47e1d
+2026-09-29T23:46:35.8490155Z [info] preview-ci: purge: deleted 2 tag(s)
+tags after: 425ccb8 d069825 ec256f8 

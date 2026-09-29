@@ -1,4 +1,4 @@
-# Phase 03 — Hardening
+# Phase 03 — Hardening — COMPLETE (2026-09-29)
 
 Spec Part E step 6 + A5 hardening note.
 
@@ -19,12 +19,12 @@ Spec Part E step 6 + A5 hardening note.
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 
 ## F011 — Env gate + ACR retention
-**Status**: IN PROGRESS
+**Status**: COMPLETE (2026-09-29)
 - [x] (Optional, per BLK) required reviewers on `preview` env. — SKIPPED by user decision (DEC-033).
-- [ ] ACR retention/purge policy for preview SHA tags; documented schedule. (daily 03:17 UTC `preview-acr-purge.yml`, DEC-034; code + bats + local dry-run done; post-merge dispatch pending)
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] ACR retention/purge policy for preview SHA tags; documented schedule. (daily 03:17 UTC `preview-acr-purge.yml`, DEC-034; SP dispatch run 36646924565 deleted 2 stale tags, kept 3 newest)
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 
 ## Phase completion criteria
-F009–F011 `COMPLETE`; Phase 02 e2e still green under least-privilege identity.
+F009–F011 `COMPLETE`; Phase 02 e2e still green under least-privilege identity. — MET 2026-09-29 (Deploy/Destroy green under the F009 guard; purge by SP).

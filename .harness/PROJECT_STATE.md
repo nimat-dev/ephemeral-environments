@@ -3,19 +3,19 @@
 > Read this first, every session. Rewrite it for a cold reader before you stop.
 
 ## Where we are
-- **Phase**: Phase 03 — Hardening (Phase 01 COMPLETE 2026-09-28, Phase 02 COMPLETE 2026-09-29)
-- **Active feature**: F011 — env reviewers SKIPPED (DEC-033) + ACR purge workflow (DEC-034) (IN PROGRESS: code done, PR → merge → dispatch). F009 (guard, DEC-031) + F010 (quota proof, DEC-032) COMPLETE.
-- **Overall progress**: 12 / 13 features COMPLETE (92%)
+- **Phase**: ALL COMPLETE — Phase 01 (2026-09-28), Phase 02 + Phase 03 (2026-09-29)
+- **Active feature**: none. Last: F011 (reviewers skipped DEC-033; daily ACR purge DEC-034). Follow-ups in `CURRENT_TASK.md`.
+- **Overall progress**: 13 / 13 features COMPLETE (100%)
 
 ## Last verified
 - **Date**: 2026-09-29
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-29)
-- **Full suite + check-architecture**: green — `bats tests/` 185/185; check-architecture clean
-- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green (`evidence/F006`–`F009`)
-- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). `feat/F011` pushed, PR open.
+- **Full suite + check-architecture**: green — `bats tests/` 187/187; check-architecture clean
+- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags) (`evidence/F006`–`F011`)
+- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`.
 
 ## Next step
-Merge F011 PR, dispatch purge on main, then F011 + Phase 03 COMPLETE. Mirrors `CURRENT_TASK.md`.
+Roadmap done. Pick a follow-up from `CURRENT_TASK.md` (new FID first) or pause the cluster to stop cost. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
