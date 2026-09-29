@@ -70,6 +70,49 @@ expires_at() {
   printf '%s\n' $((now + secs))
 }
 
+# max_replicas N -> N when an integer 1..PREVIEW_MAX_REPLICAS_CAP (= chart quota.pods: more
+# replicas could never schedule inside the namespace ResourceQuota)
+PREVIEW_MAX_REPLICAS_CAP=6
+max_replicas() {
+  local v="${1-}"
+  case "$v" in ''|*[!0-9]*|?????*) _preview_err "invalid max_replicas '$v' (want integer 1..$PREVIEW_MAX_REPLICAS_CAP)"; return 1 ;; esac
+  v=$((10#$v))   # <= 4 digits: no overflow
+  if [ "$v" -lt 1 ] || [ "$v" -gt "$PREVIEW_MAX_REPLICAS_CAP" ]; then
+    _preview_err "invalid max_replicas '${1}' (want integer 1..$PREVIEW_MAX_REPLICAS_CAP)"; return 1
+  fi
+  printf '%s\n' "$v"
+}
+
+# preview_plan BRANCH LIFETIME LIFETIME_CUSTOM IDLE_TIMEOUT MAX_REPLICAS DOMAIN SHORT_SHA [NOW]
+# -> key=value lines (preview_id namespace host short_sha idle max_replicas lifetime expires_at),
+# ready for $GITHUB_OUTPUT. Validates every input before printing anything.
+preview_plan() {
+  local id ns host idle maxr lt exp
+  [ -n "${6-}" ] || { _preview_err "preview domain is empty"; return 1; }
+  case "${7-}" in ''|*[!0-9a-f]*) _preview_err "invalid short sha '${7-}'"; return 1 ;; esac
+  id=$(preview_id "${1-}") || return 1
+  ns=$(preview_namespace "$id")
+  host=$(preview_host "$id" "$6")
+  idle=$(idle_seconds "${4-}") || return 1
+  maxr=$(max_replicas "${5-}") || return 1
+  lt=$(resolve_lifetime "${2-}" "${3-}") || return 1
+  exp=$(expires_at "$lt" "${8-}") || return 1
+  printf '%s\n' "preview_id=$id" "namespace=$ns" "host=$host" "short_sha=$7" \
+    "idle=$idle" "max_replicas=$maxr" "lifetime=$lt" "expires_at=$exp"
+}
+
+# namespace_manifest NAMESPACE PREVIEW_ID SHORT_SHA EXPIRES_AT BRANCH -> Namespace JSON carrying
+# the label contract (DATA_MODEL.md). BRANCH (raw, untrusted) only lands in an annotation, escaped by jq.
+namespace_manifest() {
+  jq -n --arg ns "${1-}" --arg id "${2-}" --arg sha "${3-}" --arg exp "${4-}" --arg br "${5-}" '{
+    apiVersion: "v1", kind: "Namespace",
+    metadata: {
+      name: $ns,
+      labels: {"managed-by": "preview-bot", "preview.branch": $id, "preview.commit": $sha, "preview.expires-at": $exp},
+      annotations: {"preview.branch-original": $br}
+    }}'
+}
+
 # expired_namespaces NOW < namespace-list.json -> names of preview-bot namespaces whose
 # preview.expires-at < NOW. Missing or non-numeric label counts as expired.
 expired_namespaces() {

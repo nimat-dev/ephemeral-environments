@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
-# Fake curl for smoke tests: prints $FAKE_CURL_OUT ("<http_code> <ssl_verify_result> <time>").
+# Fake curl for smoke/CI tests: prints $FAKE_CURL_OUT ("<http_code> <ssl_verify_result> <time>").
+# FAKE_CURL_SEQ=<file>: one output per call instead (last line repeats).
 echo "curl $*" >>"${KUBECTL_LOG:?}"
+if [ -n "${FAKE_CURL_SEQ:-}" ]; then
+  f="$FAKE_CURL_SEQ"; printf '%s' "$(head -1 "$f")"
+  [ "$(wc -l <"$f")" -gt 1 ] && { tail -n +2 "$f" >"$f.tmp"; mv "$f.tmp" "$f"; }
+  exit 0
+fi
 printf '%s' "${FAKE_CURL_OUT:-200 0 1.0}"

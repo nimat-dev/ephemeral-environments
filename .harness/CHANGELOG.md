@@ -18,6 +18,20 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-28 — F006 preview-deploy.yml — IN REVIEW (dispatch e2e pending BLK-009)
+Branch/commit: feat/F006   PR: see PROJECT_STATE   CI: N/A until on main
+Contract: `verification/contracts/F006.md`
+Evidence:
+  - `bats tests/preview-ci.bats` -> 16/16 (plan/namespace/deploy/verify/summary + workflow shape + injection guard)
+  - `bats tests/preview.bats` -> 27/27 (new: max_replicas, preview_plan, namespace_manifest)
+  - `--set name=null` -> helm "invalid value; expected string"; `--set-string` renders (bats `deploy passes strings via --set-string`)
+  - local entrypoint e2e vs aks-preview (`evidence/F006/local-entrypoint-e2e.txt`): plan -> buildx amd64 push `todo:85b116b` -> ns `preview-feat-f006` with label contract -> helm rev 1 (configmap storage, 0 secrets) -> verify 200 attempt 1 -> summary; redeploy -> same release rev 2
+  - `actionlint`, `shellcheck`, `yamllint`, check-architecture -> clean
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN, bats 141/141
+  - edge cases: empty/all-symbol branch, custom lifetime empty/bad/zero, max_replicas bounds, injection (quotes/$()/backticks), type coercion, missing vars, helm fail, never-200, summary after early failure
+Evaluator: acceptance=4 correctness=4 boundaries=5 modularity=5 evidence=4 => avg 4.4 (PASS pending dispatch e2e)
+Notes: concurrency group keys on the raw branch (`Feat/X` and `feat/x` share a preview but not a lock) — accepted, expressions have no lowercase. Phase 01 landed on main via PR #8 (DEC-028); merge blocked for the agent.
+
 ## 2026-09-28 — PR loop for Phase 01 stack (#1–#7) + A6 apply
 Branch/commit: fixes on feat/F001 @ 73a98ac, feat/F004 (DEC-026); merged up to feat/F005   PRs: https://github.com/nimat-dev/ephemeral-environments/pull/1 … /7 (stacked)   CI: N/A (no workflows yet)
 Evidence:

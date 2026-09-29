@@ -10,7 +10,7 @@ Change them in the same commit as the code that consumes them.
 | `lifetime` | choice, required | `48h` | `24h` `48h` `7d` `custom` |
 | `lifetime_custom` | string | — | `12h`, `3d`… (only when `custom`) |
 | `idle_timeout` | choice, required | `30m` | `15m` `30m` `1h` `6h` `never` |
-| `max_replicas` | string | `3` | int |
+| `max_replicas` | string | `3` | int 1..6 (≤ quota.pods) |
 Output: job summary (branch, commit, image, namespace, idle, lifetime, **URL**).
 Concurrency: `preview-<branch>`, no cancel-in-progress.
 Failure: non-200 from URL after 30×5s → job fails.

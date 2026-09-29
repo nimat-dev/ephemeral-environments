@@ -1,0 +1,137 @@
+name: Deploy Preview
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        type: string
+      lifetime:
+        description: Delete the whole preview after
+        required: true
+        default: "48h"
+        type: choice
+        options: ["24h", "48h", "7d", "custom"]
+      lifetime_custom:
+        description: Custom lifetime (e.g. 12h, 3d) — used only when lifetime=custom
+        required: false
+        type: string
+      idle_timeout:
+        description: Scale to 0 after this much idle
+        required: true
+        default: "30m"
+        type: choice
+        options: ["15m", "30m", "1h", "6h", "never"]
+      max_replicas:
+        description: Max replicas when awake
+        required: false
+        default: "3"
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: preview-${{ inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: preview
+    env:
+      # Dispatch inputs reach shell only via env (no ${{ }} inside run: blocks).
+      BRANCH: ${{ inputs.branch }}
+      IMAGE_REPOSITORY: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.APP_IMAGE_NAME }}
+      HELM_DRIVER: configmap # DEC-026
+    steps:
+      # Tooling (lib, chart, scripts) from the workflow's own ref; app code from the input branch.
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          path: src
+          persist-credentials: false
+
+      - name: Compute preview identity
+        id: id
+        env:
+          LIFETIME: ${{ inputs.lifetime }}
+          LIFETIME_CUSTOM: ${{ inputs.lifetime_custom }}
+          IDLE_TIMEOUT: ${{ inputs.idle_timeout }}
+          MAX_REPLICAS: ${{ inputs.max_replicas }}
+          PREVIEW_DOMAIN: ${{ vars.PREVIEW_DOMAIN }}
+          SRC_DIR: src
+        run: ./scripts/preview-ci.sh plan
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: ACR login
+        env:
+          ACR_NAME: ${{ vars.ACR_NAME }}
+        run: az acr login -n "$ACR_NAME"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: src/todo # BLK-002 / DEC-012: the preview target is the todo app
+          platforms: linux/amd64 # DEC-025: AKS node pool is amd64
+          push: true
+          tags: ${{ env.IMAGE_REPOSITORY }}:${{ steps.id.outputs.short_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: v0.2.20
+
+      - uses: azure/aks-set-context@v4
+        with:
+          cluster-name: ${{ vars.AKS_CLUSTER }}
+          resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
+          admin: false
+          use-kubelogin: true
+
+      - name: Create/label namespace
+        env:
+          NAMESPACE: ${{ steps.id.outputs.namespace }}
+          PREVIEW_ID: ${{ steps.id.outputs.preview_id }}
+          SHORT_SHA: ${{ steps.id.outputs.short_sha }}
+          EXPIRES_AT: ${{ steps.id.outputs.expires_at }}
+        run: ./scripts/preview-ci.sh namespace
+
+      - name: Deploy chart
+        env:
+          PREVIEW_ID: ${{ steps.id.outputs.preview_id }}
+          NAMESPACE: ${{ steps.id.outputs.namespace }}
+          HOST: ${{ steps.id.outputs.host }}
+          SHORT_SHA: ${{ steps.id.outputs.short_sha }}
+          IDLE_SECONDS: ${{ steps.id.outputs.idle }}
+          MAX_REPLICAS: ${{ steps.id.outputs.max_replicas }}
+          INTERCEPTOR_FQDN: ${{ vars.INTERCEPTOR_FQDN }}
+          INTERCEPTOR_PORT: ${{ vars.INTERCEPTOR_PORT }}
+          INGRESS_CLASS: ${{ vars.INGRESS_CLASS }} # DEC-022
+        run: ./scripts/preview-ci.sh deploy
+
+      - name: Verify (cold-start proof)
+        env:
+          HOST: ${{ steps.id.outputs.host }}
+        run: ./scripts/preview-ci.sh verify
+
+      - name: Summary
+        if: always()
+        env:
+          SHORT_SHA: ${{ steps.id.outputs.short_sha }}
+          NAMESPACE: ${{ steps.id.outputs.namespace }}
+          HOST: ${{ steps.id.outputs.host }}
+          IDLE_TIMEOUT: ${{ inputs.idle_timeout }}
+          LIFETIME: ${{ steps.id.outputs.lifetime || inputs.lifetime }}
+          JOB_STATUS: ${{ job.status }}
+        run: ./scripts/preview-ci.sh summary

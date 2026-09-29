@@ -4,19 +4,19 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 `scripts/lib/preview.sh` instead of inlining the sanitizer (DEC-010).
 
 ## F006 — `preview-deploy.yml`
-**Status**: IN PROGRESS
+**Status**: IN REVIEW (only the dispatch e2e is open — BLK-009)
 
 ### Acceptance criteria
-- [ ] Inputs/permissions/concurrency exactly per `architecture/API_SURFACE.md`.
-- [ ] Image pushed as `<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>:<short_sha>`.
-- [ ] Namespace applied with full label contract (`DATA_MODEL.md`).
-- [ ] `helm upgrade --install --wait` succeeds; redeploy same branch rolls same release.
-- [ ] Verify step: 200 within 30×5s (public curl, or in-cluster variant per BLK-003).
-- [ ] Job summary shows branch, commit, image, namespace, idle, lifetime, URL (`if: always()`).
-- [ ] actionlint clean.
-- [ ] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
-- [ ] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
-- [ ] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
+- [x] Inputs/permissions/concurrency exactly per `architecture/API_SURFACE.md`.
+- [x] Image pushed as `<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>:<short_sha>`.
+- [x] Namespace applied with full label contract (`DATA_MODEL.md`).
+- [x] `helm upgrade --install --wait` succeeds; redeploy same branch rolls same release.
+- [x] Verify step: 200 within 30×5s (public curl, or in-cluster variant per BLK-003).
+- [x] Job summary shows branch, commit, image, namespace, idle, lifetime, URL (`if: always()`).
+- [x] actionlint clean.
+- [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
+- [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
+- [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
 - [ ] E2E: dispatch against a test branch; URL works; wakes after idle.
 
 ## F007 — `preview-destroy.yml`
