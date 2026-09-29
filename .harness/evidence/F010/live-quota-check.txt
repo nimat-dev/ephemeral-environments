@@ -1,0 +1,23 @@
+# F010 live quota check — 2026-09-29T22:19:55Z
+deploy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36638763992 (success)
+$ scripts/quota-check.sh preview-e2e-quota-test
+[info] quota-check: quota preview-e2e-quota-test: {"limits.cpu":"2","limits.memory":"4Gi","pods":"6","requests.cpu":"2","requests.memory":"4Gi"} used {"limits.cpu":"500m","limits.memory":"512Mi","pods":"1","requests.cpu":"100m","requests.memory":"128Mi"}
+[info] quota-check: CP0 PASS small pod fits
+[info] quota-check: CP1 PASS cpu over limits.cpu: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-cpu" is forbidden: exceeded quota: preview-quota, requested: limits.cpu=1k, used: limits.cpu=500m, limited: limits.cpu=2
+[info] quota-check: CP2 PASS memory over limits.memory: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-mem" is forbidden: exceeded quota: preview-quota, requested: limits.memory=1Ti, used: limits.memory=512Mi, limited: limits
+[info] quota-check: CP3 PASS pod without resources: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-none" is forbidden: failed quota: preview-quota: must specify limits.cpu for: c; limits.memory for: c; requests.cpu for: c
+[info] quota-check: CP4 filling pods: used 1 / hard 6
+[info] quota-check: CP4 PASS pod beyond hard.pods=6: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-pods" is forbidden: exceeded quota: preview-quota, requested: pods=1, used: pods=6, limited: pods=6
+[info] quota-check: ALL PASS: preview-quota enforced in preview-e2e-quota-test
+[info] quota-check: cleanup: deleting fill pods in preview-e2e-quota-test
+exit=0
+fill pods after: 0
+quota used after: {"limits.cpu":"500m","limits.memory":"512Mi","pods":"1","requests.cpu":"100m","requests.memory":"128Mi"}
+
+## scaling path: kubectl scale deploy e2e-quota-test --replicas=8
+deployment.apps/e2e-quota-test scaled
+pods: 0 (all app pods: 3)
+quota used: {"limits.cpu":"1500m","limits.memory":"1536Mi","pods":"3","requests.cpu":"300m","requests.memory":"384Mi"}
+(combined from similar events): Error creating: pods "e2e-quota-test-bb87cbd6d-jlbx7" is forbidden: exceeded quota: preview-quota, requested: limits.cpu=500m, used: limits.cpu=2, limited: limits.cpu=2
+Error creating: pods "e2e-quota-test-bb87cbd6d-495n5" is forbidden: exceeded quota: preview-quota, requested: limits.cpu=500m, used: limits.cpu=2, limited: limits.cpu=2
+destroy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36639043063 (exit=0)
