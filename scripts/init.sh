@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Verify a clean, reproducible baseline (.harness/scripts/SCRIPTS.md -> init).
 # Usage: scripts/init.sh [--roadmap-only] [--roadmap FILE]
-#   --roadmap-only  run only the ROADMAP gate (exactly one IN PROGRESS feature)
+#   --roadmap-only  run only the ROADMAP gate (exactly one IN PROGRESS feature, or all COMPLETE)
 #   --roadmap FILE  ROADMAP to check (default .harness/ROADMAP.md)
 # Steps skip when their target is absent; a missing tool with a present target fails.
 # Exit: 0 baseline green, 1 failed steps (listed), 2 usage error.
@@ -44,16 +44,30 @@ step() {
 # need TOOL NAME -- true if TOOL exists, else records a failure for NAME.
 need() { command -v "$1" >/dev/null 2>&1 || { fail "$2 (tool missing: $1)"; return 1; }; }
 
+# feature_statuses FILE -> the status of each `- [ ] **F…**` line: its LAST backtick span, so a
+# description that mentions `COMPLETE` (or `IN PROGRESS`) never counts as that status.
+feature_statuses() {
+  # shellcheck disable=SC2016  # backticks are literal markdown
+  grep -E '^- \[.\] \*\*F[0-9]+\*\*' "$1" | sed -E 's/^.*`([^`]+)`[^`]*$/\1/' || true
+}
+
 check_roadmap() {
   [ -f "$roadmap" ] || { log error "roadmap not found: $roadmap"; return 1; }
-  local n
-  n=$(grep -cE "$in_progress_re" "$roadmap" || true)
+  local st n total done_n
+  st=$(feature_statuses "$roadmap")
+  n=$(grep -cx 'IN PROGRESS' <<<"$st" || true)
+  total=$(grep -c . <<<"$st" || true)
+  done_n=$(grep -cxE 'COMPLETE|DEPRECATED' <<<"$st" || true)
+  # Roadmap finished: zero IN PROGRESS is valid only when every feature is COMPLETE/DEPRECATED.
+  if [ "$n" -eq 0 ] && [ "$total" -gt 0 ] && [ "$done_n" -eq "$total" ]; then
+    log info "roadmap complete: all $total features COMPLETE/DEPRECATED"; return 0
+  fi
   [ "$n" -eq 1 ] || { log error "expected exactly 1 IN PROGRESS feature in $roadmap, found $n"; return 1; }
 }
 
 log info "start root=$root"
 
-step "roadmap: exactly one IN PROGRESS" check_roadmap
+step "roadmap: one IN PROGRESS (or all COMPLETE)" check_roadmap
 if [ "$roadmap_only" -eq 1 ]; then
   [ ${#failed[@]} -eq 0 ] && exit 0 || exit 1
 fi
@@ -96,7 +110,8 @@ log info "skip e2e smoke (no runner yet — F005)"
 
 echo
 echo "== Active feature =="
-grep -E "$in_progress_re" "$roadmap" | sed -E 's/^- \[.\] //' || true
+# shellcheck disable=SC2016  # backticks are literal markdown
+grep -E "$in_progress_re" "$roadmap" | grep -E '`IN PROGRESS`[^`]*$' | sed -E 's/^- \[.\] //' || true
 echo "== Next step (CURRENT_TASK.md) =="
 sed -n '/^## Exact next step/,/^## /p' .harness/CURRENT_TASK.md | sed '1d;$d'
 

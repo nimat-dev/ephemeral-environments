@@ -54,7 +54,7 @@ Toolchain: helm, kubectl, az, actionlint, shellcheck, yamllint, kubeconform, bat
 (Commands for paths that don't exist yet are skipped by `init.sh` until their feature lands.)
 
 ## Current target
-Phase 01 — Foundation. Feature F001 — Repo tooling. Details in `CURRENT_TASK.md`.
+Roadmap COMPLETE (13/13, 2026-09-29). No active feature — see `CURRENT_TASK.md` for follow-ups.
 
 ## Before you stop
 Run the Session-completion protocol in `AGENTS.md`: update PROJECT_STATE, CURRENT_TASK,

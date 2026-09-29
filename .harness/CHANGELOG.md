@@ -18,14 +18,17 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
-## 2026-09-29 — F011 env gate + ACR retention — IN PROGRESS (post-merge dispatch pending)
-Branch: feat/F011   Contract: `verification/contracts/F011.md`   DEC-033 (reviewers skipped), DEC-034 (purge)
+## 2026-09-29 — F011 env gate + ACR retention — COMPLETE (Phase 03 + roadmap COMPLETE, 13/13)
+Branch/commit: feat/F011 merged to main @ 733daba   PR: https://github.com/nimat-dev/ephemeral-environments/pull/15   DEC-033, DEC-034
 Evidence (`evidence/F011/`):
-  - a5 `--apply` (`a5-acrdelete.txt`): `role assignment create … AcrDelete` on nimatpreviewacr; SP roles now AcrPush, AcrDelete, AKS Cluster User; guard still verified
-  - local dry-run vs real ACR/cluster (`local-dry-run.txt`): 7d/keep 3 -> nothing; 1h/keep 3 -> would delete 85b116b, ca47e1d (oldest), keeps 3 newest
-  - bats: `purge_tags:` ×5, `preview_commits:`, `purge:` ×6, `purge workflow:`; full suite `./scripts/init.sh` -> BASELINE GREEN 178/178
-  - PR #15 review (`reviews/F011-review.md`): digest-aware protection (shared manifests), in-use from running workloads, fail closed on malformed workloads; round 2: re-read lastUpdateTime before each delete (redeploy race), digest-pinned refs parsed; bats 185/185; live dry-run unchanged
-Open: dispatch `Purge Stale Preview Images` on main (dry run, then real) via the SP.
+  - env reviewers: SKIPPED by user decision (DEC-033)
+  - a5 `--apply` (`a5-acrdelete.txt`): SP granted AcrDelete; roles AcrPush, AcrDelete, AKS Cluster User; guard still verified
+  - local operator dry-run (`local-dry-run.txt`): 7d -> nothing; 1h/keep 3 -> 85b116b, ca47e1d
+  - dispatch on main via SP (`dispatch-purge.txt`): dry run https://github.com/nimat-dev/ephemeral-environments/actions/runs/36646867534 (would delete 2, deleted 0); real https://github.com/nimat-dev/ephemeral-environments/actions/runs/36646924565 -> deleted todo:85b116b, todo:ca47e1d; tags 5 -> 3 (425ccb8 d069825 ec256f8 kept)
+  - bats: purge_tags ×7, preview_commits, image_tags_in_use, iso_epoch, purge subcommand ×9, purge workflow; full suite BASELINE GREEN 185/185
+  - PR #15 review 3 rounds (`reviews/F011-review.md`): shared-manifest protection, in-use from running workloads, fail-closed parsing, redeploy-race re-read, digest refs -> round 3 clean
+  - edge cases: in-use/keep/locked/non-sha/recent protected; unreadable inputs delete nothing; partial delete failure; config errors exit 2; fractional timestamps; empty/malformed JSON
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
 
 ## 2026-09-29 — F010 ResourceQuota enforced — COMPLETE
 Branch/commit: feat/F010   PR: see PROJECT_STATE   Contract: `verification/contracts/F010.md`   DEC-032
