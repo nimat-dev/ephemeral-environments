@@ -3,9 +3,15 @@
 #   FAKE_CTX=<current context>  FAKE_LB_IP=<ip or empty>  FAKE_ICP_PORT=<port or empty>
 #   FAKE_NS_JSON=<get namespace output>  FAKE_NS_LIST_JSON=<get namespaces -l output>  FAKE_GET_FAIL=1
 #   FAKE_DELETE_FAIL=<ns> (delete of that ns fails)
+#   FAKE_GUARD=1 (server dry-runs as --as=<sp> hit preview-deployer-guard; unset = no guard, permissive)
 #   FAKE_WAIT_FAIL=1 (kubectl wait fails)  FAKE_CANI_FAIL=1 (auth can-i denies). `apply -f -` stdin is appended to $KUBECTL_LOG.apply
 echo "$*" >>"${KUBECTL_LOG:?}"
 case " $* " in
+  *" --dry-run=server "*)
+    [[ " $* " == *" secret "* ]] && { echo 'Error from server (Forbidden): secrets is forbidden: User cannot create' >&2; exit 1; }
+    [ -n "${FAKE_GUARD:-}" ] || exit 0
+    [[ " $* " == *" create namespace preview-"* ]] && exit 0
+    echo 'Error from server (Forbidden): ... denied request: preview-deployer-guard: CI identity may only write preview-* namespaces' >&2; exit 1 ;;
   *" config current-context "*) [ -n "${FAKE_CTX:-}" ] && echo "$FAKE_CTX" || exit 1 ;;
   *" get namespaces -l "*) printf '%s' "${FAKE_NS_LIST_JSON-}"; exit "${FAKE_GET_FAIL:-0}" ;;
   *" delete namespace "*) [ -n "${FAKE_DELETE_FAIL:-}" ] && [[ " $* " == *" $FAKE_DELETE_FAIL "* ]] && exit 1; exit 0 ;;

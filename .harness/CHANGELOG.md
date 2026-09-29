@@ -18,6 +18,15 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-29 — F009 scoped ClusterRole / preview-* guard — IN PROGRESS (live apply pending BLK-010)
+Branch: feat/F009   Contract: `verification/contracts/F009.md`
+Evidence (`evidence/F009/offline-verify.txt`):
+  - baseline gap (live can-i as SP): configmaps kube-system yes, delete ns keda yes, create ns yes, deployments default yes; secrets no; Azure roles AcrPush + AKS Cluster User only
+  - a5 renders VAP `preview-deployer-guard` + binding keyed on SP oid; `kubectl apply --dry-run=server` of the rendered manifest -> accepted by the live API server
+  - bats: `A5: renders preview-deployer-guard…`, `A5 apply: guard effective -> probes…`, `A5 apply: guard not effective -> exit 1`
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN, bats 157/157
+Open: live `a5 --apply` + probes, Deploy/Destroy dispatch under the guard.
+
 ## 2026-09-29 — F007 preview-destroy.yml — COMPLETE (Phase 02 COMPLETE)
 Branch/commit: feat/F007 merged to main @ 1bde2f9; tracking on feat/F006-oidc   PR: https://github.com/nimat-dev/ephemeral-environments/pull/10
 Evidence (`evidence/F007/dispatch-destroy-e2e.txt`, `evidence/F007/scheduled-reap.txt`):

@@ -86,7 +86,7 @@ helm_calls() { grep -c . "$HELM_LOG" || true; }
 # --- A2 wildcard DNS ---
 A2="$ROOT/bootstrap/a2-wildcard-dns.sh"
 A3="$ROOT/bootstrap/a3-cert-manager.sh"
-setup_az() { export AZ_LOG="$T/az.log" GH_LOG="$T/gh.log"; : >"$AZ_LOG"; : >"$GH_LOG"; }
+setup_az() { export AZ_LOG="$T/az.log" GH_LOG="$T/gh.log" FAKE_GUARD=1 GUARD_WAIT_SECONDS=0; : >"$AZ_LOG"; : >"$GH_LOG"; }
 
 @test "A2: no record -> add wildcard to LB IP" {
   setup_az
@@ -213,6 +213,41 @@ a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-prev
   grep -q 'federated-credential update .*--federated-credential-id gh-preview-env-immutable .*repo:nimat-dev@1/ephemeral-environments@2:environment:preview' "$AZ_LOG"
   [ "$(grep -c 'federated-credential create' "$AZ_LOG" || true)" -eq 0 ]
   [[ "$output" == *"skip federated credential gh-preview-env (exists)"* ]] || false
+}
+
+@test "A5: renders preview-deployer-guard VAP keyed on the SP object id (F009)" {
+  setup_az; a5_env
+  FAKE_EXISTS="app sp" run "$A5" --env "$ENV"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"kind: ValidatingAdmissionPolicy"*"name: preview-deployer-guard"* ]] || false
+  [[ "$output" == *"expression: request.userInfo.username == 'sp-oid'"* ]] || false
+  [[ "$output" == *"? request.name.startsWith('preview-')"*": request.namespace.startsWith('preview-')"* ]] || false
+  [[ "$output" == *"kind: ValidatingAdmissionPolicyBinding"*"validationActions: [Deny]"* ]] || false
+  [[ "$output" == *"apiGroups: [authorization.k8s.io, authentication.k8s.io]"* ]] || false
+  [ "$(grep -c 'dry-run=server' "$KUBECTL_LOG" 2>/dev/null || true)" -eq 0 ]
+}
+
+@test "A5 apply: guard effective -> probes as SP pass (preview-* allowed; kube-system, default, foo, keda denied)" {
+  setup_az; a5_env
+  FAKE_EXISTS="app sp ghfic" FAKE_AZURE_RBAC=true FAKE_ROLE_COUNT=1 run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"guard verified"* ]] || false
+  grep -q 'kind: ValidatingAdmissionPolicy$' "$KUBECTL_LOG.apply"
+  grep -q '^create namespace preview-guard-probe --as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+  grep -q '^create configmap guard-probe -n kube-system .*--as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+  grep -q '^create secret generic guard-probe -n kube-system .*--as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+  grep -q '^create deployment guard-probe -n default .*--as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+  grep -q '^delete namespace keda --as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+  grep -q '^create namespace previewguard-probe --as=sp-oid --dry-run=server' "$KUBECTL_LOG"
+}
+
+@test "A5 apply: guard not effective (permissive) -> exit 1 after retries" {
+  setup_az; a5_env
+  FAKE_GUARD= GUARD_WAIT_TRIES=2 FAKE_EXISTS="app sp ghfic" FAKE_AZURE_RBAC=true FAKE_ROLE_COUNT=1 \
+    run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"allowed but must be denied: kubectl create namespace guard-probe"* ]] || false
+  [[ "$output" == *"preview-deployer-guard not effective"* ]] || false
 }
 
 @test "A5: spec's RBAC Writer is not granted; ClusterRole covers what deploy creates" {

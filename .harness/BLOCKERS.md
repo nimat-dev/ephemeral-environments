@@ -6,6 +6,7 @@ out-of-scope temptation (scope-guard) also lands here until it becomes a real RO
 ## Open
 ```
 (id | opened | feature | description | what would unblock it)
+BLK-010 | 2026-09-29 | F009 | Live apply of `preview-deployer-guard` (cluster-wide ValidatingAdmissionPolicy) was denied by the agent permission classifier; code + bats + server dry-run done | human runs `./bootstrap/a5-github-oidc.sh --apply` (self-verifies probes), or allows the agent to
 BLK-008 | 2026-09-28 | F013 follow-up | `bootstrap/teardown.sh` leaves Entra app `gh-preview-deployer` (+SP, federated cred) and UAMI `cert-manager-dns` (PR #5 review) | teardown removes them (next bootstrap touch; not Phase 02 critical path)
 ```
 

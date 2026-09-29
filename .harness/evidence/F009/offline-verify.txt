@@ -1,0 +1,16 @@
+# F009 baseline + offline verification — 2026-09-29
+## before guard: kubectl auth can-i --as=<sp>
+create configmaps -n kube-system: yes
+create secrets -n kube-system: no - Azure does not have opinion for this non AAD user. If you are an AAD user, please set Extra:oid parameter for impersonated user in the kubeconfig
+delete namespaces/keda: yes
+create namespaces: yes
+create deployments -n default: yes
+## Azure roles of SP
+AcrPush
+Azure Kubernetes Service Cluster User Role
+## rendered a5 manifest: kubectl apply --dry-run=server
+clusterrole.rbac.authorization.k8s.io/preview-deployer unchanged (server dry run)
+clusterrolebinding.rbac.authorization.k8s.io/preview-deployer unchanged (server dry run)
+validatingadmissionpolicy.admissionregistration.k8s.io/preview-deployer-guard created (server dry run)
+validatingadmissionpolicybinding.admissionregistration.k8s.io/preview-deployer-guard created (server dry run)
+## full suite: ./scripts/init.sh -> BASELINE GREEN, bats 157/157
