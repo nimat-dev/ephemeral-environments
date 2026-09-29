@@ -23,7 +23,8 @@ if [ -n "${FAKE_QUOTA:-}" ]; then
       if [[ "$m" != *resources:* ]]; then echo 'Error from server (Forbidden): failed quota: preview-quota: must specify limits.cpu' >&2; exit 1; fi
       if [[ "$m" == *quota-probe-pods* ]]; then echo 'Error from server (Forbidden): exceeded quota: preview-quota, requested: pods=1, used: pods=6, limited: pods=6' >&2; exit 1; fi
       exit 0 ;;
-    *" apply "*" -f - "*) cat >>"$KUBECTL_LOG.apply"; exit "${FAKE_FILL_FAIL:-0}" ;;
+    *" apply "*" -f - "*) cat >>"$KUBECTL_LOG.apply"; [ -z "${FAKE_FILL_FAIL:-}" ] && exit 0
+      echo 'Error from server (Forbidden): exceeded quota: preview-quota, requested: limits.cpu=1m' >&2; exit 1 ;;
     *" delete pods "*) exit 0 ;;
   esac
 fi

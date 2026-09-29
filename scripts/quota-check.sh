@@ -13,13 +13,17 @@ NS="${1:-}"
 IMAGE="${QUOTA_CHECK_IMAGE:-registry.k8s.io/pause:3.10}"
 failed=0
 
-# shellcheck disable=SC2329  # invoked via trap
-cleanup() {
-  log info "cleanup: deleting fill pods in $NS"
-  kubectl delete pods -n "$NS" -l quota-check=fill --ignore-not-found --wait=false >/dev/null 2>&1 || true
+# Waits until the fill pods are gone: terminating pods still count against hard.pods, which would
+# skew a quick rerun's CP4 and block a KEDA wake-up of the app.
+remove_fill() {
+  kubectl delete pods -n "$NS" -l quota-check=fill --ignore-not-found --grace-period=1 --wait=true \
+    --timeout="${QUOTA_CHECK_CLEANUP_TIMEOUT:-120s}" >/dev/null 2>&1 || log warn "fill pods in $NS not gone yet"
 }
+# shellcheck disable=SC2329  # invoked via trap
+cleanup() { log info "cleanup: deleting fill pods in $NS"; remove_fill; }
 trap cleanup EXIT
 
+remove_fill   # leftovers from an interrupted/previous run
 q=$(kubectl get resourcequota preview-quota -n "$NS" -o json 2>/dev/null) || { log error "no ResourceQuota preview-quota in $NS"; exit 1; }
 hard_pods=$(jq -r '.status.hard.pods // .spec.hard.pods // empty' <<<"$q")
 [[ "$hard_pods" =~ ^[0-9]+$ ]] || { log error "preview-quota has no pods limit"; exit 1; }
@@ -54,7 +58,8 @@ log info "CP4 filling pods: used $used / hard $hard_pods"
 i=0
 while [ $(( used + i )) -lt "$hard_pods" ]; do
   i=$(( i + 1 ))
-  pod "quota-fill-$i" 1m 8Mi | kubectl apply -n "$NS" -f - >/dev/null 2>&1 || { log error "CP4 FAIL could not create fill pod $i"; failed=1; break; }
+  out=$(pod "quota-fill-$i" 1m 8Mi | kubectl apply -n "$NS" -f - 2>&1) ||
+    { log error "CP4 FAIL could not create fill pod $i: $out"; failed=1; break; }
 done
 [ "$failed" -eq 0 ] && expect_denied CP4 "pod beyond hard.pods=$hard_pods" "exceeded quota" quota-probe-pods 1m 8Mi
 

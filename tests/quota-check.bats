@@ -21,7 +21,8 @@ teardown() { rm -rf "$T"; }
   [ "$(grep -c "^apply -n $NS -f -" "$KUBECTL_LOG")" -eq 5 ]     # used 1 -> 6
   grep -q 'name: quota-fill-5' "$KUBECTL_LOG.apply"
   ! grep -q 'name: quota-fill-6' "$KUBECTL_LOG.apply"
-  grep -q "^delete pods -n $NS -l quota-check=fill" "$KUBECTL_LOG"
+  [ "$(grep -c "^delete pods -n $NS -l quota-check=fill .*--wait=true" "$KUBECTL_LOG")" -eq 2 ]   # before + on exit
+  [ "$(head -1 "$KUBECTL_LOG" | cut -d' ' -f1-2)" = "delete pods" ]   # leftovers cleared before reading usage
 }
 
 @test "quota not enforced (everything admitted) -> FAIL exit 1, still cleans up" {
@@ -42,7 +43,7 @@ teardown() { rm -rf "$T"; }
 @test "fill pod creation fails -> CP4 FAIL, no final probe" {
   FAKE_FILL_FAIL=1 run "$QC" "$NS"
   [ "$status" -eq 1 ]
-  [[ "$output" == *"CP4 FAIL could not create fill pod 1"* ]] || false
+  [[ "$output" == *"CP4 FAIL could not create fill pod 1: "*"exceeded quota"* ]] || false
   ! grep -q 'quota-probe-pods' "$KUBECTL_LOG.apply"
 }
 

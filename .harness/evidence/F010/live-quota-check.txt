@@ -21,3 +21,18 @@ quota used: {"limits.cpu":"1500m","limits.memory":"1536Mi","pods":"3","requests.
 (combined from similar events): Error creating: pods "e2e-quota-test-bb87cbd6d-jlbx7" is forbidden: exceeded quota: preview-quota, requested: limits.cpu=500m, used: limits.cpu=2, limited: limits.cpu=2
 Error creating: pods "e2e-quota-test-bb87cbd6d-495n5" is forbidden: exceeded quota: preview-quota, requested: limits.cpu=500m, used: limits.cpu=2, limited: limits.cpu=2
 destroy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36639043063 (exit=0)
+
+## PR #14 review re-verify (2026-09-29T22:26:34Z): deploy https://github.com/nimat-dev/ephemeral-environments/actions/runs/36639422415; two back-to-back runs
+### run 1
+[info] quota-check: CP4 filling pods: used 1 / hard 6
+[info] quota-check: CP4 PASS pod beyond hard.pods=6: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-pods" is forbidden: exceeded quota: preview-quota, requested: pods=1, used: pods=6, limited: pods=6
+[info] quota-check: ALL PASS: preview-quota enforced in preview-e2e-quota-test
+[info] quota-check: cleanup: deleting fill pods in preview-e2e-quota-test
+exit=0 (ALL PASS; zsh PIPESTATUS unset) fill pods left: 0
+### run 2
+[info] quota-check: CP4 filling pods: used 1 / hard 6
+[info] quota-check: CP4 PASS pod beyond hard.pods=6: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-pods" is forbidden: exceeded quota: preview-quota, requested: pods=1, used: pods=6, limited: pods=6
+[info] quota-check: ALL PASS: preview-quota enforced in preview-e2e-quota-test
+[info] quota-check: cleanup: deleting fill pods in preview-e2e-quota-test
+exit=0 (ALL PASS; zsh PIPESTATUS unset) fill pods left: 0
+destroy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36639676916 (success)

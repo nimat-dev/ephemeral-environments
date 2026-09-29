@@ -26,6 +26,7 @@ Evidence (`evidence/F010/live-quota-check.txt`):
   - scaling path: `kubectl scale deploy --replicas=8` -> ReplicaSet FailedCreate `exceeded quota: preview-quota, requested: limits.cpu=500m, used: limits.cpu=2` (ceiling 4 pods)
   - Destroy: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36639043063 (success); branch deleted
   - bats `tests/quota-check.bats` 7/7 (enforced, not-enforced, wrong-reason, fill failure, already full, no quota, usage/foreign ns); full suite `./scripts/init.sh` -> BASELINE GREEN 165/165
+  - PR #14 review (`reviews/F010-review.md`): cleanup waits for fill pods (+ clears leftovers first), fill errors logged; live back-to-back reruns ALL PASS, 0 leftovers
 Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
 
 ## 2026-09-29 — F009 scoped ClusterRole / preview-* guard — COMPLETE
