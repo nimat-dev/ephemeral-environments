@@ -222,3 +222,56 @@ ns_json() { printf '{"metadata":{"name":"%s","labels":{%s}}}' "$1" "$2"; }
   grep -qx '        run: ./scripts/preview-ci.sh destroy' "$DWF"
   run awk '/^ *run: /{ if ($0 ~ /\$\{\{/) print }' "$DWF"; [ -z "$output" ]
 }
+
+# --- reap (F008) ---
+RWF="$ROOT/.github/workflows/preview-reap.yml"
+ns_list() {
+  cat <<'JSON'
+{"items":[
+ {"metadata":{"name":"preview-old","labels":{"managed-by":"preview-bot","preview.expires-at":"100"}}},
+ {"metadata":{"name":"preview-live","labels":{"managed-by":"preview-bot","preview.expires-at":"900"}}},
+ {"metadata":{"name":"preview-nolabel","labels":{"managed-by":"preview-bot"}}},
+ {"metadata":{"name":"default","labels":{"managed-by":"preview-bot","preview.expires-at":"1"}}}
+]}
+JSON
+}
+
+@test "reap: deletes only expired preview-* namespaces, lists by label" {
+  FAKE_NS_LIST_JSON=$(ns_list) REAP_NOW=500 run "$CI" reap
+  [ "$status" -eq 0 ]
+  grep -qx 'get namespaces -l managed-by=preview-bot -o json' "$KUBECTL_LOG"
+  [ "$(grep '^delete ' "$KUBECTL_LOG")" = "$(printf '%s\n' \
+    'delete namespace preview-old --ignore-not-found --wait=false' \
+    'delete namespace preview-nolabel --ignore-not-found --wait=false')" ]
+  grep -qF 'Reaped `preview-old`' "$GITHUB_STEP_SUMMARY"
+}
+
+@test "reap: nothing expired / no previews -> 'nothing to reap', exit 0, no delete" {
+  for list in "$(ns_list | jq 'del(.items[] | select(.metadata.name == "preview-nolabel"))')" '{"items":[]}'; do
+    : >"$KUBECTL_LOG"
+    FAKE_NS_LIST_JSON="$list" REAP_NOW=50 run "$CI" reap
+    [ "$status" -eq 0 ]; [[ "$output" == *"nothing to reap"* ]] || false
+    ! grep -q '^delete ' "$KUBECTL_LOG"
+  done
+}
+
+@test "reap: one delete fails -> others still deleted, run fails" {
+  FAKE_NS_LIST_JSON=$(ns_list) REAP_NOW=500 FAKE_DELETE_FAIL=preview-old run "$CI" reap
+  [ "$status" -eq 1 ]
+  grep -q 'delete namespace preview-nolabel' "$KUBECTL_LOG"
+  grep -qF 'FAILED to reap `preview-old`' "$GITHUB_STEP_SUMMARY"
+}
+
+@test "reap: list failure or malformed list -> non-zero, no delete" {
+  FAKE_GET_FAIL=1 run "$CI" reap; [ "$status" -ne 0 ]
+  FAKE_NS_LIST_JSON='{bad' run "$CI" reap; [ "$status" -ne 0 ]
+  ! grep -q '^delete ' "$KUBECTL_LOG"
+}
+
+@test "reap workflow: cron */30 + dispatch, own concurrency group, calls entrypoint" {
+  grep -qx 'name: Reap Expired Previews' "$RWF"
+  grep -qF -- '- cron: "*/30 * * * *"' "$RWF"
+  grep -qx '  workflow_dispatch: {}' "$RWF"
+  grep -qx '  group: preview-reap' "$RWF"
+  grep -qx '        run: ./scripts/preview-ci.sh reap' "$RWF"
+}

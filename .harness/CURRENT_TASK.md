@@ -6,10 +6,12 @@
 (F006 PR #9 and F007 are IN REVIEW: code + tests + local e2e done; only dispatch e2e open — BLK-009.)
 
 ## Exact next step
-1. `reap` subcommand in `scripts/preview-ci.sh` (lib `expired_namespaces` + `preview-` name guard),
-   thin `preview-reap.yml` (cron `*/30` + dispatch), bats, local e2e with a `1m` lifetime preview.
-2. Human: merge PR #8, #9, then F007/F008 PRs into `main` in order (DEC-028).
-3. Agent: dispatch e2e for deploy → destroy → reap; mark F006–F008 COMPLETE; Phase 02 COMPLETE.
+1. (done) reap subcommand + workflow + bats + local e2e; PR #11.
+2. Human: merge PRs #8 → #9 → #10 → #11 into `main` in order (DEC-028, BLK-009).
+3. Agent: `gh workflow run preview-deploy.yml -f branch=<test> -f lifetime=custom -f lifetime_custom=1h -f idle_timeout=15m`
+   → summary URL 200; wait idle → wake 200; `gh workflow run preview-destroy.yml -f branch=<test>` → 404;
+   deploy again with `lifetime_custom=1m` → `gh workflow run preview-reap.yml` → reaped. Record run URLs;
+   mark F006–F008 + Phase 02 COMPLETE; then Phase 03 (F009).
 
 ## Acceptance (summary)
 See `phases/PHASE-02-WORKFLOWS.md` → F008.

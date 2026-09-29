@@ -1,0 +1,32 @@
+== deploy reap-short (expires in 60s) and reap-live (expires in 24h)
+[info] preview-ci: apply namespace preview-e2e-reap-short expires-at=1790632627
+namespace/preview-e2e-reap-short created
+[info] preview-ci: helm upgrade --install e2e-reap-short -n preview-e2e-reap-short image=nimatpreviewacr.azurecr.io/todo:85b116b
+STATUS: deployed
+REVISION: 1
+[info] preview-ci: verify attempt 1/30: 200
+[info] preview-ci: verify ok https://e2e-reap-short.preview.nimat.dev/
+[info] preview-ci: apply namespace preview-e2e-reap-live expires-at=1790718967
+namespace/preview-e2e-reap-live created
+NAME                     STATUS   AGE   PREVIEW.EXPIRES-AT
+preview-e2e-reap-live    Active   1s    1790718967
+preview-e2e-reap-short   Active   17s   1790632627
+== reap before expiry (now=1790632586)
+[info] preview-ci: reap: nothing to reap (now=1790632586)
+Nothing to reap.
+== reap after expiry (now=1790632652)
+[info] preview-ci: reap: deleting preview-e2e-reap-short
+namespace "preview-e2e-reap-short" deleted
+Reaped `preview-e2e-reap-short`.
+[info] preview-ci: reap: deleted 1 namespace(s)
+NAME                    STATUS   AGE   PREVIEW.EXPIRES-AT
+preview-e2e-reap-live   Active   92s   1790718967
+== url of reaped
+404
+== reap again
+[info] preview-ci: reap: nothing to reap (now=1790632678)
+Nothing to reap.
+== cleanup live via destroy
+[info] preview-ci: destroy: deleting preview-e2e-reap-live
+namespace "preview-e2e-reap-live" deleted
+Destroyed `preview-e2e-reap-live` (branch `e2e/reap-live`).

@@ -114,6 +114,7 @@ ns_json() {
  {"metadata":{"name":"preview-nolabel","labels":{"managed-by":"preview-bot"}}},
  {"metadata":{"name":"preview-garbage","labels":{"managed-by":"preview-bot","preview.expires-at":"soon"}}},
  {"metadata":{"name":"kube-system","labels":{"preview.expires-at":"1"}}},
+ {"metadata":{"name":"default","labels":{"managed-by":"preview-bot","preview.expires-at":"1"}}},
  {"metadata":{"name":"nolabels"}}
 ]}
 JSON
