@@ -24,7 +24,7 @@ Evidence (`evidence/F011/`):
   - a5 `--apply` (`a5-acrdelete.txt`): `role assignment create … AcrDelete` on nimatpreviewacr; SP roles now AcrPush, AcrDelete, AKS Cluster User; guard still verified
   - local dry-run vs real ACR/cluster (`local-dry-run.txt`): 7d/keep 3 -> nothing; 1h/keep 3 -> would delete 85b116b, ca47e1d (oldest), keeps 3 newest
   - bats: `purge_tags:` ×5, `preview_commits:`, `purge:` ×6, `purge workflow:`; full suite `./scripts/init.sh` -> BASELINE GREEN 178/178
-  - PR #15 review (`reviews/F011-review.md`): digest-aware protection (shared manifests), in-use from running workloads, fail closed on malformed workloads; bats 182/182; live dry-run unchanged
+  - PR #15 review (`reviews/F011-review.md`): digest-aware protection (shared manifests), in-use from running workloads, fail closed on malformed workloads; round 2: re-read lastUpdateTime before each delete (redeploy race), digest-pinned refs parsed; bats 185/185; live dry-run unchanged
 Open: dispatch `Purge Stale Preview Images` on main (dry run, then real) via the SP.
 
 ## 2026-09-29 — F010 ResourceQuota enforced — COMPLETE

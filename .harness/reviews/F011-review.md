@@ -9,4 +9,11 @@ Round 1 (`/code-review medium 15`):
 | — | (self-found while fixing) | malformed workload JSON swallowed inside nested `$(…)` → empty in-use | fixed: separate step, fails closed (bats) |
 | — | (low, not raised) | identical re-push may not bump `lastUpdateTime` | covered by keep-newest 3 + digest protection |
 
-Live dry-run after fixes (`evidence/F011/local-dry-run.txt`): unchanged selection (real digests unique). `./scripts/init.sh` BASELINE GREEN 182/182.
+Round 2 (`/code-review medium 15` on 47f5c81):
+
+| # | Where | Finding | Outcome |
+|---|---|---|---|
+| 1 | purge vs deploy race (medium) | separate concurrency groups; a redeploy of a stale tag could be deleted between purge listing and delete | fixed: deploy always re-pushes (`push: true`), and ACR refreshes `lastUpdateTime` on re-push (live: `425ccb8` created 04:33, updated 12:31 = its redeploy); purge re-reads each tag right before delete and skips if refreshed; re-read failure → skip + run fails; bats ×2 |
+| 2 | image ref parse (low) | `repo:tag@sha256:…` yielded the digest hex | fixed: strip `@sha256:` first; bats case added |
+
+Live dry-run after fixes (`evidence/F011/local-dry-run.txt`): unchanged selection (real digests unique). `./scripts/init.sh` BASELINE GREEN 185/185 after round 2; real `az acr repository show --query lastUpdateTime` + `iso_epoch` checked.

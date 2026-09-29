@@ -158,7 +158,7 @@ summary_line() { printf '%s\n' "$1" >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"; }
 # Env: ACR_NAME APP_IMAGE_NAME [PURGE_MAX_AGE=7d PURGE_KEEP=3 PURGE_DRY_RUN=false]
 cmd_purge() {
   need ACR_NAME APP_IMAGE_NAME
-  local now age keep dry list workloads running tags in_use victims tag failed=0 n=0
+  local now age keep dry list workloads running tags in_use victims tag updated failed=0 n=0
   now="${PURGE_NOW:-$(date -u +%s)}"
   age=$(to_seconds "${PURGE_MAX_AGE:-7d}") || exit 2
   keep="${PURGE_KEEP:-3}"
@@ -182,6 +182,15 @@ cmd_purge() {
   while read -r tag; do
     if [ "$dry" -eq 1 ]; then
       log info "purge: [dry-run] would delete $APP_IMAGE_NAME:$tag"; summary_line "Would purge \`$APP_IMAGE_NAME:$tag\`."; continue
+    fi
+    # A deploy re-pushes its tag (refreshing lastUpdateTime) before relabeling the namespace; re-read
+    # right before deleting so a redeploy racing this run keeps its image.
+    if ! updated=$(az acr repository show -n "$ACR_NAME" --image "$APP_IMAGE_NAME:$tag" --query lastUpdateTime -o tsv) ||
+      ! updated=$(iso_epoch "$updated"); then
+      log error "purge: cannot re-read $APP_IMAGE_NAME:$tag; skipped"; failed=1; continue
+    fi
+    if [ "$updated" -ge $(( now - age )) ]; then
+      log info "purge: $APP_IMAGE_NAME:$tag refreshed since listing (redeployed); skipped"; continue
     fi
     log info "purge: deleting $APP_IMAGE_NAME:$tag"
     if az acr repository delete -n "$ACR_NAME" --image "$APP_IMAGE_NAME:$tag" --yes >/dev/null; then

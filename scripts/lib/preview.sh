@@ -146,8 +146,15 @@ image_tags_in_use() {
     .items[]
     | select(.metadata.namespace // "" | startswith("preview-"))
     | (.spec.template.spec // .spec) | ((.containers // []) + (.initContainers // []))[] | .image
-    | select(test("(^|/)" + $name + ":[^/]+$"))
+    | sub("@sha256:[0-9a-f]+$"; "")
+    | select(test("(^|/)" + $name + ":[^/:@]+$"))
     | sub(".*:"; "")' | sort -u
+}
+
+# iso_epoch ISO8601 -> epoch seconds (fractional seconds dropped)
+iso_epoch() {
+  jq -nr --arg t "${1-}" '$t | sub("\\.[0-9]+"; "") | fromdateiso8601' 2>/dev/null ||
+    { _preview_err "invalid timestamp '${1-}'"; return 1; }
 }
 
 # purge_tags NOW MAX_AGE_SECONDS KEEP [IN_USE...] < show-tags-detail.json -> tags to delete, one per

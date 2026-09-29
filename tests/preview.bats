@@ -293,9 +293,16 @@ JSON
  {"kind":"Pod","metadata":{"namespace":"preview-a"},"spec":{"containers":[{"image":"acr.io/todo:0ld0ld0"}]}},
  {"kind":"Pod","metadata":{"namespace":"preview-a"},"spec":{"initContainers":[{"image":"acr.io/todo:1111111"}],"containers":[{"image":"busybox:1.36"}]}},
  {"kind":"Pod","metadata":{"namespace":"kube-system"},"spec":{"containers":[{"image":"acr.io/todo:bbbbbbb"}]}},
- {"kind":"Pod","metadata":{"namespace":"preview-b"},"spec":{"containers":[{"image":"acr.io/nottodo:ccccccc"}]}}
+ {"kind":"Pod","metadata":{"namespace":"preview-b"},"spec":{"containers":[{"image":"acr.io/nottodo:ccccccc"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-c"},"spec":{"containers":[{"image":"acr.io/todo:ddddddd@sha256:0123abcd"}]}},
+ {"kind":"Pod","metadata":{"namespace":"preview-c"},"spec":{"containers":[{"image":"acr.io/todo@sha256:0123abcd"}]}}
 ]}
 JSON
   [ "$status" -eq 0 ]
-  [ "$output" = "$(printf '%s\n' 0ld0ld0 1111111 aaaaaaa)" ]
+  [ "$output" = "$(printf '%s\n' 0ld0ld0 1111111 aaaaaaa ddddddd)" ]
+}
+
+@test "iso_epoch: fractional seconds dropped; garbage -> non-zero" {
+  run iso_epoch 2026-09-30T00:00:00.9876543Z; [ "$status" -eq 0 ]; [ "$output" = 1790726400 ]
+  run iso_epoch nope; [ "$status" -ne 0 ]
 }

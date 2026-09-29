@@ -312,6 +312,24 @@ purge_env() {
   [[ "$output" == *"in use [aaaaaaa bbbbbbb]"* ]] || false
 }
 
+@test "purge: tag refreshed by a racing redeploy after listing -> re-read, skipped" {
+  purge_env
+  FAKE_TAG_UPDATED=2026-09-29T23:59:00Z PURGE_KEEP=0 run "$CI" purge
+  [ "$status" -eq 0 ]
+  grep -q '^acr repository show -n acr1 --image todo:aaaaaaa --query lastUpdateTime -o tsv' "$AZ_LOG"
+  ! grep -q '^acr repository delete' "$AZ_LOG"
+  [[ "$output" == *"todo:aaaaaaa refreshed since listing (redeployed); skipped"* ]] || false
+}
+
+@test "purge: re-read fails -> tag skipped, run fails, others continue" {
+  purge_env
+  PURGE_KEEP=0 FAKE_FAIL='--image todo:ccccccc --query' run "$CI" purge
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"cannot re-read todo:ccccccc; skipped"* ]] || false
+  ! grep -q 'delete -n acr1 --image todo:ccccccc' "$AZ_LOG"
+  grep -q 'delete -n acr1 --image todo:aaaaaaa' "$AZ_LOG"
+}
+
 @test "purge: dry run lists, deletes nothing" {
   purge_env
   PURGE_KEEP=0 PURGE_DRY_RUN=true run "$CI" purge
@@ -341,7 +359,7 @@ purge_env() {
 
 @test "purge: one delete fails -> others still deleted, run fails" {
   purge_env
-  PURGE_KEEP=0 FAKE_FAIL='todo:ccccccc' run "$CI" purge
+  PURGE_KEEP=0 FAKE_FAIL='--image todo:ccccccc --yes' run "$CI" purge
   [ "$status" -eq 1 ]
   grep -q 'delete -n acr1 --image todo:aaaaaaa' "$AZ_LOG"
   grep -qF 'FAILED to purge `todo:ccccccc`' "$GITHUB_STEP_SUMMARY"
