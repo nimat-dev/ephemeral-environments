@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # A5: GitHub Actions -> Azure OIDC identity for preview workflows (no secrets).
 #  - AKS: Entra ID integration + Azure RBAC (needed for kubelogin); operator gets RBAC Cluster Admin
-#  - Entra app + SP + federated credential repo:<GH_REPO>:environment:preview
+#  - Entra app + SP + federated credential repo:<GH_REPO>:environment:preview (+ the repo's
+#    immutable-id subject when GitHub issues one)
 #  - SP: AcrPush (ACR), AKS Cluster User Role (kubeconfig)
 #  - k8s ClusterRole `preview-deployer` bound to the SP (spec's RBAC Writer can't create
 #    namespaces, resourcequotas or HTTPScaledObjects — DEC-024); no secrets (DEC-026)
@@ -65,12 +66,24 @@ else
 fi
 sp_id="${sp_id:-<sp-object-id>}"
 
-subject="repo:$GH_REPO:environment:preview"
-n=$(az ad app federated-credential list --id "$app_id" --query "[?name=='gh-preview-env'] | length(@)" -o tsv 2>/dev/null || echo 0)
-if [ "${n:-0}" -ge 1 ]; then log info "skip federated credential gh-preview-env (exists)"
+# ensure_fic NAME SUBJECT
+ensure_fic() {
+  local n
+  n=$(az ad app federated-credential list --id "$app_id" --query "[?name=='$1'] | length(@)" -o tsv 2>/dev/null || echo 0)
+  if [ "${n:-0}" -ge 1 ]; then log info "skip federated credential $1 (exists)"
+  else
+    run az ad app federated-credential create --id "$app_id" --parameters \
+      "{\"name\":\"$1\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"$2\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+  fi
+}
+ensure_fic gh-preview-env "repo:$GH_REPO:environment:preview"
+# Repos on GitHub's immutable subject format send repo:<owner>@<id>/<repo>@<id>:... (AADSTS700213
+# otherwise). Read the repo's actual prefix and federate it too.
+prefix=$(gh api "repos/$GH_REPO/actions/oidc/customization/sub" --jq '.sub_claim_prefix // ""' 2>/dev/null || true)
+if [ -n "$prefix" ] && [ "$prefix" != "repo:$GH_REPO" ]; then
+  ensure_fic gh-preview-env-immutable "$prefix:environment:preview"
 else
-  run az ad app federated-credential create --id "$app_id" --parameters \
-    "{\"name\":\"gh-preview-env\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"$subject\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+  log info "oidc subject prefix: legacy repo:$GH_REPO"
 fi
 
 # 4. Azure roles for the SP

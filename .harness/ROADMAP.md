@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 7 / 13 COMPLETE (54%) — Phase 01 COMPLETE
+**Progress**: 9 / 13 COMPLETE (69%) — Phase 01 COMPLETE
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -18,9 +18,9 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F012** — Sample app container: `todo/Dockerfile` (Vite build → nginx-unprivileged :8080, SPA fallback) — the image F005/F006 deploy — `COMPLETE`
 
 ## Phase 02 — Workflows (Part D)
-- [ ] **F006** — `preview-deploy.yml`: dispatch → build/push → ns+labels → helm → verify → summary — `IN REVIEW` (built + local e2e green; dispatch e2e needs `main`, BLK-009)
-- [ ] **F007** — `preview-destroy.yml`: dispatch → delete ns — `IN REVIEW` (local e2e green; dispatch e2e needs `main`, BLK-009)
-- [ ] **F008** — `preview-reap.yml`: cron */30 → delete expired ns — `IN PROGRESS` (built + local e2e green; only scheduled-run e2e on `main` open, BLK-009)
+- [x] **F006** — `preview-deploy.yml`: dispatch → build/push → ns+labels → helm → verify → summary — `COMPLETE`
+- [ ] **F007** — `preview-destroy.yml`: dispatch → delete ns — `IN PROGRESS` (merged; only the GitHub dispatch run is open)
+- [x] **F008** — `preview-reap.yml`: cron */30 → delete expired ns — `COMPLETE`
 
 ## Phase 03 — Hardening (Part E step 6)
 - [ ] **F009** — Scoped ClusterRole already in F004 (DEC-024); remaining: restrict SP namespace create/delete to `preview-*` (ValidatingAdmissionPolicy) + negative tests — `NOT STARTED`

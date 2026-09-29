@@ -18,6 +18,23 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-29 — F008 preview-reap.yml — COMPLETE
+Branch/commit: feat/F008 merged to main @ 425ccb8   PR: https://github.com/nimat-dev/ephemeral-environments/pull/11
+Evidence (`evidence/F008/dispatch-reap-e2e.txt`):
+  - Deploy `e2e/reap-test` lifetime 1m: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36522237996 (success)
+  - Reap dispatch: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36522361188 (success) -> deleted only `preview-e2e-reap-test`; live `preview-e2e-preview-test` (1h) kept; reaped URL 404
+  - earlier local e2e + bats 26/26 (entry 2026-09-28)
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
+
+## 2026-09-29 — F006 preview-deploy.yml — COMPLETE
+Branch/commit: feat/F006 merged to main @ b8ac00d; OIDC fix on feat/F006-oidc   PR: https://github.com/nimat-dev/ephemeral-environments/pull/9
+Evidence (`evidence/F006/dispatch-e2e.txt`, `evidence/F006/a5-immutable-subject.txt`):
+  - run 36521876981 FAILED at azure/login: AADSTS700213, repo issues immutable OIDC subject `repo:nimat-dev@183449925/ephemeral-environments@1392951147:environment:preview` -> a5 now federates it (DEC-030; bats `A5: immutable OIDC subject prefix`), applied
+  - https://github.com/nimat-dev/ephemeral-environments/actions/runs/36522067800 (success): plan -> build/push `todo:425ccb8` -> ns with label contract -> helm rev 1 (configmap) -> verify 200 attempt 1 -> summary
+  - idle 15m: scaled to 0 at 04:49:05Z; wake request HTTP 200 in 9.0s, 0/0 -> 1/1
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN, bats 152/152
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
+
 ## 2026-09-28 — F008 preview-reap.yml — IN PROGRESS (e2e on main pending BLK-009)
 Branch/commit: feat/F008   PR: see PROJECT_STATE   CI: N/A until on main
 Contract: `verification/contracts/F008.md`

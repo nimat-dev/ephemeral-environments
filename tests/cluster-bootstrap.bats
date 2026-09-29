@@ -184,6 +184,17 @@ a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-prev
   [ "$(grep -cE ' create | update ' "$AZ_LOG" || true)" -eq 0 ]
 }
 
+@test "A5: immutable OIDC subject prefix -> second federated credential; legacy -> none" {
+  setup_az; a5_env; export GH_LOG="$T/gh.log"; : >"$GH_LOG"
+  FAKE_GH_SUB_PREFIX='repo:nimat-dev@1/ephemeral-environments@2' run "$A5" --env "$ENV"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *'"name":"gh-preview-env-immutable"'*'"subject":"repo:nimat-dev@1/ephemeral-environments@2:environment:preview"'* ]] || false
+  FAKE_GH_SUB_PREFIX='repo:nimat-dev/ephemeral-environments' run "$A5" --env "$ENV"
+  [[ "$output" != *gh-preview-env-immutable* ]] || false
+  FAKE_GH_SUB_PREFIX='' run "$A5" --env "$ENV"
+  [ "$status" -eq 0 ]; [[ "$output" != *gh-preview-env-immutable* ]] || false
+}
+
 @test "A5: spec's RBAC Writer is not granted; ClusterRole covers what deploy creates" {
   setup_az; a5_env
   run "$A5" --env "$ENV"
