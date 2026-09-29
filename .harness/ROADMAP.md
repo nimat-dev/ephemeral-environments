@@ -23,6 +23,6 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F008** — `preview-reap.yml`: cron */30 → delete expired ns — `COMPLETE`
 
 ## Phase 03 — Hardening (Part E step 6)
-- [ ] **F009** — Scoped ClusterRole already in F004 (DEC-024); remaining: restrict SP namespace create/delete to `preview-*` (ValidatingAdmissionPolicy) + negative tests — `NOT STARTED`
+- [ ] **F009** — Scoped ClusterRole already in F004 (DEC-024); remaining: restrict SP namespace create/delete to `preview-*` (ValidatingAdmissionPolicy) + negative tests — `IN PROGRESS`
 - [ ] **F010** — Prove per-namespace `ResourceQuota` enforced — `NOT STARTED`
 - [ ] **F011** — `preview` env required reviewers (optional gate) + ACR retention policy for SHA tags — `NOT STARTED`

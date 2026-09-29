@@ -2,7 +2,7 @@
 
 **Feature**: F009 — Scoped k8s ClusterRole (restrict SP to `preview-*` namespaces)
 **Phase**: Phase 03 — Hardening (Phase 02 COMPLETE 2026-09-29)
-**Status**: NOT STARTED (next up once PR #12 `feat/F006-oidc` merges)
+**Status**: IN PROGRESS (no code yet; starts once the `feat/F006-oidc` PR merges)
 
 ## Exact next step
 1. Merge PR for `feat/F006-oidc` (a5 immutable OIDC subject DEC-030 + F007/Phase 02 completion tracking).

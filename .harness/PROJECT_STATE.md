@@ -4,7 +4,7 @@
 
 ## Where we are
 - **Phase**: Phase 03 — Hardening (Phase 01 COMPLETE 2026-09-28, Phase 02 COMPLETE 2026-09-29)
-- **Active feature**: F009 — scoped ClusterRole / `preview-*` admission guard (NOT STARTED; starts after `feat/F006-oidc` PR merges). F006–F008 COMPLETE via real GitHub runs.
+- **Active feature**: F009 — scoped ClusterRole / `preview-*` admission guard (IN PROGRESS, no code yet; starts after `feat/F006-oidc` PR merges). F006–F008 COMPLETE via real GitHub runs.
 - **Overall progress**: 10 / 13 features COMPLETE (77%)
 
 ## Last verified

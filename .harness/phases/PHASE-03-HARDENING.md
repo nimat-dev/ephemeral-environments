@@ -3,7 +3,7 @@
 Spec Part E step 6 + A5 hardening note.
 
 ## F009 — Scoped k8s ClusterRole
-**Status**: NOT STARTED
+**Status**: IN PROGRESS
 - [ ] SP AAD object bound to k8s `ClusterRole` limited to namespaces, deployments, services, ingresses, httpscaledobjects, resourcequotas.
 - [ ] Azure `RBAC Writer` assignment removed; F006–F008 still pass.
 - [ ] Negative test: SP cannot write e.g. secrets in `kube-system`.
