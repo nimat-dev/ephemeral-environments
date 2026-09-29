@@ -42,6 +42,7 @@ Evidence (`evidence/F006/dispatch-e2e.txt`, `evidence/F006/a5-immutable-subject.
   - https://github.com/nimat-dev/ephemeral-environments/actions/runs/36522067800 (success): plan -> build/push `todo:425ccb8` -> ns with label contract -> helm rev 1 (configmap) -> verify 200 attempt 1 -> summary
   - idle 15m: scaled to 0 at 04:49:05Z; wake request HTTP 200 in 9.0s, 0/0 -> 1/1
   - full suite: `./scripts/init.sh` -> BASELINE GREEN, bats 152/152
+  - PR #12 review fixes (`reviews/F006-oidc-review.md`): gh lookup failure fails --apply; FIC subject drift -> update; bats 154/154 GREEN
 Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
 
 ## 2026-09-28 — F008 preview-reap.yml — IN PROGRESS (e2e on main pending BLK-009)

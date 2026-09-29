@@ -86,7 +86,7 @@ helm_calls() { grep -c . "$HELM_LOG" || true; }
 # --- A2 wildcard DNS ---
 A2="$ROOT/bootstrap/a2-wildcard-dns.sh"
 A3="$ROOT/bootstrap/a3-cert-manager.sh"
-setup_az() { export AZ_LOG="$T/az.log"; : >"$AZ_LOG"; }
+setup_az() { export AZ_LOG="$T/az.log" GH_LOG="$T/gh.log"; : >"$AZ_LOG"; : >"$GH_LOG"; }
 
 @test "A2: no record -> add wildcard to LB IP" {
   setup_az
@@ -190,9 +190,29 @@ a5_env() { printf 'GH_REPO=nimat-dev/ephemeral-environments\nGH_APP_NAME=gh-prev
   [ "$status" -eq 0 ]
   [[ "$output" == *'"name":"gh-preview-env-immutable"'*'"subject":"repo:nimat-dev@1/ephemeral-environments@2:environment:preview"'* ]] || false
   FAKE_GH_SUB_PREFIX='repo:nimat-dev/ephemeral-environments' run "$A5" --env "$ENV"
-  [[ "$output" != *gh-preview-env-immutable* ]] || false
+  [ "$status" -eq 0 ]; [[ "$output" != *gh-preview-env-immutable* ]] || false
   FAKE_GH_SUB_PREFIX='' run "$A5" --env "$ENV"
   [ "$status" -eq 0 ]; [[ "$output" != *gh-preview-env-immutable* ]] || false
+}
+
+@test "A5: OIDC prefix lookup fails -> --apply exits 1, dry-run warns" {
+  setup_az; a5_env
+  FAKE_GH_SUB_FAIL=1 FAKE_EXISTS="app sp ghfic" FAKE_AZURE_RBAC=true FAKE_ROLE_COUNT=1 run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"cannot read OIDC subject prefix"* ]] || false
+  [[ "$output" != *"legacy"* ]] || false
+  FAKE_GH_SUB_FAIL=1 run "$A5" --env "$ENV"
+  [ "$status" -eq 0 ]; [[ "$output" == *"[warn]"*"cannot read OIDC subject prefix"* ]] || false
+}
+
+@test "A5: federated credential subject drift -> update, not skip" {
+  setup_az; a5_env
+  FAKE_GH_SUB_PREFIX='repo:nimat-dev@1/ephemeral-environments@2' FAKE_GHFIC_IMM_SUBJECT='repo:old@1/old@2:environment:preview' \
+    FAKE_EXISTS="app sp ghfic" FAKE_AZURE_RBAC=true FAKE_ROLE_COUNT=1 run "$A5" --env "$ENV" --apply
+  [ "$status" -eq 0 ]
+  grep -q 'federated-credential update .*--federated-credential-id gh-preview-env-immutable .*repo:nimat-dev@1/ephemeral-environments@2:environment:preview' "$AZ_LOG"
+  [ "$(grep -c 'federated-credential create' "$AZ_LOG" || true)" -eq 0 ]
+  [[ "$output" == *"skip federated credential gh-preview-env (exists)"* ]] || false
 }
 
 @test "A5: spec's RBAC Writer is not granted; ClusterRole covers what deploy creates" {

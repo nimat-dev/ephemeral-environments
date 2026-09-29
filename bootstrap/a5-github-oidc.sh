@@ -66,25 +66,36 @@ else
 fi
 sp_id="${sp_id:-<sp-object-id>}"
 
-# ensure_fic NAME SUBJECT
+# ensure_fic NAME SUBJECT -- create, or update when the stored subject drifted (repo rename/transfer)
 ensure_fic() {
-  local n
-  n=$(az ad app federated-credential list --id "$app_id" --query "[?name=='$1'] | length(@)" -o tsv 2>/dev/null || echo 0)
-  if [ "${n:-0}" -ge 1 ]; then log info "skip federated credential $1 (exists)"
+  local cur params
+  cur=$(az ad app federated-credential list --id "$app_id" --query "[?name=='$1'].subject | [0]" -o tsv 2>/dev/null || true)
+  params="{\"name\":\"$1\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"$2\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+  if [ "$cur" = "$2" ]; then log info "skip federated credential $1 (exists)"
+  elif [ -n "$cur" ]; then
+    log warn "federated credential $1 subject drift: $cur -> $2"
+    run az ad app federated-credential update --id "$app_id" --federated-credential-id "$1" --parameters "$params"
   else
-    run az ad app federated-credential create --id "$app_id" --parameters \
-      "{\"name\":\"$1\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"$2\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+    run az ad app federated-credential create --id "$app_id" --parameters "$params"
   fi
 }
 ensure_fic gh-preview-env "repo:$GH_REPO:environment:preview"
 # Repos on GitHub's immutable subject format send repo:<owner>@<id>/<repo>@<id>:... (AADSTS700213
-# otherwise). Read the repo's actual prefix and federate it too.
-prefix=$(gh api "repos/$GH_REPO/actions/oidc/customization/sub" --jq '.sub_claim_prefix // ""' 2>/dev/null || true)
-if [ -n "$prefix" ] && [ "$prefix" != "repo:$GH_REPO" ]; then
-  ensure_fic gh-preview-env-immutable "$prefix:environment:preview"
-else
-  log info "oidc subject prefix: legacy repo:$GH_REPO"
+# otherwise). Read the repo's actual prefix and federate it too. A failed lookup is not "legacy":
+# skipping the credential would break azure/login, so --apply stops.
+if ! prefix=$(gh api "repos/$GH_REPO/actions/oidc/customization/sub" --jq '.sub_claim_prefix // ""' 2>/dev/null); then
+  if [ "$APPLY" -eq 1 ]; then
+    log error "cannot read OIDC subject prefix for $GH_REPO (gh missing, not logged in, or active account lacks access)"
+    exit 1
+  fi
+  log warn "cannot read OIDC subject prefix for $GH_REPO; --apply will fail until gh can"
+  prefix="?"
 fi
+case "$prefix" in
+  "?") ;;
+  ""|"repo:$GH_REPO") log info "oidc subject prefix: legacy repo:$GH_REPO" ;;
+  *) ensure_fic gh-preview-env-immutable "$prefix:environment:preview" ;;
+esac
 
 # 4. Azure roles for the SP
 ensure_role "$sp_id" AcrPush "$acr_id"

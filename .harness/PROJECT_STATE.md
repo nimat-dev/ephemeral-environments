@@ -10,7 +10,7 @@
 ## Last verified
 - **Date**: 2026-09-29
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-29)
-- **Full suite + check-architecture**: green — `bats tests/` 152/152; check-architecture clean
+- **Full suite + check-architecture**: green — `bats tests/` 154/154; check-architecture clean
 - **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404 (`evidence/F006`–`F008`)
 - **Git**: PRs #8–#11 merged to `main` (425ccb8). Branch `feat/F006-oidc` = a5 immutable OIDC subject fix (DEC-030) + F007/Phase 02 tracking, pushed, PR open (see CURRENT_TASK).
 

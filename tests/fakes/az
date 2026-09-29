@@ -3,6 +3,7 @@
 #   FAKE_EXISTS="acr aks zone"  FAKE_UNREG="Microsoft.X"  FAKE_ACCOUNT_FAIL=1  FAKE_RG_MISSING=1
 #   FAKE_LIMIT=4  FAKE_RESTRICT=NotAvailableForSubscription  FAKE_NO_SKU=1  FAKE_AKS_OIDC=false
 #   FAKE_FAIL="aks create"  FAKE_A_IPS="1.2.3.4"  FAKE_ROLE_COUNT=1  (FAKE_EXISTS also: uami fic app sp ghfic)  FAKE_AZURE_RBAC=true
+#   FAKE_GHFIC_SUBJECT / FAKE_GHFIC_IMM_SUBJECT = stored subject of gh-preview-env / -immutable (with ghfic)
 echo "$*" >>"$AZ_LOG"
 args=" $* "
 has() { [[ " ${FAKE_EXISTS:-} " == *" $1 "* ]]; }
@@ -34,7 +35,10 @@ case "$args" in
   *" aks show "*" --query id "*) echo /aks-id ;;
   *" aks show "*"enableAzureRbac"*) echo "${FAKE_AZURE_RBAC:-}" ;;
   *" ad signed-in-user show "*) echo me-oid ;;
-  *" ad app federated-credential list "*) has ghfic && echo 1 || echo 0 ;;
+  *" ad app federated-credential list "*)
+    has ghfic || exit 0
+    if [[ "$args" == *gh-preview-env-immutable* ]]; then echo "${FAKE_GHFIC_IMM_SUBJECT:-}"
+    else echo "${FAKE_GHFIC_SUBJECT:-repo:nimat-dev/ephemeral-environments:environment:preview}"; fi ;;
   *" ad app list "*) has app && echo app-123 || true ;;
   *" ad sp show "*) has sp && echo sp-oid || exit 3 ;;
   *" aks show "*)
