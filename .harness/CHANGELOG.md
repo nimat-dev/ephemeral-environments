@@ -18,6 +18,15 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-29 — F007 preview-destroy.yml — COMPLETE (Phase 02 COMPLETE)
+Branch/commit: feat/F007 merged to main @ 1bde2f9; tracking on feat/F006-oidc   PR: https://github.com/nimat-dev/ephemeral-environments/pull/10
+Evidence (`evidence/F007/dispatch-destroy-e2e.txt`, `evidence/F007/scheduled-reap.txt`):
+  - Deploy `e2e/preview-test` lifetime 24h: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36568611973 (success, verify ok) -> GET 200
+  - Destroy dispatch: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36568750009 (success) -> `namespace "preview-e2e-preview-test" deleted`; GET -> 404
+  - first scheduled reap (cron) run 36558226159 10:52Z: deleted expired `preview-e2e-preview-test` (1h lifetime) -> F008 cron path proven too
+  - full suite: `./scripts/init.sh` -> BASELINE GREEN (2026-09-29)
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0 (PASS)
+
 ## 2026-09-29 — F008 preview-reap.yml — COMPLETE
 Branch/commit: feat/F008 merged to main @ 425ccb8   PR: https://github.com/nimat-dev/ephemeral-environments/pull/11
 Evidence (`evidence/F008/dispatch-reap-e2e.txt`):

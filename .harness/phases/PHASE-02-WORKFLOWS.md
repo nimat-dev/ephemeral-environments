@@ -1,4 +1,4 @@
-# Phase 02 — Workflows
+# Phase 02 — Workflows — COMPLETE (2026-09-29)
 
 GitHub Actions per spec Part D, on the default branch. Workflows source
 `scripts/lib/preview.sh` instead of inlining the sanitizer (DEC-010).
@@ -20,7 +20,7 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 - [x] E2E: dispatch against a test branch; URL works; wakes after idle.
 
 ## F007 — `preview-destroy.yml`
-**Status**: IN PROGRESS (only the GitHub dispatch run is open)
+**Status**: COMPLETE (2026-09-29)
 
 ### Acceptance criteria
 - [x] Destroys `preview-<id>` where id is computed by the same lib as deploy.
@@ -28,7 +28,7 @@ GitHub Actions per spec Part D, on the default branch. Workflows source
 - [x] Edge/error cases from `verification/edge-cases.md` (applicable ones) covered by tests.
 - [x] Boundary invariants: obeys `rules/layer-boundaries.md` (check-architecture passes).
 - [x] Verification: the FULL verify (CLAUDE.md → Commands) passes with zero errors, no regressions.
-- [ ] E2E: deploy then destroy test branch; ns gone; URL 404.
+- [x] E2E: deploy then destroy test branch; ns gone; URL 404.
 
 ## F008 — `preview-reap.yml`
 **Status**: COMPLETE (2026-09-29)

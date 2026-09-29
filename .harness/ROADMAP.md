@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 9 / 13 COMPLETE (69%) — Phase 01 COMPLETE
+**Progress**: 10 / 13 COMPLETE (77%) — Phase 01 + Phase 02 COMPLETE
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -17,9 +17,9 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F005** — Smoke test `scripts/smoke.sh` (Part C): HTTPS valid, cold-start 200, scales back to 0 — `COMPLETE`
 - [x] **F012** — Sample app container: `todo/Dockerfile` (Vite build → nginx-unprivileged :8080, SPA fallback) — the image F005/F006 deploy — `COMPLETE`
 
-## Phase 02 — Workflows (Part D)
+## Phase 02 — Workflows (Part D) — COMPLETE (2026-09-29)
 - [x] **F006** — `preview-deploy.yml`: dispatch → build/push → ns+labels → helm → verify → summary — `COMPLETE`
-- [ ] **F007** — `preview-destroy.yml`: dispatch → delete ns — `IN PROGRESS` (merged; only the GitHub dispatch run is open)
+- [x] **F007** — `preview-destroy.yml`: dispatch → delete ns — `COMPLETE`
 - [x] **F008** — `preview-reap.yml`: cron */30 → delete expired ns — `COMPLETE`
 
 ## Phase 03 — Hardening (Part E step 6)

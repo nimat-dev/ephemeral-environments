@@ -1,20 +1,19 @@
 # CURRENT TASK
 
-**Feature**: F007 — `.github/workflows/preview-destroy.yml`
-**Phase**: Phase 02 — Workflows
-**Status**: IN PROGRESS (merged to main; only the GitHub dispatch run is open)
+**Feature**: F009 — Scoped k8s ClusterRole (restrict SP to `preview-*` namespaces)
+**Phase**: Phase 03 — Hardening (Phase 02 COMPLETE 2026-09-29)
+**Status**: NOT STARTED (next up once PR #12 `feat/F006-oidc` merges)
 
 ## Exact next step
-1. `gh workflow run preview-destroy.yml -R nimat-dev/ephemeral-environments --ref main -f branch=e2e/preview-test`
-   → ns `preview-e2e-preview-test` gone, URL 404; record run URL in CHANGELOG
-   (evidence/F007/dispatch-destroy-e2e.txt). If the ns already got reaped (1h lifetime, ~05:32Z),
-   redeploy `e2e/preview-test` first. Also capture the first scheduled reap run.
-2. Push `feat/F006-oidc` (a5 immutable OIDC subject, DEC-030), open PR to main, review.
-3. Mark F007 + Phase 02 COMPLETE; delete test branches `e2e/preview-test`, `e2e/reap-test`.
-4. Phase 03: F009 (namespace-prefix admission guard).
+1. Merge PR for `feat/F006-oidc` (a5 immutable OIDC subject DEC-030 + F007/Phase 02 completion tracking).
+2. Branch `feat/F009` off main; write `verification/contracts/F009.md`.
+3. Most of the ClusterRole already exists (F004, DEC-024: `preview-deployer`, no RBAC Writer).
+   Remaining: ValidatingAdmissionPolicy limiting SP namespace create/delete to `preview-*`
+   + negative tests (SP can't write secrets in `kube-system`, can't create ns `foo`).
+4. Re-run Deploy/Destroy dispatch under the policy (Phase 03 completion needs Phase 02 e2e green).
 
 ## Acceptance (summary)
-See `phases/PHASE-02-WORKFLOWS.md` → F007.
+See `phases/PHASE-03-HARDENING.md` → F009.
 
 ## Definition of done
 Every acceptance item met + evidence in `CHANGELOG.md` + Evaluator PASS + check-architecture

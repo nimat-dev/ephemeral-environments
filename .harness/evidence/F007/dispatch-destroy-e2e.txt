@@ -1,0 +1,9 @@
+# F007 dispatch destroy e2e — 2026-09-29
+deploy run: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36568611973 (success, verify ok)
+pre-destroy: GET https://e2e-preview-test.preview.nimat.dev/ -> 200
+destroy run: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36568750009 (success)
+destroy	Delete namespace	﻿2026-09-29T12:32:23.9964945Z ##[group]Run ./scripts/preview-ci.sh destroy
+destroy	Delete namespace	2026-09-29T12:32:23.9965500Z ^[[36;1m./scripts/preview-ci.sh destroy^[[0m
+destroy	Delete namespace	2026-09-29T12:32:29.1340974Z [info] preview-ci: destroy: deleting preview-e2e-preview-test
+destroy	Delete namespace	2026-09-29T12:32:29.7488575Z namespace "preview-e2e-preview-test" deleted
+post-destroy: GET -> 404
