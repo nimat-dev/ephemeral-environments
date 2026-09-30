@@ -1,0 +1,17 @@
+# fixtures (operator):
+namespace/preview-other-f015 created
+namespace/preview-f015-legacy created
+namespace/preview-todo-f015-foreign created
+run 36706523897 exit 0
+run 36706532056 exit 0
+# reap log:
+[info] preview-ci: reap: nothing to reap (now=1790766428)
+# destroy f015-legacy log:
+[info] preview-ci: destroy: deleting preview-f015-legacy (legacy pre-F015 name)
+# ns after:
+preview-other-f015          Active
+preview-todo-f015-foreign   Active
+preview-todo-feat-f015      Active
+destroy f015-foreign run 36706594874 exit 1 (expect failure)
+[error] preview-ci: destroy: refusing preview-todo-f015-foreign (managed-by='preview-bot', repo='other-org-other-repo'; want preview-bot + nimat-dev-ephemeral-environments)
+namespace/preview-todo-f015-foreign

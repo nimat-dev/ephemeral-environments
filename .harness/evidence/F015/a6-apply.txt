@@ -1,0 +1,4 @@
+[info] a6-github-env: + gh variable set INTERCEPTOR_FQDN --env preview --repo nimat-dev/ephemeral-environments --body keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local
+[info] a6-github-env: + gh variable set INTERCEPTOR_PORT --env preview --repo nimat-dev/ephemeral-environments --body 8080
+[info] a6-github-env: + gh variable set INGRESS_CLASS --env preview --repo nimat-dev/ephemeral-environments --body traefik
+[info] a6-github-env: done

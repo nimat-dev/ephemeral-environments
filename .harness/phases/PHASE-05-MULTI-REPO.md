@@ -9,17 +9,17 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 `harness/` template. Existing bash stays until its OpenTofu/Flux replacement is proven (DEC-042).
 
 ## F015 — Repo-scoped preview identity
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] Namespace `preview-<app>-<branch-id>`; `<app>` from repo var `PREVIEW_APP` (default: repo name, sanitized). Whole name ≤ 63 chars: truncate + 6-char hash when over.
-- [ ] Host unchanged: `<branch-id>.<PREVIEW_DOMAIN>` (domain is per project, DEC-040).
-- [ ] Namespace label `preview.repo=<owner>-<repo>` (sanitized); destroy, reap, purge act only on their own repo's namespaces.
-- [ ] Legacy namespaces without `preview.repo` still destroyable/reapable by this repo (migration path), covered by a test.
-- [ ] Two repos, same branch name → distinct namespaces; repo A destroy/reap never touches repo B (bats with fixtures).
-- [ ] Edge cases (`verification/edge-cases.md`): long names, unicode/slashes in branch, empty app var, label missing/garbled.
-- [ ] Full verify green; e2e: Deploy + Destroy dispatched green on real cluster.
+**Status**: COMPLETE (2026-09-30) — contract `verification/contracts/F015.md`, evidence `evidence/F015/`
+- [x] Namespace `preview-<app>-<branch-id>`; `<app>` from repo var `PREVIEW_APP` (default: repo name, sanitized, ≤ 20). > 63 chars → 54-char prefix + 8-hex cksum.
+- [x] Host unchanged: `<branch-id>.<PREVIEW_DOMAIN>` (domain is per project, DEC-040).
+- [x] Namespace labels `preview.repo` + `preview.app` (+ annotation `preview.repo-original`); namespace apply, destroy, reap act only on owned namespaces. Purge unchanged (own image repo only; in-use set spans all previews).
+- [x] Legacy namespaces without `preview.repo` still destroyable/reapable (bats + live: `preview-f015-legacy` destroyed).
+- [x] Two repos, same branch → distinct namespaces; other repo's ns never reaped, destroy refused (bats + live runs 36706523897, 36706594874).
+- [x] Edge cases: long names/hash, unicode/symbols, empty app var → repo name, missing/garbled labels, missing `GITHUB_REPOSITORY`.
+- [x] Full verify green (206/206); e2e: Deploy 36706339119 (200) + Destroy 36706663297 (404) green on real cluster.
 
 ## F016 — `.preview.yaml` app contract with components
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (2026-09-30)
 - [ ] Schema-validated `.preview.yaml` in the app repo: `components[]` (name, build.context, build.dockerfile, port, probePath, route, resources), `addons[]` (empty for now), defaults (lifetime, idle, maxReplicas).
 - [ ] Chart loops over components (Deployment + Service + HTTPScaledObject each); path routing on one host (`/` web, `/api` backend).
 - [ ] Missing file → current single-component behaviour (todo keeps working).

@@ -18,6 +18,22 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-30 — F015 Repo-scoped preview identity — COMPLETE
+Branch/commit: feat/F015 @ 855e284   Contract: `verification/contracts/F015.md`   DEC-036, DEC-040
+Evidence (`evidence/F015/`):
+  - lib: `preview_app`, `preview_repo_label`, `preview_namespace APP ID` (≤63, 54+cksum), `preview_owns`; ns labels `preview.app`/`preview.repo`
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 206/206 (+14 new), shellcheck/actionlint/check-architecture clean (`init.txt`)
+  - a6 `--apply` → repo var `PREVIEW_APP=todo` (`a6-apply.txt`)
+  - e2e (`deploy.txt`, `isolation.txt`, `destroy.txt`, `runs.txt`): Deploy 36706339119 → ns `preview-todo-feat-f015` with
+    `preview.repo=nimat-dev-ephemeral-environments`, URL 200; Reap 36706523897 → "nothing to reap" while an expired
+    `preview.repo=other-org-other-repo` ns existed (kept); Destroy `f015-legacy` 36706532056 → legacy `preview-f015-legacy`
+    deleted; Destroy `f015-foreign` 36706594874 → refused (exit 1), foreign ns kept; Destroy `feat/F015` 36706663297 → 404, 0 preview ns left
+  - edge cases: >63 hash (stable, distinct), symbol-only/empty app → repo name, unusable repo → exit 1, missing GITHUB_REPOSITORY/APP → exit 2,
+    foreign/garbled/empty `preview.repo`, non-bot same-name ns, legacy fallback never hits labeled ns
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=4 evidence=5 => avg 4.8  (PASS)
+Notes: main's scheduled reaper (pre-F015 code) still reaps any repo until merge. Same-domain + same-branch across repos
+still shares a host (DEC-040 makes domains per project).
+
 ## 2026-09-30 — Phase 05 planned (no feature complete) — tracking only
 Branch: docs/phase-05-plan. Added Phase 05 (F015–F023) + `phases/PHASE-05-MULTI-REPO.md`, DEC-036–043; F015 IN PROGRESS.
 Discrepancy fixed: `rules/scope-guard.md` still said "Current phase: Phase 02" — now Phase 05.

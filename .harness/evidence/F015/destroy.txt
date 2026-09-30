@@ -1,0 +1,3 @@
+destroy feat/F015 run 36706663297 exit 0
+$ curl https://feat-f015.preview.nimat.dev -> 404
+preview-* namespaces left: 0

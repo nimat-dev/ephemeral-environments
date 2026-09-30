@@ -1,0 +1,6 @@
+$ kubectl get ns -l managed-by=preview-bot --show-labels
+NAME                     STATUS   AGE   LABELS
+preview-todo-feat-f015   Active   21s   kubernetes.io/metadata.name=preview-todo-feat-f015,managed-by=preview-bot,preview.app=todo,preview.branch=feat-f015,preview.commit=855e284,preview.expires-at=1790852748,preview.repo=nimat-dev-ephemeral-environments
+$ kubectl get ns preview-todo-feat-f015 -o jsonpath={.metadata.annotations}
+{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"v1\",\"kind\":\"Namespace\",\"metadata\":{\"annotations\":{\"preview.branch-original\":\"feat/F015\",\"preview.repo-original\":\"nimat-dev/ephemeral-environments\"},\"labels\":{\"managed-by\":\"preview-bot\",\"preview.app\":\"todo\",\"preview.branch\":\"feat-f015\",\"preview.commit\":\"855e284\",\"preview.expires-at\":\"1790852748\",\"preview.repo\":\"nimat-dev-ephemeral-environments\"},\"name\":\"preview-todo-feat-f015\"}}\n","preview.branch-original":"feat/F015","preview.repo-original":"nimat-dev/ephemeral-environments"}
+$ curl https://feat-f015.preview.nimat.dev -> 200
