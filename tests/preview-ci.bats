@@ -14,7 +14,7 @@ setup() {
   unset HELM_DRIVER
   git -C "$T" init -q src && git -C "$T/src" -c user.name=t -c user.email=t@t commit -q --allow-empty -m init
   export SRC_DIR="$T/src" BRANCH='Feature/JIRA-1' LIFETIME=48h LIFETIME_CUSTOM='' IDLE_TIMEOUT=30m \
-    MAX_REPLICAS=3 PREVIEW_DOMAIN=preview.example.com
+    MAX_REPLICAS=3 PREVIEW_DOMAIN=preview.example.com GITHUB_REPOSITORY=Owner/Repo PREVIEW_APP=todo
 }
 teardown() { rm -rf "$T"; }
 
@@ -29,8 +29,9 @@ deploy_env() {
   run "$CI" plan
   [ "$status" -eq 0 ]
   sha=$(git -C "$SRC_DIR" rev-parse --short HEAD)
+  grep -qx app=todo "$GITHUB_OUTPUT"
   grep -qx preview_id=feature-jira-1 "$GITHUB_OUTPUT"
-  grep -qx namespace=preview-feature-jira-1 "$GITHUB_OUTPUT"
+  grep -qx namespace=preview-todo-feature-jira-1 "$GITHUB_OUTPUT"
   grep -qx host=feature-jira-1.preview.example.com "$GITHUB_OUTPUT"
   grep -qx "short_sha=$sha" "$GITHUB_OUTPUT"
   grep -qx idle=1800 "$GITHUB_OUTPUT"
@@ -48,6 +49,21 @@ deploy_env() {
   [ "$status" -eq 1 ]; [ ! -s "$GITHUB_OUTPUT" ]
 }
 
+@test "plan: app falls back to the repo name when PREVIEW_APP is unset or empty" {
+  for v in unset ''; do
+    : >"$GITHUB_OUTPUT"
+    if [ "$v" = unset ]; then unset PREVIEW_APP; else export PREVIEW_APP=''; fi
+    GITHUB_REPOSITORY=nimat-dev/Shop_Web run "$CI" plan
+    [ "$status" -eq 0 ]; grep -qx app=shop-web "$GITHUB_OUTPUT"; grep -qx namespace=preview-shop-web-feature-jira-1 "$GITHUB_OUTPUT"
+  done
+}
+
+@test "plan: missing GITHUB_REPOSITORY -> exit 2; unusable repo -> exit 1; nothing written" {
+  GITHUB_REPOSITORY='' run "$CI" plan; [ "$status" -eq 2 ]
+  PREVIEW_APP='' GITHUB_REPOSITORY='o/***' run "$CI" plan; [ "$status" -eq 1 ]
+  [ ! -s "$GITHUB_OUTPUT" ]
+}
+
 @test "plan: missing env -> exit 2 naming it; bad src dir -> exit 1" {
   PREVIEW_DOMAIN='' run "$CI" plan
   [ "$status" -eq 2 ]; [[ "$output" == *"missing env: PREVIEW_DOMAIN"* ]] || false
@@ -57,13 +73,36 @@ deploy_env() {
 
 # --- namespace ---
 @test "namespace: applies label contract via kubectl apply -f -" {
-  export NAMESPACE=preview-feature-jira-1 PREVIEW_ID=feature-jira-1 SHORT_SHA=abc1234 EXPIRES_AT=1700000000
+  export NAMESPACE=preview-todo-feature-jira-1 PREVIEW_ID=feature-jira-1 SHORT_SHA=abc1234 EXPIRES_AT=1700000000 APP=todo
   run "$CI" namespace
   [ "$status" -eq 0 ]
+  [ "$(jq -r '.metadata.labels["preview.repo"]' "$KUBECTL_LOG.apply")" = owner-repo ]
+  [ "$(jq -r '.metadata.labels["preview.app"]' "$KUBECTL_LOG.apply")" = todo ]
   grep -q 'apply -f -' "$KUBECTL_LOG"
   [ "$(jq -r '.metadata.labels["preview.expires-at"]' "$KUBECTL_LOG.apply")" = 1700000000 ]
   [ "$(jq -r '.metadata.labels["managed-by"]' "$KUBECTL_LOG.apply")" = preview-bot ]
   [ "$(jq -r '.metadata.annotations["preview.branch-original"]' "$KUBECTL_LOG.apply")" = 'Feature/JIRA-1' ]
+}
+
+@test "namespace: existing ns of another repo -> refused, never relabeled; own/legacy -> applied" {
+  export NAMESPACE=preview-todo-feature-jira-1 PREVIEW_ID=feature-jira-1 SHORT_SHA=abc1234 EXPIRES_AT=1700000000 APP=todo
+  FAKE_NS_JSON=$(printf '{"metadata":{"name":"%s","labels":{"managed-by":"preview-bot","preview.repo":"other-repo"}}}' "$NAMESPACE") \
+    run "$CI" namespace
+  [ "$status" -eq 1 ]; [[ "$output" == *"refusing preview-todo-feature-jira-1"* ]] || false
+  [ ! -s "$KUBECTL_LOG.apply" ]
+  for l in '"managed-by":"preview-bot","preview.repo":"owner-repo"' '"managed-by":"preview-bot"'; do
+    FAKE_NS_JSON=$(printf '{"metadata":{"name":"%s","labels":{%s}}}' "$NAMESPACE" "$l") run "$CI" namespace
+    [ "$status" -eq 0 ]
+  done
+  # a same-named namespace not made by preview-bot is refused too
+  FAKE_NS_JSON=$(printf '{"metadata":{"name":"%s","labels":{}}}' "$NAMESPACE") run "$CI" namespace
+  [ "$status" -eq 1 ]
+}
+
+@test "namespace: missing APP or GITHUB_REPOSITORY -> exit 2" {
+  export NAMESPACE=preview-todo-x PREVIEW_ID=x SHORT_SHA=abc1234 EXPIRES_AT=1
+  run "$CI" namespace; [ "$status" -eq 2 ]
+  APP=todo GITHUB_REPOSITORY='' run "$CI" namespace; [ "$status" -eq 2 ]
 }
 
 # --- deploy ---
@@ -166,6 +205,8 @@ SH
   grep -qE '^          context: src/todo' "$WF"
   grep -qE '^          platforms: linux/amd64' "$WF"
   grep -qF 'INGRESS_CLASS: ${{ vars.INGRESS_CLASS }}' "$WF"
+  grep -qF 'PREVIEW_APP: ${{ vars.PREVIEW_APP }}' "$WF"
+  grep -qF 'APP: ${{ steps.id.outputs.app }}' "$WF"
   grep -qF 'tags: ${{ env.IMAGE_REPOSITORY }}:${{ steps.id.outputs.short_sha }}' "$WF"
   awk '/name: Summary/{f=1} f&&/if: always\(\)/{ok=1} END{exit !ok}' "$WF"
 }
@@ -181,14 +222,35 @@ DWF="$ROOT/.github/workflows/preview-destroy.yml"
 ns_json() { printf '{"metadata":{"name":"%s","labels":{%s}}}' "$1" "$2"; }
 
 @test "destroy: preview-bot namespace -> delete --ignore-not-found --wait=false, same id as deploy" {
-  export FAKE_NS_JSON; FAKE_NS_JSON=$(ns_json preview-feature-jira-1 '"managed-by":"preview-bot"')
+  export FAKE_NS_JSON; FAKE_NS_JSON=$(ns_json preview-todo-feature-jira-1 '"managed-by":"preview-bot","preview.repo":"owner-repo"')
   run "$CI" destroy
   [ "$status" -eq 0 ]
-  grep -q 'get namespace preview-feature-jira-1 --ignore-not-found -o json' "$KUBECTL_LOG"
-  grep -qx 'delete namespace preview-feature-jira-1 --ignore-not-found --wait=false' "$KUBECTL_LOG"
-  grep -qF 'Destroyed `preview-feature-jira-1`' "$GITHUB_STEP_SUMMARY"
+  grep -q 'get namespace preview-todo-feature-jira-1 --ignore-not-found -o json' "$KUBECTL_LOG"
+  grep -qx 'delete namespace preview-todo-feature-jira-1 --ignore-not-found --wait=false' "$KUBECTL_LOG"
+  grep -qF 'Destroyed `preview-todo-feature-jira-1`' "$GITHUB_STEP_SUMMARY"
   # deploy's plan derives the very same namespace
-  "$CI" plan 2>/dev/null; grep -qx namespace=preview-feature-jira-1 "$GITHUB_OUTPUT"
+  "$CI" plan 2>/dev/null; grep -qx namespace=preview-todo-feature-jira-1 "$GITHUB_OUTPUT"
+}
+
+@test "destroy: another repo's namespace of the same name is refused, never deleted" {
+  FAKE_NS_JSON=$(ns_json preview-todo-feature-jira-1 '"managed-by":"preview-bot","preview.repo":"other-repo"') run "$CI" destroy
+  [ "$status" -eq 1 ]; [[ "$output" == *"refusing preview-todo-feature-jira-1"* ]] || false
+  ! grep -q '^delete ' "$KUBECTL_LOG"
+}
+
+@test "destroy: pre-F015 legacy preview-<id> (no repo label) is deleted when the new name is absent" {
+  FAKE_NS_JSON=$(ns_json preview-feature-jira-1 '"managed-by":"preview-bot"') run "$CI" destroy
+  [ "$status" -eq 0 ]
+  grep -qx 'delete namespace preview-feature-jira-1 --ignore-not-found --wait=false' "$KUBECTL_LOG"
+  grep -qF 'legacy' "$GITHUB_STEP_SUMMARY"
+}
+
+@test "destroy: legacy-looking name carrying a repo label (a new-format ns) is never deleted by fallback" {
+  for l in '"managed-by":"preview-bot","preview.repo":"owner-repo"' '"managed-by":"preview-bot","preview.repo":"other-repo"' '"managed-by":"x"'; do
+    : >"$KUBECTL_LOG"
+    FAKE_NS_JSON=$(ns_json preview-feature-jira-1 "$l") run "$CI" destroy
+    [ "$status" -eq 0 ]; ! grep -q '^delete ' "$KUBECTL_LOG"
+  done
 }
 
 @test "destroy: non-existent preview -> success, no delete (idempotent)" {
@@ -201,8 +263,8 @@ ns_json() { printf '{"metadata":{"name":"%s","labels":{%s}}}' "$1" "$2"; }
 @test "destroy: namespace not owned by preview-bot is refused, never deleted" {
   for labels in '' '"managed-by":"someone-else"'; do
     : >"$KUBECTL_LOG"
-    FAKE_NS_JSON=$(ns_json preview-feature-jira-1 "$labels") run "$CI" destroy
-    [ "$status" -eq 1 ]; [[ "$output" == *"refusing preview-feature-jira-1"* ]] || false
+    FAKE_NS_JSON=$(ns_json preview-todo-feature-jira-1 "$labels") run "$CI" destroy
+    [ "$status" -eq 1 ]; [[ "$output" == *"refusing preview-todo-feature-jira-1"* ]] || false
     ! grep -q '^delete ' "$KUBECTL_LOG"
   done
 }
@@ -210,6 +272,7 @@ ns_json() { printf '{"metadata":{"name":"%s","labels":{%s}}}' "$1" "$2"; }
 @test "destroy: invalid branch -> exit 1, missing -> exit 2, kubectl get failure -> exit non-zero, no delete" {
   BRANCH='///' run "$CI" destroy; [ "$status" -eq 1 ]
   BRANCH='' run "$CI" destroy; [ "$status" -eq 2 ]
+  GITHUB_REPOSITORY='' run "$CI" destroy; [ "$status" -eq 2 ]
   FAKE_GET_FAIL=1 run "$CI" destroy; [ "$status" -ne 0 ]
   ! grep -q '^delete ' "$KUBECTL_LOG"
 }
@@ -220,6 +283,7 @@ ns_json() { printf '{"metadata":{"name":"%s","labels":{%s}}}' "$1" "$2"; }
   grep -qF 'group: preview-${{ inputs.branch }}' "$DWF"
   grep -qx '    environment: preview' "$DWF"
   grep -qx '        run: ./scripts/preview-ci.sh destroy' "$DWF"
+  grep -qF 'PREVIEW_APP: ${{ vars.PREVIEW_APP }}' "$DWF"
   run awk '/^ *run: /{ if ($0 ~ /\$\{\{/) print }' "$DWF"; [ -z "$output" ]
 }
 
@@ -231,12 +295,13 @@ ns_list() {
  {"metadata":{"name":"preview-old","labels":{"managed-by":"preview-bot","preview.expires-at":"100"}}},
  {"metadata":{"name":"preview-live","labels":{"managed-by":"preview-bot","preview.expires-at":"900"}}},
  {"metadata":{"name":"preview-nolabel","labels":{"managed-by":"preview-bot"}}},
- {"metadata":{"name":"default","labels":{"managed-by":"preview-bot","preview.expires-at":"1"}}}
+ {"metadata":{"name":"default","labels":{"managed-by":"preview-bot","preview.expires-at":"1"}}},
+ {"metadata":{"name":"preview-other-x","labels":{"managed-by":"preview-bot","preview.repo":"other-repo","preview.expires-at":"1"}}}
 ]}
 JSON
 }
 
-@test "reap: deletes only expired preview-* namespaces, lists by label" {
+@test "reap: deletes only expired preview-* namespaces of this repo (+ legacy), lists by label" {
   FAKE_NS_LIST_JSON=$(ns_list) REAP_NOW=500 run "$CI" reap
   [ "$status" -eq 0 ]
   grep -qx 'get namespaces -l managed-by=preview-bot -o json' "$KUBECTL_LOG"
@@ -263,6 +328,7 @@ JSON
 }
 
 @test "reap: list failure or malformed list -> non-zero, no delete" {
+  GITHUB_REPOSITORY='' FAKE_NS_LIST_JSON=$(ns_list) REAP_NOW=500 run "$CI" reap; [ "$status" -eq 2 ]
   FAKE_GET_FAIL=1 run "$CI" reap; [ "$status" -ne 0 ]
   FAKE_NS_LIST_JSON='{bad' run "$CI" reap; [ "$status" -ne 0 ]
   ! grep -q '^delete ' "$KUBECTL_LOG"

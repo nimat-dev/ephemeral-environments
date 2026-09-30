@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Fake kubectl for bootstrap tests. Logs to $KUBECTL_LOG.
 #   FAKE_CTX=<current context>  FAKE_LB_IP=<ip or empty>  FAKE_ICP_PORT=<port or empty>
-#   FAKE_NS_JSON=<get namespace output>  FAKE_NS_LIST_JSON=<get namespaces -l output>  FAKE_GET_FAIL=1
+#   FAKE_NS_JSON=<get namespace output, only for the name it carries>  FAKE_NS_LIST_JSON=<get namespaces -l output>  FAKE_GET_FAIL=1
 #   FAKE_DELETE_FAIL=<ns> (delete of that ns fails)
 #   FAKE_GUARD=1 (server dry-runs as --as=<sp> hit preview-deployer-guard; unset = no guard, permissive)
 #   FAKE_QUOTA=on|off|wrong (quota-check: admission enforces / admits all / denies for another reason)
@@ -39,7 +39,10 @@ case " $* " in
   *" get deployments,pods -A "*) [ -n "${FAKE_WORKLOADS_FAIL:-}" ] && exit 1; w='{"items":[]}'; printf '%s' "${FAKE_WORKLOADS_JSON:-$w}" ;;
   *" get namespaces -l "*) printf '%s' "${FAKE_NS_LIST_JSON-}"; exit "${FAKE_GET_FAIL:-0}" ;;
   *" delete namespace "*) [ -n "${FAKE_DELETE_FAIL:-}" ] && [[ " $* " == *" $FAKE_DELETE_FAIL "* ]] && exit 1; exit 0 ;;
-  *" get namespace "*) printf '%s' "${FAKE_NS_JSON-}"; exit "${FAKE_GET_FAIL:-0}" ;;
+  *" get namespace "*) [ -n "${FAKE_GET_FAIL:-}" ] && exit 1
+    # FAKE_NS_JSON answers only for the namespace it names (destroy probes new then legacy names)
+    n=$(printf '%s' "${FAKE_NS_JSON-}" | jq -r '.metadata.name // empty' 2>/dev/null || true)
+    [ -n "$n" ] && [ "$n" = "$3" ] && printf '%s' "$FAKE_NS_JSON"; exit 0 ;;
   *" get svc traefik "*) printf '%s' "${FAKE_LB_IP-}" ;;
   *" get svc keda-add-ons-http-interceptor-proxy "*) printf '%s' "${FAKE_ICP_PORT-}" ;;
   *" apply -f - "*) cat >>"$KUBECTL_LOG.apply" ;;

@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 14 / 23 COMPLETE (61%) — Phases 01–04 COMPLETE, Phase 05 IN PROGRESS
+**Progress**: 15 / 23 COMPLETE (65%) — Phases 01–04 COMPLETE, Phase 05 IN PROGRESS
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -31,8 +31,8 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F014** — Pin GitHub Actions to latest full release tags (Node 24; issue #17, DEC-035) — `COMPLETE`
 
 ## Phase 05 — Multi-repo, reusable platform — IN PROGRESS (2026-09-30)
-- [ ] **F015** — Repo-scoped preview identity: ns `preview-<app>-<branch>`, `preview.repo` label, destroy/reap/purge own-repo only — `IN PROGRESS`
-- [ ] **F016** — `.preview.yaml` app contract with `components[]` + path routing; chart renders N components — `NOT STARTED`
+- [x] **F015** — Repo-scoped preview identity: ns `preview-<app>-<branch>`, `preview.repo` label, destroy/reap/purge own-repo only — `COMPLETE`
+- [ ] **F016** — `.preview.yaml` app contract with `components[]` + path routing; chart renders N components — `IN PROGRESS`
 - [ ] **F017** — Multiple project domains per cluster (Azure DNS zone each, wildcard cert, TLSStore) — `NOT STARTED`
 - [ ] **F018** — OpenTofu infra stack `team-cluster` + encrypted remote state — `NOT STARTED`
 - [ ] **F019** — Flux (AKS extension) for in-cluster add-ons, `clusters/base` + `clusters/<team>` — `NOT STARTED`
