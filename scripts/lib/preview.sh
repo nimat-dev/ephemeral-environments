@@ -64,7 +64,7 @@ preview_namespace() {
 preview_owns() {
   [ -n "${1-}" ] || { _preview_err "repo label required"; return 1; }
   jq -e --arg repo "$1" '
-    .metadata.labels as $l | ($l["managed-by"] == "preview-bot")
+    (.metadata.labels // {}) as $l | ($l["managed-by"] == "preview-bot")
     and (($l | has("preview.repo") | not) or $l["preview.repo"] == $repo)' >/dev/null
 }
 
@@ -175,7 +175,7 @@ expired_namespaces() {
   jq -r --argjson now "$now" --arg repo "$2" '
     .items[]
     | select(.metadata.labels["managed-by"] == "preview-bot")
-    | select((.metadata.labels | has("preview.repo") | not) or .metadata.labels["preview.repo"] == $repo)
+    | select(((.metadata.labels // {}) | has("preview.repo") | not) or .metadata.labels["preview.repo"] == $repo)
     | select(.metadata.name | startswith("preview-"))
     | select(((.metadata.labels["preview.expires-at"] // "0") | tonumber? // 0) < $now)
     | .metadata.name'

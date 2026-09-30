@@ -127,7 +127,7 @@ cmd_destroy() {
   if [ -z "$json" ]; then
     legacy="preview-$id"
     json=$(kubectl get namespace "$legacy" --ignore-not-found -o json)
-    if [ -n "$json" ] && jq -e '.metadata.labels as $l | $l["managed-by"] == "preview-bot" and ($l | has("preview.repo") | not)' \
+    if [ -n "$json" ] && jq -e '(.metadata.labels // {}) as $l | $l["managed-by"] == "preview-bot" and ($l | has("preview.repo") | not)' \
       >/dev/null <<<"$json"; then
       ns=$legacy note=" (legacy pre-F015 name)"
     else

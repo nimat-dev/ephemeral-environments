@@ -109,6 +109,8 @@ long41="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bcdef"   # char 40 is "-"
   ! own '"managed-by":"preview-bot","preview.repo":""'
   ! own '"preview.repo":"o-r"'
   ! own ''
+  echo '{"metadata":{"name":"preview-x"}}' | { ! preview_owns o-r; }            # no labels object: not ours, no jq error
+  [ -z "$(echo '{"items":[{"metadata":{"name":"preview-x"}}]}' | expired_namespaces 500 o-r)" ]
   run preview_owns '' </dev/null; [ "$status" -ne 0 ]
 }
 
