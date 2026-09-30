@@ -1,0 +1,16 @@
+# Reap this repo's expired previews every 30 min; purge its stale images daily at 03:17 UTC.
+name: Preview cleanup
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  reap:
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-reap.yml@v1.0.0
+  purge:
+    if: github.event.schedule == '17 3 * * *'
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-purge.yml@v1.0.0

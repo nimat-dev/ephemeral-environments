@@ -1,0 +1,58 @@
+name: Preview environment step
+description: >-
+  One step of the preview-environments kit (scripts/preview-ci.sh). Configuration comes from the step's
+  env (see the kit workflows); the kit repo root (scripts/, deploy/preview) sits next to this action.
+inputs:
+  command:
+    description: plan | namespace | deploy | verify | summary | destroy | reap | purge
+    required: true
+outputs:
+  app:
+    description: plan output app
+    value: ${{ steps.run.outputs.app }}
+  preview_id:
+    description: plan output preview_id
+    value: ${{ steps.run.outputs.preview_id }}
+  namespace:
+    description: plan output namespace
+    value: ${{ steps.run.outputs.namespace }}
+  host:
+    description: plan output host
+    value: ${{ steps.run.outputs.host }}
+  short_sha:
+    description: plan output short_sha
+    value: ${{ steps.run.outputs.short_sha }}
+  sha:
+    description: plan output sha
+    value: ${{ steps.run.outputs.sha }}
+  idle:
+    description: plan output idle
+    value: ${{ steps.run.outputs.idle }}
+  max_replicas:
+    description: plan output max_replicas
+    value: ${{ steps.run.outputs.max_replicas }}
+  lifetime:
+    description: plan output lifetime
+    value: ${{ steps.run.outputs.lifetime }}
+  expires_at:
+    description: plan output expires_at
+    value: ${{ steps.run.outputs.expires_at }}
+  config:
+    description: plan output config
+    value: ${{ steps.run.outputs.config }}
+  components:
+    description: plan output components
+    value: ${{ steps.run.outputs.components }}
+  verify_paths:
+    description: plan output verify_paths
+    value: ${{ steps.run.outputs.verify_paths }}
+runs:
+  using: composite
+  steps:
+    - name: preview-ci ${{ inputs.command }}
+      id: run
+      shell: bash
+      env:
+        KIT_COMMAND: ${{ inputs.command }}
+        KIT_ROOT: ${{ github.action_path }}/..
+      run: '"$KIT_ROOT/scripts/preview-ci.sh" "$KIT_COMMAND"'

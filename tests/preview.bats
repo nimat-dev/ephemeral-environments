@@ -385,7 +385,7 @@ cfg_fails() {  # cfg_fails JSON EXPECTED_MSG_SUBSTRING
 
 @test "preview_config: minimal component gets defaults" {
   out=$(cfg '{"components":[{"name":"web"}]}')
-  [ "$out" = '{"components":[{"name":"web","context":".","dockerfile":"Dockerfile","port":8080,"probePath":"/","route":"/"}],"addons":[]}' ]
+  [ "$out" = '{"components":[{"name":"web","context":".","dockerfile":"Dockerfile","port":8080,"probePath":"/","route":"/"}],"addons":[],"defaults":{"lifetime":"48h","idle":"30m","maxReplicas":3}}' ]
 }
 
 @test "preview_config: full two-component config kept; trailing '/' on route normalized; resources kept" {
@@ -453,4 +453,22 @@ cfg_fails() {  # cfg_fails JSON EXPECTED_MSG_SUBSTRING
     {"name":"adm","route":"/admin","probePath":"/healthz"},{"name":"x","route":"/api2","probePath":"/api2"}]}' | preview_verify_paths)
   [ "$out" = '/ /api/health /admin /api2' ]
   [ "$(cfg '{"components":[{"name":"a","route":"/ap","probePath":"/apx"}]}' | preview_verify_paths)" = /ap ]
+}
+
+# --- F021: defaults in .preview.yaml ---
+@test "preview_config: defaults kept when valid, filled when absent" {
+  out=$(cfg '{"components":[{"name":"web"}],"defaults":{"lifetime":"7d","idle":"never","maxReplicas":2}}')
+  [ "$(jq -c .defaults <<<"$out")" = '{"lifetime":"7d","idle":"never","maxReplicas":2}' ]
+  out=$(cfg '{"components":[{"name":"web"}],"defaults":{"idle":"1h"}}')
+  [ "$(jq -c .defaults <<<"$out")" = '{"lifetime":"48h","idle":"1h","maxReplicas":3}' ]
+}
+
+@test "preview_config: invalid defaults rejected" {
+  cfg_fails '{"components":[{"name":"a"}],"defaults":{"lifetime":"forever"}}' 'defaults.lifetime'
+  cfg_fails '{"components":[{"name":"a"}],"defaults":{"lifetime":"0h"}}' 'defaults.lifetime'
+  cfg_fails '{"components":[{"name":"a"}],"defaults":{"idle":"soon"}}' 'defaults.idle'
+  cfg_fails '{"components":[{"name":"a"}],"defaults":{"maxReplicas":9}}' 'defaults.maxReplicas'
+  cfg_fails '{"components":[{"name":"a"}],"defaults":{"maxReplicas":"3"}}' 'defaults.maxReplicas'
+  cfg_fails '{"components":[{"name":"a"}],"defaults":{"ttl":"1h"}}' 'defaults: unknown key(s): ttl'
+  cfg_fails '{"components":[{"name":"a"}],"defaults":[]}' 'defaults must be a mapping'
 }

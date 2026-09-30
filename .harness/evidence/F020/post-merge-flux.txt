@@ -1,0 +1,3 @@
+validatingadmissionpolicy.admissionregistration.k8s.io/preview-deployer-guard-todo
+validatingadmissionpolicybinding.admissionregistration.k8s.io/preview-deployer-guard-todo
+clusterrolebinding.rbac.authorization.k8s.io/preview-deployer-todo

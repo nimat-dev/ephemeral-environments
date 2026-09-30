@@ -273,7 +273,7 @@ preview_config() {
         then err("\($n): resources must be {requests,limits: {cpu,memory: quantity}}") else . end
       | .route |= (if . == "/" then . else sub("/+$"; "") end);
     if type != "object" then err("must be a mapping") else . end
-    | (keys - ["components", "addons"]) as $x
+    | (keys - ["components", "addons", "defaults"]) as $x
     | if ($x | length) > 0 then err("unknown key(s): \($x | join(", "))") else . end
     | (.addons // []) as $a
     | if ($a | type) != "array" then err("addons must be a list")
@@ -283,7 +283,20 @@ preview_config() {
     | [.components[] | component] as $c
     | if ($c | map(.name) | unique | length) != ($c | length) then err("duplicate component name") else . end
     | if ($c | map(.route) | unique | length) != ($c | length) then err("duplicate route") else . end
-    | {components: $c, addons: []}'
+    | (.defaults // {}) as $d
+    | if ($d | type) != "object" then err("defaults must be a mapping") else . end
+    | ($d | keys - ["lifetime", "idle", "maxReplicas"]) as $dx
+    | if ($dx | length) > 0 then err("defaults: unknown key(s): \($dx | join(", "))") else . end
+    | {lifetime: "48h", idle: "30m", maxReplicas: 3} + $d
+    | . as $defs
+    | if ($defs.lifetime | type) != "string" or ($defs.lifetime | test("^0*[1-9][0-9]*[mhd]$") | not)
+      then err("defaults.lifetime \($defs.lifetime | tojson) must be Nm, Nh or Nd (N > 0)") else . end
+    | if ($defs.idle | type) != "string" or (($defs.idle == "never" or ($defs.idle | test("^[0-9]+[mhd]$"))) | not)
+      then err("defaults.idle \($defs.idle | tojson) must be never, Nm, Nh or Nd") else . end
+    | if ($defs.maxReplicas | type) != "number" or $defs.maxReplicas != ($defs.maxReplicas | floor)
+        or $defs.maxReplicas < 1 or $defs.maxReplicas > 6
+      then err("defaults.maxReplicas \($defs.maxReplicas | tojson) must be an integer 1..6") else . end
+    | {components: $c, addons: [], defaults: $defs}'
 }
 
 # preview_verify_paths < normalized-config.json -> one URL path per component, space-separated: its

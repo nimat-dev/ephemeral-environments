@@ -72,15 +72,17 @@ dep=(deploy/preview/templates/deployment.yaml)
 scan 6 'alleghenycounty\.us|nimat\.dev|azurecr\.io|svc\.cluster\.local' '' ${wf[@]+"${wf[@]}"}
 
 # 7. Least-privilege tokens: top-level permissions == {id-token: write, contents: read}; no job overrides.
-want=$'contents: read\nid-token: write'
+#    Sole exception: kit-release.yml also writes contents (it creates the GitHub release, DEC-051).
 for f in ${wf[@]+"${wf[@]}"}; do
+  want=$'contents: read\nid-token: write'
+  [ "$(basename "$f")" = kit-release.yml ] && want=$'contents: write\nid-token: write'
   got=$(awk '
     /^permissions:/ { inb = 1; v = $0; sub(/^permissions:[ \t]*/, "", v); if (v != "") print "INLINE " v; next }
     inb && /^[^ \t#]/ { inb = 0 }
     inb && /^[ \t]+[A-Za-z-]+:/ { l = $0; sub(/#.*/, "", l); gsub(/^[ \t]+|[ \t]+$/, "", l); gsub(/:[ \t]+/, ": ", l); print l }
   ' "$f" | sort)
   if [ "$got" != "$want" ]; then
-    report "$f:1 -> top-level permissions [$(printf '%s' "$got" | tr '\n' ',')] != [contents: read,id-token: write]" 7
+    report "$f:1 -> top-level permissions [$(printf '%s' "$got" | tr '\n' ',')] != [$(printf '%s' "$want" | tr '\n' ',')]" 7
   fi
   nested=$(awk '/^[ \t]+permissions:/ { printf "%s:%d\n", FILENAME, FNR }' "$f")
   for loc in $nested; do report "$loc -> job-level permissions override" 7; done

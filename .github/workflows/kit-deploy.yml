@@ -1,0 +1,202 @@
+name: Kit - Deploy Preview
+# Reusable preview deploy (F021, DEC-051): consumers call this with `uses: <kit repo>/.github/workflows/kit-deploy.yml@vX.Y.Z`.
+# vars.* and the `preview` environment resolve in the CALLER repo (onboarded by platform/modules/repo-onboarding).
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        type: string
+      lifetime:
+        description: Delete the whole preview after (24h, 48h, 7d, Nd/Nh/Nm, custom). Empty = .preview.yaml defaults.
+        required: false
+        default: ""
+        type: string
+      lifetime_custom:
+        description: Custom lifetime when lifetime=custom
+        required: false
+        default: ""
+        type: string
+      idle_timeout:
+        description: Scale to 0 after this much idle (15m, 30m, 1h, 6h, never). Empty = .preview.yaml defaults.
+        required: false
+        default: ""
+        type: string
+      max_replicas:
+        description: Max replicas when awake. Empty = .preview.yaml defaults.
+        required: false
+        default: ""
+        type: string
+      kit_repository:
+        description: Where the kit lives (this repo).
+        required: false
+        default: nimat-dev/ephemeral-environments
+        type: string
+      kit_ref:
+        description: Kit version to run (release tag; bumped by scripts/kit-release.sh).
+        required: false
+        default: v1.0.0
+        type: string
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: preview-${{ inputs.branch }}
+  cancel-in-progress: false
+jobs:
+  # Identity + app contract (.preview.yaml, F016). Everything downstream uses these outputs.
+  plan:
+    runs-on: ubuntu-latest
+    environment: preview # vars (PREVIEW_DOMAIN, PREVIEW_APP) are environment-scoped
+    env:
+      # Dispatch inputs reach shell only via env (no ${{ }} inside run: blocks).
+      BRANCH: ${{ inputs.branch }}
+    outputs:
+      app: ${{ steps.id.outputs.app }}
+      preview_id: ${{ steps.id.outputs.preview_id }}
+      namespace: ${{ steps.id.outputs.namespace }}
+      host: ${{ steps.id.outputs.host }}
+      short_sha: ${{ steps.id.outputs.short_sha }}
+      sha: ${{ steps.id.outputs.sha }}
+      idle: ${{ steps.id.outputs.idle }}
+      max_replicas: ${{ steps.id.outputs.max_replicas }}
+      lifetime: ${{ steps.id.outputs.lifetime }}
+      expires_at: ${{ steps.id.outputs.expires_at }}
+      config: ${{ steps.id.outputs.config }}
+      components: ${{ steps.id.outputs.components }}
+      verify_paths: ${{ steps.id.outputs.verify_paths }}
+    steps:
+      # Kit tooling (lib, chart, scripts) at the pinned kit ref; app code from the input branch.
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: ${{ inputs.kit_repository }}
+          ref: ${{ inputs.kit_ref }}
+          path: .kit
+          persist-credentials: false
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.branch }}
+          path: src
+          persist-credentials: false
+      - name: Compute preview identity + read .preview.yaml
+        id: id
+        env:
+          LIFETIME: ${{ inputs.lifetime }}
+          LIFETIME_CUSTOM: ${{ inputs.lifetime_custom }}
+          IDLE_TIMEOUT: ${{ inputs.idle_timeout }}
+          MAX_REPLICAS: ${{ inputs.max_replicas }}
+          PREVIEW_DOMAIN: ${{ vars.PREVIEW_DOMAIN }}
+          PREVIEW_APP: ${{ vars.PREVIEW_APP }} # F015: ns preview-<app>-<branch>; empty -> repo name
+          SRC_DIR: src
+        uses: ./.kit/kit
+        with:
+          command: plan
+  # One image per component: <ACR>/<APP_IMAGE_NAME>/<component>:<short sha> (DEC-046), built from the planned commit.
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: preview
+    strategy:
+      fail-fast: true
+      matrix:
+        component: ${{ fromJSON(needs.plan.outputs.components) }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          path: src
+          persist-credentials: false
+      - uses: azure/login@v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: ACR login
+        env:
+          ACR_NAME: ${{ vars.ACR_NAME }}
+        run: az acr login -n "$ACR_NAME"
+      - uses: docker/setup-buildx-action@v4.4.1
+      - uses: docker/build-push-action@v7.4.0
+        with:
+          context: src/${{ matrix.component.context }}
+          file: src/${{ matrix.component.context }}/${{ matrix.component.dockerfile }}
+          platforms: linux/amd64 # DEC-025: AKS node pool is amd64
+          push: true
+          tags: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.APP_IMAGE_NAME }}/${{ matrix.component.name }}:${{ needs.plan.outputs.short_sha }}
+          cache-from: type=gha,scope=${{ matrix.component.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component.name }}
+  deploy:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    environment: preview
+    env:
+      BRANCH: ${{ inputs.branch }}
+      IMAGE_REPOSITORY: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.APP_IMAGE_NAME }}
+      HELM_DRIVER: configmap # DEC-026
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: ${{ inputs.kit_repository }}
+          ref: ${{ inputs.kit_ref }}
+          path: .kit
+          persist-credentials: false
+      - uses: azure/login@v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/use-kubelogin@v1.3
+        with:
+          kubelogin-version: v0.2.20
+      - uses: azure/aks-set-context@v5.0.0
+        with:
+          cluster-name: ${{ vars.AKS_CLUSTER }}
+          resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
+          admin: false
+          use-kubelogin: true
+      - name: Create/label namespace
+        env:
+          NAMESPACE: ${{ needs.plan.outputs.namespace }}
+          PREVIEW_ID: ${{ needs.plan.outputs.preview_id }}
+          SHORT_SHA: ${{ needs.plan.outputs.short_sha }}
+          EXPIRES_AT: ${{ needs.plan.outputs.expires_at }}
+          APP: ${{ needs.plan.outputs.app }}
+        uses: ./.kit/kit
+        with:
+          command: namespace
+      - name: Deploy chart
+        env:
+          PREVIEW_ID: ${{ needs.plan.outputs.preview_id }}
+          NAMESPACE: ${{ needs.plan.outputs.namespace }}
+          HOST: ${{ needs.plan.outputs.host }}
+          SHORT_SHA: ${{ needs.plan.outputs.short_sha }}
+          IDLE_SECONDS: ${{ needs.plan.outputs.idle }}
+          MAX_REPLICAS: ${{ needs.plan.outputs.max_replicas }}
+          CONFIG: ${{ needs.plan.outputs.config }}
+          INTERCEPTOR_FQDN: ${{ vars.INTERCEPTOR_FQDN }}
+          INTERCEPTOR_PORT: ${{ vars.INTERCEPTOR_PORT }}
+          INGRESS_CLASS: ${{ vars.INGRESS_CLASS }} # DEC-022
+        uses: ./.kit/kit
+        with:
+          command: deploy
+      - name: Verify (cold-start proof, every route)
+        env:
+          HOST: ${{ needs.plan.outputs.host }}
+          VERIFY_PATHS: ${{ needs.plan.outputs.verify_paths }}
+        uses: ./.kit/kit
+        with:
+          command: verify
+      - name: Summary
+        if: always()
+        env:
+          SHORT_SHA: ${{ needs.plan.outputs.short_sha }}
+          NAMESPACE: ${{ needs.plan.outputs.namespace }}
+          HOST: ${{ needs.plan.outputs.host }}
+          COMPONENTS: ${{ needs.plan.outputs.components }}
+          IDLE_TIMEOUT: ${{ inputs.idle_timeout }}
+          LIFETIME: ${{ needs.plan.outputs.lifetime || inputs.lifetime }}
+          JOB_STATUS: ${{ job.status }}
+        uses: ./.kit/kit
+        with:
+          command: summary

@@ -20,20 +20,25 @@ need() {
 # out KEY=VALUE... -> $GITHUB_OUTPUT (stdout when unset)
 out() { printf '%s\n' "$@" >>"${GITHUB_OUTPUT:-/dev/stdout}"; }
 
-# plan: validate dispatch inputs + the app contract, derive identity. Env: BRANCH LIFETIME LIFETIME_CUSTOM
-# IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR (checkout of BRANCH) GITHUB_REPOSITORY [PREVIEW_APP].
+# plan: validate dispatch inputs + the app contract, derive identity. Env: BRANCH PREVIEW_DOMAIN SRC_DIR
+# (checkout of BRANCH) GITHUB_REPOSITORY [LIFETIME LIFETIME_CUSTOM IDLE_TIMEOUT MAX_REPLICAS PREVIEW_APP];
+# empty LIFETIME/IDLE_TIMEOUT/MAX_REPLICAS come from .preview.yaml `defaults` (48h/30m/3 when absent).
 # Outputs the identity plus sha (full, for the build jobs), config (normalized .preview.yaml JSON),
 # components (build matrix) and verify_paths (one per component). Nothing is written unless everything validates.
 cmd_plan() {
-  need BRANCH LIFETIME IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR GITHUB_REPOSITORY
-  local sha full app plan config
+  need BRANCH PREVIEW_DOMAIN SRC_DIR GITHUB_REPOSITORY
+  local sha full app plan config lifetime idle maxr
   app=$(preview_app "${PREVIEW_APP-}" "$GITHUB_REPOSITORY") || exit 1
+  config=$(read_config "$SRC_DIR") || exit $?
+  # Empty dispatch/workflow_call inputs fall back to the app's .preview.yaml defaults (F021).
+  lifetime="${LIFETIME:-$(jq -r .defaults.lifetime <<<"$config")}"
+  idle="${IDLE_TIMEOUT:-$(jq -r .defaults.idle <<<"$config")}"
+  maxr="${MAX_REPLICAS:-$(jq -r .defaults.maxReplicas <<<"$config")}"
   if ! sha=$(git -C "$SRC_DIR" rev-parse --short HEAD) || ! full=$(git -C "$SRC_DIR" rev-parse HEAD); then
     log error "cannot read HEAD of $SRC_DIR"; exit 1
   fi
-  plan=$(preview_plan "$app" "$BRANCH" "$LIFETIME" "${LIFETIME_CUSTOM-}" "$IDLE_TIMEOUT" "$MAX_REPLICAS" \
+  plan=$(preview_plan "$app" "$BRANCH" "$lifetime" "${LIFETIME_CUSTOM-}" "$idle" "$maxr" \
     "$PREVIEW_DOMAIN" "$sha") || exit 1
-  config=$(read_config "$SRC_DIR") || exit $?
   log info "plan $(printf '%s' "$plan" | tr '\n' ' ')"
   log info "config $config"
   # shellcheck disable=SC2086 # one KEY=VALUE per line, no spaces by construction

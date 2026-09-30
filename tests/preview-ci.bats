@@ -4,7 +4,8 @@
 
 ROOT="$BATS_TEST_DIRNAME/.."
 CI="$ROOT/scripts/preview-ci.sh"
-WF="$ROOT/.github/workflows/preview-deploy.yml"
+WF="$ROOT/.github/workflows/preview-deploy.yml"   # this repo's caller (F021)
+KWF="$ROOT/.github/workflows/kit-deploy.yml"      # the reusable kit workflow it calls
 
 setup() {
   T="$(mktemp -d)"
@@ -60,6 +61,19 @@ YAML
   grep -qxF 'components=[{"name":"web","context":"todo","dockerfile":"Dockerfile"},{"name":"api","context":"svc/api","dockerfile":"Dockerfile.prod"}]' "$GITHUB_OUTPUT"
   grep -qx 'verify_paths=/ /api' "$GITHUB_OUTPUT"
   [ "$(grep '^config=' "$GITHUB_OUTPUT" | cut -d= -f2- | jq -r '.components[1].port')" = 3000 ]
+}
+
+@test "plan: empty inputs fall back to .preview.yaml defaults, then built-ins; explicit inputs win (F021)" {
+  printf 'components: [{name: web}]\ndefaults: {lifetime: 7d, idle: 1h, maxReplicas: 2}\n' >"$SRC_DIR/.preview.yaml"
+  LIFETIME= IDLE_TIMEOUT= MAX_REPLICAS= run "$CI" plan
+  [ "$status" -eq 0 ]
+  grep -qx lifetime=7d "$GITHUB_OUTPUT"; grep -qx idle=3600 "$GITHUB_OUTPUT"; grep -qx max_replicas=2 "$GITHUB_OUTPUT"
+  : >"$GITHUB_OUTPUT"
+  LIFETIME=24h IDLE_TIMEOUT=15m MAX_REPLICAS=3 run "$CI" plan
+  grep -qx lifetime=24h "$GITHUB_OUTPUT"; grep -qx idle=900 "$GITHUB_OUTPUT"; grep -qx max_replicas=3 "$GITHUB_OUTPUT"
+  : >"$GITHUB_OUTPUT"; rm "$SRC_DIR/.preview.yaml"
+  LIFETIME= IDLE_TIMEOUT= MAX_REPLICAS= run "$CI" plan
+  grep -qx lifetime=48h "$GITHUB_OUTPUT"; grep -qx idle=1800 "$GITHUB_OUTPUT"; grep -qx max_replicas=3 "$GITHUB_OUTPUT"
 }
 
 @test "plan: invalid .preview.yaml (bad key, bad YAML) -> exit 1; yq missing -> exit 2; nothing written" {
@@ -267,12 +281,39 @@ SH
   grep -qF 'options: ["24h", "48h", "7d", "custom"]' "$WF"
   grep -qF 'options: ["15m", "30m", "1h", "6h", "never"]' "$WF"
   grep -qF 'default: "48h"' "$WF"; grep -qF 'default: "30m"' "$WF"; grep -qF 'default: "3"' "$WF"
-  grep -qF 'group: preview-${{ inputs.branch }}' "$WF"
-  grep -qF 'cancel-in-progress: false' "$WF"
-  grep -qx '    environment: preview' "$WF"
+  # F021: the caller only forwards inputs to the local kit at its own commit; concurrency lives in the kit
+  [ "$(yq -r '.jobs.preview.uses' "$WF")" = ./.github/workflows/kit-deploy.yml ]
+  [ "$(yq -r '.jobs.preview.with.kit_ref' "$WF")" = '${{ github.sha }}' ]
+  [ "$(yq -r '.concurrency' "$WF")" = null ]
+  grep -qF 'group: preview-${{ inputs.branch }}' "$KWF"
+  grep -qF 'cancel-in-progress: false' "$KWF"
+  grep -qx '    environment: preview' "$KWF"
+}
+
+@test "kit-deploy: workflow_call inputs (empty = .preview.yaml defaults), kit checked out at kit_ref, steps via ./.kit/kit" {
+  for i in branch lifetime lifetime_custom idle_timeout max_replicas kit_repository kit_ref; do
+    [ "$(yq -r ".on.workflow_call.inputs.$i.type" "$KWF")" = string ] || { echo "input $i"; return 1; }
+  done
+  [ "$(yq -r '.on.workflow_call.inputs.branch.required' "$KWF")" = true ]
+  for i in lifetime idle_timeout max_replicas; do [ "$(yq -r ".on.workflow_call.inputs.$i.default" "$KWF")" = "" ] || return 1; done
+  [ "$(yq -r '.on.workflow_call.inputs.kit_ref.default' "$KWF")" = "v$(cat "$ROOT/kit/VERSION")" ]
+  [ "$(yq -r '[.jobs.plan.steps[] | select(.with.path == ".kit") | .with.ref] | .[0]' "$KWF")" = '${{ inputs.kit_ref }}' ]
+  [ "$(yq -r '[.jobs.deploy.steps[] | select(.uses == "./.kit/kit") | .with.command] | join(" ")' "$KWF")" = 'namespace deploy verify summary' ]
+  ! grep -q 'scripts/preview-ci.sh' "$KWF"
+}
+
+@test "kit composite action: runs scripts/preview-ci.sh from the kit root, command via env, exposes plan outputs" {
+  A="$ROOT/kit/action.yml"
+  [ "$(yq -r .runs.using "$A")" = composite ]
+  [ "$(yq -r '.runs.steps[0].env.KIT_ROOT' "$A")" = '${{ github.action_path }}/..' ]
+  [ "$(yq -r '.runs.steps[0].run' "$A")" = '"$KIT_ROOT/scripts/preview-ci.sh" "$KIT_COMMAND"' ]
+  for k in app preview_id namespace host short_sha sha idle max_replicas lifetime expires_at config components verify_paths; do
+    [ "$(yq -r ".outputs.$k.value" "$A")" = "\${{ steps.run.outputs.$k }}" ] || { echo "output $k"; return 1; }
+  done
 }
 
 @test "workflow: plan -> build matrix -> deploy; configmap driver, amd64, ingress class var, summary always" {
+  WF="$KWF"
   [ "$(yq -r '.jobs | keys | join(" ")' "$WF")" = 'plan build deploy' ]
   [ "$(yq -r '.jobs.build.needs' "$WF")" = plan ]
   [ "$(yq -r '.jobs.deploy.needs | join(" ")' "$WF")" = 'plan build' ]
@@ -293,9 +334,11 @@ SH
 }
 
 @test "workflow: no expression interpolation inside run: (script injection guard)" {
-  run awk '/^ *run: /{ if ($0 ~ /\$\{\{/) print FNR": "$0 }' "$WF"
-  [ -z "$output" ] || { echo "$output"; false; }
-  ! grep -qE '^ *run: *\|' "$WF"   # multi-line run blocks would dodge the check above
+  for f in "$ROOT"/.github/workflows/*.yml "$ROOT/kit/action.yml"; do
+    run awk '/^ *run: /{ if ($0 ~ /\$\{\{/) print FILENAME":"FNR": "$0 }' "$f"
+    [ -z "$output" ] || { echo "$output"; false; }
+    ! grep -qE '^ *run: *\|' "$f" || { echo "multi-line run in $f"; false; }   # would dodge the check above
+  done
 }
 
 # --- destroy (F007) ---
@@ -358,14 +401,17 @@ ns_json() { printf '{"metadata":{"name":"%s","labels":{%s}}}' "$1" "$2"; }
   ! grep -q '^delete ' "$KUBECTL_LOG"
 }
 
-@test "destroy workflow: input, concurrency shared with deploy, env-only input, calls entrypoint" {
+@test "destroy workflow: caller -> kit-destroy; concurrency shared with deploy, env-only input, kit step" {
+  K="$ROOT/.github/workflows/kit-destroy.yml"
   grep -qx 'name: Destroy Preview' "$DWF"
   grep -qx '      branch:' "$DWF"
-  grep -qF 'group: preview-${{ inputs.branch }}' "$DWF"
-  grep -qx '    environment: preview' "$DWF"
-  grep -qx '        run: ./scripts/preview-ci.sh destroy' "$DWF"
-  grep -qF 'PREVIEW_APP: ${{ vars.PREVIEW_APP }}' "$DWF"
-  run awk '/^ *run: /{ if ($0 ~ /\$\{\{/) print }' "$DWF"; [ -z "$output" ]
+  [ "$(yq -r '.jobs.preview.uses' "$DWF")" = ./.github/workflows/kit-destroy.yml ]
+  [ "$(yq -r '.jobs.preview.with.kit_ref' "$DWF")" = '${{ github.sha }}' ]
+  [ "$(yq -r '.on.workflow_call.inputs.branch.required' "$K")" = true ]
+  grep -qF 'group: preview-${{ inputs.branch }}' "$K"
+  grep -qx '    environment: preview' "$K"
+  [ "$(yq -r '[.jobs.destroy.steps[] | select(.uses == "./.kit/kit") | .with.command] | join(" ")' "$K")" = destroy ]
+  grep -qF 'PREVIEW_APP: ${{ vars.PREVIEW_APP }}' "$K"
 }
 
 # --- reap (F008) ---
@@ -415,12 +461,14 @@ JSON
   ! grep -q '^delete ' "$KUBECTL_LOG"
 }
 
-@test "reap workflow: cron */30 + dispatch, own concurrency group, calls entrypoint" {
+@test "reap workflow: cron */30 + dispatch -> kit-reap (own concurrency group, kit step)" {
+  K="$ROOT/.github/workflows/kit-reap.yml"
   grep -qx 'name: Reap Expired Previews' "$RWF"
   grep -qF -- '- cron: "*/30 * * * *"' "$RWF"
   grep -qx '  workflow_dispatch: {}' "$RWF"
-  grep -qx '  group: preview-reap' "$RWF"
-  grep -qx '        run: ./scripts/preview-ci.sh reap' "$RWF"
+  [ "$(yq -r '.jobs.preview.uses' "$RWF")" = ./.github/workflows/kit-reap.yml ]
+  grep -qx '  group: preview-reap' "$K"
+  [ "$(yq -r '[.jobs.reap.steps[] | select(.uses == "./.kit/kit") | .with.command] | join(" ")' "$K")" = reap ]
 }
 
 # --- purge (F011) ---
@@ -547,15 +595,25 @@ purge_env() {
   [ ! -s "$AZ_LOG" ]
 }
 
-@test "purge workflow: daily cron + dispatch dry_run, own concurrency, env-only inputs, entrypoint" {
+@test "purge workflow: daily cron + dispatch dry_run -> kit-purge (own concurrency, env-only inputs, kit step)" {
+  K="$ROOT/.github/workflows/kit-purge.yml"
   grep -qx 'name: Purge Stale Preview Images' "$PWF"
   grep -qF -- '- cron: "17 3 * * *"' "$PWF"
   grep -qx '      dry_run:' "$PWF"
-  grep -qx '  group: preview-acr-purge' "$PWF"
-  grep -qx '    environment: preview' "$PWF"
-  grep -qx '          PURGE_DRY_RUN: ${{ inputs.dry_run || false }}' "$PWF"
-  grep -qx "          PURGE_MAX_AGE: \${{ inputs.max_age || '7d' }}" "$PWF"
-  grep -qx "          PURGE_KEEP: \${{ inputs.keep || '3' }}" "$PWF"
-  ! grep -q 'run:.*\${{' "$PWF"
-  grep -qx '        run: ./scripts/preview-ci.sh purge' "$PWF"
+  [ "$(yq -r '.jobs.preview.uses' "$PWF")" = ./.github/workflows/kit-purge.yml ]
+  [ "$(yq -r '.jobs.preview.with.dry_run' "$PWF")" = '${{ inputs.dry_run || false }}' ]
+  grep -qx '  group: preview-acr-purge' "$K"
+  grep -qx '    environment: preview' "$K"
+  grep -qx '          PURGE_DRY_RUN: ${{ inputs.dry_run || false }}' "$K"
+  grep -qx "          PURGE_MAX_AGE: \${{ inputs.max_age || '7d' }}" "$K"
+  grep -qx "          PURGE_KEEP: \${{ inputs.keep || '3' }}" "$K"
+  [ "$(yq -r '[.jobs.purge.steps[] | select(.uses == "./.kit/kit") | .with.command] | join(" ")' "$K")" = purge ]
+}
+
+@test "kit-release: tag push only, contents:write (rule 7 exception), verify before publish, script steps" {
+  K="$ROOT/.github/workflows/kit-release.yml"
+  [ "$(yq -r '.on.push.tags[0]' "$K")" = 'v*.*.*' ]
+  [ "$(yq -r '.permissions.contents' "$K")" = write ]
+  [ "$(yq -r '[.jobs.release.steps[] | select(has("run")) | .run] | join(" ")' "$K")" = \
+    './scripts/kit-release.sh verify ./scripts/kit-release.sh publish-chart ./scripts/kit-release.sh github-release' ]
 }

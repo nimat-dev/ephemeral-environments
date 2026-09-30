@@ -30,6 +30,17 @@ Cron `*/30 * * * *` + manual dispatch. Deletes `managed-by=preview-bot` namespac
 `preview.expires-at < now`, a `preview-` name, owned by this repo (`preview.repo`, or none = legacy; F015). No expired → "nothing to reap", exit 0.
 One failed delete → others still deleted, run fails. Concurrency: `preview-reap`.
 
+## Preview kit (F021, DEC-051) — what other repos consume
+| Reusable workflow (`workflow_call`) | Inputs |
+|---|---|
+| `kit-deploy.yml` | `branch` (req), `lifetime`, `lifetime_custom`, `idle_timeout`, `max_replicas` (empty = `.preview.yaml` defaults), `kit_repository`, `kit_ref` |
+| `kit-destroy.yml` | `branch` (req), `kit_*` |
+| `kit-reap.yml` | `kit_*` — reaps only the caller repo's previews |
+| `kit-purge.yml` | `dry_run`, `max_age` (7d), `keep` (3), `kit_*` |
+Pin `nimat-dev/ephemeral-environments/.github/workflows/kit-<x>.yml@vX.Y.Z`; the caller needs `permissions: {id-token: write, contents: read}`
+and must not reuse the kit's concurrency groups. Composite `kit/action.yml` (`command:` plan|namespace|deploy|verify|summary|destroy|reap|purge).
+Chart: `oci://<ACR>/helm/preview` (version = kit version). Example: `examples/consumer/`.
+
 ## Repo variables read by the workflows (env `preview`, set by a6)
 `AZURE_CLIENT_ID` `AZURE_TENANT_ID` `AZURE_SUBSCRIPTION_ID` `ACR_NAME` `ACR_LOGIN_SERVER` `APP_IMAGE_NAME`
 `AKS_CLUSTER` `AKS_RESOURCE_GROUP` `PREVIEW_DOMAIN` `INTERCEPTOR_FQDN` `INTERCEPTOR_PORT` `INGRESS_CLASS`
