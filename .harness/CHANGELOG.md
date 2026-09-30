@@ -18,6 +18,20 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-30 — F017 Multiple project domains per cluster — COMPLETE
+Branch/commit: feat/F017   Contract: `verification/contracts/F017.md`   DEC-047
+Evidence (`evidence/F017/`):
+  - `bootstrap/a7-project-domain.sh`; a6 `PREVIEW_DOMAIN` override; teardown deletes `PROJECT_DOMAINS` zones
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 238/238 (+11 new) (`init.txt`)
+  - live: `a7 --domain shop.preview.nimat.dev --parent-zone preview.nimat.dev --apply` → zone, 4 NS in parent, `*.shop` → 74.151.139.236,
+    role, issuer + cert Ready, TLSStore entry (`a7-apply.txt`); rerun → all skip (`a7-idempotent.txt`); public DNS resolves (`dns.txt`)
+  - e2e: `smoke.sh --domain shop.preview.nimat.dev` CP1–CP3 PASS (cert CN `*.shop.preview.nimat.dev`, LE); `smoke.sh --domain preview.nimat.dev`
+    CP1–CP3 PASS (cert `*.preview.nimat.dev`) (`smoke.txt`)
+  - edge cases: input validation (exit 2, no cloud call), idempotency, append vs merge TLSStore patch, no LB / no identity / cert not Ready, wrong context
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=4 evidence=5 => avg 4.8  (PASS)
+Notes: `shop.preview.nimat.dev` stays as the second test domain (F023 pilot uses it); local `bootstrap/.env` has PROJECT_DOMAINS.
+Tracking fix: this entry, scope-guard and PROJECT_STATE active feature landed on feat/F018 (helper script failed after PR #23 merged).
+
 ## 2026-09-30 — F016 `.preview.yaml` app contract with components — COMPLETE
 Branch/commit: feat/F016 @ a556bdd   Contract: `verification/contracts/F016.md`   DEC-044, DEC-045, DEC-046
 Evidence (`evidence/F016/`):
