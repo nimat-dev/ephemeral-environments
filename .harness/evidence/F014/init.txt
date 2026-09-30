@@ -1,0 +1,239 @@
+$ ./scripts/init.sh
+[info] init: start root=/Users/nimatullahrazmjo/workstation/ephemeral-environments
+[info] init: ▶ roadmap: one IN PROGRESS (or all COMPLETE)
+[info] init: roadmap complete: all 13 features COMPLETE/DEPRECATED
+[info] init: ✔ roadmap: one IN PROGRESS (or all COMPLETE)
+[warn] init: working tree is dirty (see .harness/loops/failure-modes.md)
+[info] init: ▶ yamllint
+[info] init: ✔ yamllint
+[info] init: ▶ shellcheck
+[info] init: ✔ shellcheck
+[info] init: ▶ actionlint
+[info] init: ✔ actionlint
+[info] init: ▶ helm lint
+engine.go:214: [INFO] Missing required value: host is required (e.g. <id>.<PREVIEW_DOMAIN>)
+engine.go:214: [INFO] Missing required value: image.repository is required (<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>)
+engine.go:214: [INFO] Missing required value: image.tag is required (short git sha)
+==> Linting ./deploy/preview
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+[info] init: ✔ helm lint
+[info] init: ▶ helm template | kubeconform
+Summary: 6 resources found parsing stdin - Valid: 5, Invalid: 0, Errors: 0, Skipped: 1
+[info] init: ✔ helm template | kubeconform
+[info] init: ▶ bats (full suite)
+1..192
+ok 1 dry-run: plans all three creates, runs no mutating az call
+ok 2 apply: executes creates and fetches credentials
+ok 3 idempotent: everything exists -> nothing created, NS printed
+ok 4 re-run with AKS present skips quota check (node already uses quota)
+ok 5 partial failure then retry: existing ACR skipped, AKS retried
+ok 6 existing AKS without OIDC/workload identity -> update planned
+ok 7 unregistered provider -> register planned (dry-run), executed (apply)
+ok 8 preflight: inaccessible subscription fails before any mutation
+ok 9 preflight: missing resource group fails
+ok 10 preflight: quota below vcpus x (nodes+1) fails
+ok 11 preflight: quota exactly enough passes
+ok 12 preflight: restricted or missing VM size fails
+ok 13 config validation: each invalid value exits 2
+ok 14 unknown argument exits 2
+ok 15 teardown without --yes deletes nothing
+ok 16 teardown --yes deletes AKS, ACR, zone but never the resource group
+ok 17 teardown with nothing present skips all
+ok 18 spec files are byte-identical to spec Part B
+ok 19 helm lint passes
+ok 20 fixture render passes kubeconform strict
+ok 21 no Namespace rendered
+ok 22 Deployment has no replicas field; image is repo:tag
+ok 23 Ingress routes host to interceptor and preserves Host
+ok 24 Ingress has no secretName (nginx default wildcard cert)
+ok 25 HTTPScaledObject: host, idle timeout, replica bounds
+ok 26 never idle timeout renders as integer
+ok 27 overrides: interceptor fqdn/port and max replicas
+ok 28 ResourceQuota from values
+ok 29 name exactly 50 kept
+ok 30 name > 50 truncated, trailing '-' trimmed
+ok 31 missing host fails render
+ok 32 missing image.repository fails render
+ok 33 missing image.tag fails render
+ok 34 empty tree is clean
+ok 35 compliant tree is clean (comments and near-misses ignored)
+ok 36 rule 1: adapter call in scripts/lib
+ok 37 rule 1: adapter call inside command substitution
+ok 38 rule 2: inline sanitizer in workflow
+ok 39 rule 3: client-secret in workflow
+ok 40 rule 3: non-GITHUB_TOKEN secret in workflow
+ok 41 rule 3: secret whose name starts with GITHUB_TOKEN
+ok 42 rule 3: bracket-notation secret
+ok 43 rule 3: GITHUB_TOKEN next to another expression stays clean
+ok 44 rule 4: Namespace in chart
+ok 45 rule 5: replicas in Deployment
+ok 46 rule 6: hard-coded domain in workflow
+ok 47 rule 7: missing top-level permissions
+ok 48 rule 7: extra permission
+ok 49 rule 7: job-level permissions override
+ok 50 rule 8: workflow references bootstrap/
+ok 51 rule 9: secretName in Ingress
+ok 52 multiple violations are all reported
+ok 53 --root on missing dir exits 2
+ok 54 unknown argument exits 2
+ok 55 A1 dry-run: plans pinned traefik install, calls no helm
+ok 56 A1 apply: installs and prints LB IP
+ok 57 A1 apply: no LB IP within timeout fails
+ok 58 wrong kube context refuses before any helm call
+ok 59 A4 dry-run: plans keda + http add-on at pinned versions
+ok 60 A4 apply: verifies interceptor proxy service and port
+ok 61 A4 apply: interceptor missing or on another port fails
+ok 62 helm failure mid-way exits non-zero; re-run converges
+ok 63 missing versions file exits 2
+ok 64 unknown argument exits 2
+ok 65 A2: no record -> add wildcard to LB IP
+ok 66 A2: record already correct -> skip
+ok 67 A2: stale IP -> removed, new added
+ok 68 A2: no LB IP fails before touching DNS
+ok 69 A2 dry-run: no DNS mutation
+ok 70 A3 dry-run: plans install, identity, role, federation, manifests; mutates nothing
+ok 71 A3 apply: manifests use MI client id, zone, no ACME email; waits for cert
+ok 72 A3 idempotent: identity, role, federation present -> none recreated
+ok 73 A3: certificate never Ready -> fails
+ok 74 A5 dry-run: plans AAD/RBAC, identity, roles, k8s RBAC; mutates nothing
+ok 75 A5: immutable OIDC subject prefix -> second federated credential; legacy -> none
+ok 76 A5: OIDC prefix lookup fails -> --apply exits 1, dry-run warns
+ok 77 A5: federated credential subject drift -> update, not skip
+ok 78 A5: renders preview-deployer-guard VAP keyed on the SP object id (F009)
+ok 79 A5 apply: guard effective -> probes as SP pass (preview-* allowed; kube-system, default, foo denied)
+ok 80 A5 apply: probe namespace already exists -> still allowed, guard verified
+ok 81 A5 apply: guard not effective (permissive) -> exit 1 after retries
+ok 82 A5: spec's RBAC Writer is not granted; ClusterRole covers what deploy creates
+ok 83 A5: ClusterRole never grants secrets (helm uses configmap driver, DEC-026)
+ok 84 A5 apply: converts kubeconfig and binds ClusterRole to the SP object id
+ok 85 A5 idempotent: everything present -> no creates
+ok 86 A5: operator without cluster access after role assignment fails
+ok 87 A5: invalid GH_REPO exits 2
+ok 88 A6 apply: creates env and all workflow variables
+ok 89 A6: no repo admin -> apply refuses, dry-run warns
+ok 90 A6: missing Entra app fails
+ok 91 roadmap: exactly one IN PROGRESS passes (status legend line ignored)
+ok 92 roadmap: zero IN PROGRESS fails
+ok 93 roadmap: all COMPLETE/DEPRECATED passes (roadmap finished)
+ok 94 roadmap: zero IN PROGRESS with one NOT STARTED left still fails
+ok 95 roadmap: status is the last backtick span (description mentioning COMPLETE / IN PROGRESS ignored)
+ok 96 roadmap: two IN PROGRESS fails
+ok 97 roadmap: empty file fails
+ok 98 roadmap: missing file fails
+ok 99 real ROADMAP passes the gate
+ok 100 unknown argument exits 2
+ok 101 plan: writes identity to GITHUB_OUTPUT with HEAD short sha
+ok 102 plan: invalid input -> exit 1, nothing written
+ok 103 plan: missing env -> exit 2 naming it; bad src dir -> exit 1
+ok 104 namespace: applies label contract via kubectl apply -f -
+ok 105 deploy: helm upgrade --install with configmap driver, string-safe values, traefik class
+ok 106 deploy: helm failure propagates; missing env -> exit 2
+ok 107 deploy passes strings via --set-string: branch 'null'/'true' renders (plain --set breaks the chart)
+ok 108 verify: 200 on first try -> ok, one request
+ok 109 verify: cold start (000, 502) then 200 -> ok after 3 attempts
+ok 110 verify: never 200 -> exit 1 after VERIFY_ATTEMPTS
+ok 111 summary: full table with URL
+ok 112 summary: after an early failure (no plan outputs) still writes, no URL
+ok 113 unknown command -> exit 2
+ok 114 workflow: inputs, defaults, concurrency per API_SURFACE
+ok 115 workflow: configmap driver, todo context, amd64, ingress class var, summary always
+ok 116 workflow: no expression interpolation inside run: (script injection guard)
+ok 117 destroy: preview-bot namespace -> delete --ignore-not-found --wait=false, same id as deploy
+ok 118 destroy: non-existent preview -> success, no delete (idempotent)
+ok 119 destroy: namespace not owned by preview-bot is refused, never deleted
+ok 120 destroy: invalid branch -> exit 1, missing -> exit 2, kubectl get failure -> exit non-zero, no delete
+ok 121 destroy workflow: input, concurrency shared with deploy, env-only input, calls entrypoint
+ok 122 reap: deletes only expired preview-* namespaces, lists by label
+ok 123 reap: nothing expired / no previews -> 'nothing to reap', exit 0, no delete
+ok 124 reap: one delete fails -> others still deleted, run fails
+ok 125 reap: list failure or malformed list -> non-zero, no delete
+ok 126 reap workflow: cron */30 + dispatch, own concurrency group, calls entrypoint
+ok 127 purge: deletes old unused sha tags, keeps in-use + newest, summary
+ok 128 purge: image still run by a pod (failed upgrade relabeled ns) is protected
+ok 129 purge: tag refreshed by a racing redeploy after listing -> re-read, skipped
+ok 130 purge: re-read fails -> tag skipped, run fails, others continue
+ok 131 purge: dry run lists, deletes nothing
+ok 132 purge: namespace list or tag list unreadable -> exit 1, deletes nothing
+ok 133 purge: nothing stale -> 'nothing to purge', exit 0
+ok 134 purge: one delete fails -> others still deleted, run fails
+ok 135 purge: config errors -> exit 2, nothing listed
+ok 136 purge workflow: daily cron + dispatch dry_run, own concurrency, env-only inputs, entrypoint
+ok 137 preview_id matches spec pipeline over corpus
+ok 138 preview_id examples
+ok 139 preview_id: exactly 40 chars kept
+ok 140 preview_id: >40 with '-' at the cut is trimmed
+ok 141 preview_id: unicode collapses deterministically
+ok 142 preview_id: -n and -e are sanitized, not swallowed (spec echo bug)
+ok 143 preview_id: empty, whitespace-only, all-symbol fail
+ok 144 namespace and host
+ok 145 to_seconds units
+ok 146 to_seconds: leading zero is decimal, not octal
+ok 147 to_seconds rejects malformed
+ok 148 idle_seconds: never and passthrough
+ok 149 resolve_lifetime
+ok 150 expires_at with fixed now
+ok 151 expires_at defaults now to current time
+ok 152 expires_at rejects zero lifetime, bad lifetime, bad now
+ok 153 expired_namespaces: < now, missing/garbage label expired, foreign ns ignored
+ok 154 expired_namespaces: expires-at == now is not expired
+ok 155 expired_namespaces: empty list -> no output
+ok 156 expired_namespaces: malformed JSON and bad now fail
+ok 157 sourcing does not change caller shell options
+ok 158 max_replicas: 1..6 accepted, leading zero decimal
+ok 159 max_replicas: 0, over quota, negative, non-numeric, empty rejected
+ok 160 preview_plan: happy path emits the full identity
+ok 161 preview_plan: custom lifetime and never idle
+ok 162 preview_plan: every invalid input fails and prints nothing on stdout
+ok 163 namespace_manifest: label contract + raw branch escaped into annotation
+ok 164 purge_tags: old sha tags only; skips in-use, locked, non-sha, newest KEEP, recent
+ok 165 purge_tags: KEEP larger than the tag count -> nothing
+ok 166 purge_tags: KEEP 0, age 0 -> every deletable sha tag (none locked/non-sha)
+ok 167 purge_tags: empty tag list -> nothing; malformed json -> non-zero
+ok 168 purge_tags: invalid now / age / keep -> non-zero
+ok 169 preview_commits: labels of preview-bot preview-* namespaces only
+ok 170 purge_tags: digest shared with a protected tag (in-use / latest) is never deleted; shared victims once
+ok 171 purge_tags: digest shared with a KEEP-newest tag is protected
+ok 172 image_tags_in_use: deployment templates + pods in preview-* only, this image only
+ok 173 iso_epoch: fractional seconds dropped; garbage -> non-zero
+ok 174 enforced quota: CP0-CP4 PASS, fills to hard.pods, fill pods cleaned up
+ok 175 quota not enforced (everything admitted) -> FAIL exit 1, still cleans up
+ok 176 rejected for another reason is not a PASS
+ok 177 fill pod creation fails -> CP4 FAIL, no final probe
+ok 178 already at hard.pods -> no fill, CP4 still probes
+ok 179 no preview-quota in namespace -> exit 1
+ok 180 usage: missing arg, extra arg, or non-preview namespace -> exit 2, nothing touched
+ok 181 happy path: 1 -> 0, wake to 1, back to 0 => 3 PASS, namespace cleaned
+ok 182 never scales to zero => CP2 FAIL before any request, still cleaned
+ok 183 missing spec.replicas is not mistaken for asleep
+ok 184 HTTP 200 but no ready pod => CP2 FAIL
+ok 185 wake returns 502 => CP2 FAIL
+ok 186 bad TLS => CP1 FAIL
+ok 187 --keep leaves the namespace
+ok 188 usage errors exit 2
+ok 189 workflows reference at least one action
+ok 190 every action ref is a full release tag
+ok 191 no floating major-only tag
+ok 192 no commit-SHA pin
+[info] init: ✔ bats (full suite)
+[info] init: ▶ check-architecture
+[info] check-architecture: root=/Users/nimatullahrazmjo/workstation/ephemeral-environments lib=1 workflows=4 templates=8
+clean
+[info] check-architecture: clean
+[info] init: ✔ check-architecture
+[info] init: skip e2e smoke (no runner yet — F005)
+
+== Active feature ==
+== Next step (CURRENT_TASK.md) ==
+Roadmap done. Follow-ups (not on the roadmap; each needs a new FID in ROADMAP + phase file before work starts):
+1. BLK-008: `bootstrap/teardown.sh` leaves Entra app `gh-preview-deployer` (+SP, federated creds) and UAMI
+   `cert-manager-dns`.
+2. Untagged ACR manifests (buildx platform/attestation children) are never purged (F011 contract §5).
+3. Node.js 20 deprecation warning on actions (checkout@v4, azure/login@v2, aks-set-context@v4, use-kubelogin@v1)
+   — bump when Node 24 majors exist.
+4. COST IS RUNNING: pause with `az aks stop -g nimatresourceg -n aks-preview`; remove with `bootstrap/teardown.sh --yes`.
+
+
+BASELINE GREEN
+[info] init: done
