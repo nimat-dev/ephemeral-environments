@@ -1,0 +1,21 @@
+# Copy into an onboarded repo (platform/envs/<team>/repos.tf). Lifetime/idle/replicas come from .preview.yaml defaults.
+name: Preview
+on:
+  workflow_dispatch:
+    inputs:
+      branch: {description: Branch to preview, required: true, type: string}
+      action: {description: deploy or destroy, required: true, default: deploy, type: choice, options: [deploy, destroy]}
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    if: inputs.action == 'deploy'
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-deploy.yml@v1.0.0
+    with:
+      branch: ${{ inputs.branch }}
+  destroy:
+    if: inputs.action == 'destroy'
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-destroy.yml@v1.0.0
+    with:
+      branch: ${{ inputs.branch }}

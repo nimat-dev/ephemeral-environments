@@ -5,7 +5,11 @@
 ROOT="$BATS_TEST_DIRNAME/.."
 FULL_TAG='^[A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+@v[0-9]+\.[0-9]+(\.[0-9]+)?$'
 
-refs() { grep -hoE 'uses:[[:space:]]*[^[:space:]#]+' "$ROOT"/.github/workflows/*.yml | sed -E 's/uses:[[:space:]]*//'; }
+# Local refs (./kit composite, ./.github/workflows/kit-*.yml reusable workflows, F021) are this repo at the same commit.
+refs() {
+  grep -hE '^[[:space:]]*(-[[:space:]]+)?uses:' "$ROOT"/.github/workflows/*.yml "$ROOT"/examples/consumer/.github/workflows/*.yml |
+    sed -E 's/^[[:space:]]*(-[[:space:]]+)?uses:[[:space:]]*//; s/[[:space:]]*(#.*)?$//' | grep -v '^\./'
+}
 
 @test "workflows reference at least one action" {
   [ "$(refs | wc -l)" -gt 0 ]

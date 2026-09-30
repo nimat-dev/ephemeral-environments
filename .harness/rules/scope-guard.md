@@ -8,7 +8,7 @@ until the previous phase's completion criteria pass.
 ## Current phase: Phase 05 — Multi-repo, reusable platform (Phases 01–04 COMPLETE)
 
 ### In scope (current phase only)
-- F015–F020 COMPLETE; F021 (IN PROGRESS), then the rest in ROADMAP order — see `phases/PHASE-05-MULTI-REPO.md`.
+- F015–F021 COMPLETE; F022 (IN PROGRESS), then the rest in ROADMAP order — see `phases/PHASE-05-MULTI-REPO.md`.
 
 ### Off-limits until their phase (do NOT build now)
 - **Later**: Key Vault/CSI secrets add-on, Postgres add-on, splitting into separate repos (DEC-037).

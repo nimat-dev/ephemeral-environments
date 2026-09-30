@@ -54,13 +54,14 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] Replaces `a5`/`a6` (superseded); BLK-008 resolved (identity + UAMI destroyed by `tofu destroy`).
 
 ## F021 — Kit extraction + releases
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] `kit/` composite action (scripts via `github.action_path`) + `workflow_call` deploy/destroy/reap/purge; chart pushed to ACR OCI.
-- [ ] Semver release workflow, full tags only (DEC-035); consumer example ≤ 25 lines.
-- [ ] This repo's own workflows consume the kit (dogfood).
+**Status**: COMPLETE (2026-09-30) — contract `verification/contracts/F021.md`, evidence `evidence/F021/`, DEC-051
+- [x] `kit/action.yml` composite (scripts via `github.action_path/..`, plan outputs exposed) + `workflow_call` kit-deploy/destroy/reap/purge (kit checked out at `kit_ref` into `.kit`); chart published to ACR OCI by the release.
+- [x] Semver release: `scripts/kit-release.sh prepare|verify|publish-chart|github-release` + `kit-release.yml` on tag `vX.Y.Z` (full tags only, DEC-035; rule-7 exception for `contents: write`); consumer example `examples/consumer/preview.yml` 21 lines.
+- [x] This repo's workflows consume the kit (dogfood at `github.sha`): Deploy 36724289952, Destroy 36724554226, Reap 36724558780, Purge 36724563167 green.
+- [x] `.preview.yaml` `defaults` (lifetime, idle, maxReplicas) fill empty inputs.
 
 ## F022 — Agent-agnostic harness
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (2026-09-30)
 - [ ] Root `AGENTS.md` canonical; `CLAUDE.md` = `@AGENTS.md`; `.github/copilot-instructions.md` pointer (DEC-043).
 - [ ] `.harness/commands/*.md` single source, mirrored to `.claude/commands/` + `.github/prompts/*.prompt.md`.
 - [ ] Enforcement in git + CI: pre-commit (roadmap gate, state-updated check) + required `harness-check` status.

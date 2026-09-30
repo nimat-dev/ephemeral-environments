@@ -18,6 +18,19 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-30 — F021 Kit extraction + releases — COMPLETE
+Branch/commit: feat/F021 @ 21f993b   Contract: `verification/contracts/F021.md`   DEC-051
+Evidence (`evidence/F021/`):
+  - kit: composite `kit/action.yml`, reusable `kit-{deploy,destroy,reap,purge}.yml`, release `kit-release.yml` + `scripts/kit-release.sh`,
+    consumer example (21-line caller + cleanup + `.preview.yaml`); `.preview.yaml` defaults
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 269/269 (+14: defaults, kit shape, release prepare/verify/publish/github-release,
+    example), actionlint (incl. example), check-architecture (rule 7 exception) (`init.txt`)
+  - dogfood e2e (`dogfood.txt`): Deploy 36724289952 (preview/plan, 2× build, deploy; verify `/` + `/api/health`), Destroy 36724554226 (404),
+    Reap 36724558780, Purge dry-run 36724563167 — all via `./.kit/kit`
+  - release v1.0.0: see the post-merge entry below
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0  (PASS)
+Notes: Bash auto-mode classifier outages paused the session mid-feature (tracked in PROJECT_STATE, resumed same day).
+
 ## 2026-09-30 — F020 Repo onboarding module — COMPLETE
 Branch/commit: feat/F020   Contract: `verification/contracts/F020.md`   DEC-050   BLK-008 resolved
 Evidence (`evidence/F020/`):

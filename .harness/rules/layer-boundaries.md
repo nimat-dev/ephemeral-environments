@@ -33,7 +33,8 @@ import-direction rules — dependencies point one way only.
    interceptor FQDN — only `vars.*`. (grep `nimat.dev`, `alleghenycounty.us`, `azurecr.io`,
    `svc.cluster.local` in `.github/workflows/`)
 7. **Least-privilege tokens.** Every workflow declares `permissions:` with exactly
-   `id-token: write` and `contents: read`. (yaml parse)
+   `id-token: write` and `contents: read`; no job-level overrides. Sole exception: `kit-release.yml`
+   has `contents: write` (it creates the GitHub release, DEC-051). (yaml parse)
 8. **Bootstrap isolated.** No workflow references `bootstrap/`. (grep)
 9. **TLS via default cert.** Chart Ingress has no `secretName`. (grep)
 

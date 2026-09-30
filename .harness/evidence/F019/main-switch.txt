@@ -1,0 +1,6 @@
+NAME                                              URL                                                   AGE   READY   STATUS
+gitrepository.source.toolkit.fluxcd.io/platform   https://github.com/nimat-dev/ephemeral-environments   37m   True    stored artifact for revision 'main@sha1:cdaaeaccb4e4b4e7ec810e8904126f88547ef804'
+
+NAME                                                          AGE   READY   STATUS
+kustomization.kustomize.toolkit.fluxcd.io/platform-config     37m   False   dependency 'flux-system/platform-releases' revision is not up to date
+kustomization.kustomize.toolkit.fluxcd.io/platform-releases   37m   True    Applied revision: main@sha1:cdaaeaccb4e4b4e7ec810e8904126f88547ef804

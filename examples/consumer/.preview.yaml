@@ -1,0 +1,9 @@
+# App contract (see .harness/architecture/DATA_MODEL.md). One entry per workload on https://<branch>.<your domain>.
+components:
+  - name: web
+    context: .
+    route: /
+defaults:
+  lifetime: 48h
+  idle: 30m
+  maxReplicas: 3
