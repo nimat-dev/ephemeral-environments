@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # A5: GitHub Actions -> Azure OIDC identity for preview workflows (no secrets).
+# SUPERSEDED (F020, DEC-050): platform/modules/repo-onboarding (OpenTofu) owns the repo identity, roles, GitHub env/vars and k8s guard; kept for non-OpenTofu setups.
 #  - AKS: Entra ID integration + Azure RBAC (needed for kubelogin); operator gets RBAC Cluster Admin
 #  - Entra app + SP + federated credential repo:<GH_REPO>:environment:preview (+ the repo's
 #    immutable-id subject when GitHub issues one)
