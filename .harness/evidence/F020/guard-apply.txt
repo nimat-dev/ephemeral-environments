@@ -1,0 +1,3 @@
+clusterrolebinding.rbac.authorization.k8s.io/preview-deployer-todo serverside-applied
+validatingadmissionpolicy.admissionregistration.k8s.io/preview-deployer-guard-todo serverside-applied
+validatingadmissionpolicybinding.admissionregistration.k8s.io/preview-deployer-guard-todo serverside-applied

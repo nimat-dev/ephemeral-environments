@@ -1,0 +1,5 @@
+deploy 36722280404 exit 0
+[info] preview-ci: apply namespace preview-todo-feat-f020 repo=nimat-dev-ephemeral-environments expires-at=1790861510
+[info] preview-ci: verify ok https://feat-f020.preview.nimat.dev/
+[info] preview-ci: verify ok https://feat-f020.preview.nimat.dev/api/health
+destroy 36722549593 exit 0

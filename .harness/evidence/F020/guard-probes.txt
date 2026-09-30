@@ -1,0 +1,6 @@
+ALLOWED  kubectl create namespace preview-todo-probe
+DENIED   kubectl create namespace preview-shop-probe :: preview-deployer-guard-todo' with binding 'preview-deployer-guard-todo' denied request: preview-deployer-guard-todo: CI identity of nimat-dev/ephemeral-environments may only write preview-todo-* namespaces (namespaces preview-shop-probe/preview-shop-probe)
+DENIED   kubectl create namespace preview-probe :: preview-deployer-guard-todo' with binding 'preview-deployer-guard-todo' denied request: preview-deployer-guard-todo: CI identity of nimat-dev/ephemeral-environments may only write preview-todo-* namespaces (namespaces preview-probe/preview-probe)
+DENIED   kubectl create configmap x -n kube-system :: preview-deployer-guard-todo' with binding 'preview-deployer-guard-todo' denied request: preview-deployer-guard-todo: CI identity of nimat-dev/ephemeral-environments may only write preview-todo-* namespaces (configmaps kube-system/x)
+DENIED   kubectl create configmap x -n default :: preview-deployer-guard-todo' with binding 'preview-deployer-guard-todo' denied request: preview-deployer-guard-todo: CI identity of nimat-dev/ephemeral-environments may only write preview-todo-* namespaces (configmaps default/x)
+DENIED   kubectl create secret generic x -n preview-todo-probe :: 
