@@ -122,3 +122,57 @@ resource "azurerm_role_assignment" "cert_manager_dns" {
   role_definition_name = "DNS Zone Contributor"
   principal_id         = azurerm_user_assigned_identity.cert_manager.principal_id
 }
+
+# --- GitOps (F019, DEC-039): Flux owns in-cluster add-ons; branch previews stay push-deployed ---
+resource "azurerm_kubernetes_cluster_extension" "flux" {
+  count          = var.flux == null ? 0 : 1
+  name           = "flux"
+  cluster_id     = azurerm_kubernetes_cluster.this.id
+  extension_type = "microsoft.flux"
+
+  # Fits a single 2-vCPU node next to the add-ons and previews (DEC-041/049): no notification
+  # controller (alerts/receivers unused; status comes from fluxconfig-agent), 50m CPU requests.
+  configuration_settings = {
+    "notification-controller.enabled"             = "false"
+    "helm-controller.resources.requests.cpu"      = "50m"
+    "kustomize-controller.resources.requests.cpu" = "50m"
+    "source-controller.resources.requests.cpu"    = "50m"
+  }
+}
+
+resource "azurerm_kubernetes_flux_configuration" "platform" {
+  count      = var.flux == null ? 0 : 1
+  name       = "platform"
+  cluster_id = azurerm_kubernetes_cluster.this.id
+  namespace  = "flux-system"
+  scope      = "cluster"
+
+  git_repository {
+    url                      = var.flux.repository_url
+    reference_type           = "branch"
+    reference_value          = var.flux.branch
+    sync_interval_in_seconds = 120
+  }
+
+  # Add-on HelmReleases first; config (issuers, certs, TLSStore, RBAC/guard) needs their CRDs.
+  kustomizations {
+    name                       = "releases"
+    path                       = "${var.flux.path}/releases"
+    sync_interval_in_seconds   = 300
+    retry_interval_in_seconds  = 60
+    timeout_in_seconds         = 900
+    garbage_collection_enabled = true
+    wait                       = true
+  }
+
+  kustomizations {
+    name                       = "config"
+    path                       = "${var.flux.path}/config"
+    depends_on                 = ["releases"]
+    sync_interval_in_seconds   = 300
+    retry_interval_in_seconds  = 60
+    garbage_collection_enabled = true
+  }
+
+  depends_on = [azurerm_kubernetes_cluster_extension.flux]
+}

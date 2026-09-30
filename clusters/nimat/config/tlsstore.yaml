@@ -1,0 +1,11 @@
+# Traefik serves every project wildcard by SNI; the default cert stays *.preview.nimat.dev (DEC-047).
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: traefik
+spec:
+  defaultCertificate:
+    secretName: wildcard-preview-tls
+  certificates:
+    - secretName: wildcard-shop-preview-nimat-dev-tls

@@ -1,0 +1,9 @@
+module.team_cluster.azurerm_kubernetes_flux_configuration.platform[0]: Still creating... [1m10s elapsed]
+module.team_cluster.azurerm_kubernetes_flux_configuration.platform[0]: Still creating... [1m20s elapsed]
+module.team_cluster.azurerm_kubernetes_flux_configuration.platform[0]: Still creating... [1m30s elapsed]
+module.team_cluster.azurerm_kubernetes_flux_configuration.platform[0]: Still creating... [1m40s elapsed]
+module.team_cluster.azurerm_kubernetes_flux_configuration.platform[0]: Creation complete after 1m47s [id=/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.ContainerService/managedClusters/aks-preview/providers/Microsoft.KubernetesConfiguration/fluxConfigurations/platform]
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+Error: updating Scoped Extension (Scope: "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.ContainerService/managedClusters/aks-preview"
+Extension Name: "flux"): polling after Update: internal-error: polling support for the Content-Type "text/plain" was not implemented: <nil>
+Extension Name: "flux"): polling after Update: internal-error: polling

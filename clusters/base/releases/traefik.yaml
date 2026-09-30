@@ -1,0 +1,61 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: traefik
+  namespace: flux-system
+spec:
+  releaseName: traefik
+  targetNamespace: traefik
+  storageNamespace: traefik # adopt the release a1-a4 installed (same name + storage ns)
+  install:
+    createNamespace: true
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: ["/spec/replicas"] # owned by HPAs (KEDA interceptor) / scaling, not the chart
+        target:
+          kind: Deployment
+      # caBundles injected at runtime (cert-manager cainjector, KEDA cert rotation) — not chart-owned
+      - paths: ["/webhooks"]
+        target:
+          kind: ValidatingWebhookConfiguration
+      - paths: ["/webhooks"]
+        target:
+          kind: MutatingWebhookConfiguration
+      - paths: ["/spec/caBundle"]
+        target:
+          kind: APIService
+      - paths: ["/spec/conversion/webhook/clientConfig/caBundle"]
+        target:
+          kind: CustomResourceDefinition
+  interval: 30m
+  timeout: 5m
+  chart:
+    spec:
+      chart: traefik
+      version: "41.6.0"
+      sourceRef:
+        kind: HelmRepository
+        name: traefik
+  # values: bootstrap/values/traefik.yaml (kept identical by tests/flux.bats)
+  values:
+    ingressClass:
+      enabled: true
+      isDefaultClass: false
+      name: traefik
+    providers:
+      kubernetesIngress:
+        allowExternalNameServices: true
+        publishedService:
+          enabled: true
+    ports:
+      web:
+        http:
+          redirections:
+            entryPoint:
+              to: websecure
+              scheme: https
+              permanent: true

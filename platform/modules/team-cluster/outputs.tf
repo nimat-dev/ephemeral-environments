@@ -33,3 +33,7 @@ output "cert_manager_client_id" {
 output "cert_manager_principal_id" {
   value = azurerm_user_assigned_identity.cert_manager.principal_id
 }
+
+output "flux_configuration_id" {
+  value = one(azurerm_kubernetes_flux_configuration.platform[*].id)
+}

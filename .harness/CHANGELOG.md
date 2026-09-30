@@ -18,6 +18,22 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-30 — F019 Flux add-ons — COMPLETE
+Branch/commit: feat/F019   Contract: `verification/contracts/F019.md`   DEC-049
+Evidence (`evidence/F019/`):
+  - OpenTofu: extension + flux configuration created (`tofu-apply.txt`); trims applied (provider polling bug "text/plain" on update —
+    Azure state Succeeded, re-plan No changes)
+  - Flux: both Kustomizations + 4 HelmReleases Ready (adopted: traefik v2, cert-manager v2, keda v4); 0 DriftDetected in 3 min steady state
+    (`steady-headroom.txt`)
+  - drift: ClusterRole deleted → restored in 5s; cainjector imagePullPolicy tampered → corrected in 25s (`drift.txt`)
+  - fresh install: `helm uninstall http-add-on` → Flux "Install complete" v1 in 20s, interceptor :8080 (`fresh-install.txt`)
+  - headroom: 1597m/1900m CPU requested idle, Flux 170m, 303m free; 1797m with a 2-component preview awake (`steady-headroom.txt`, `regression.txt`)
+  - smoke PASS CP1–CP3 (`smoke.txt`); Deploy 36720360228 (verify `/` + `/api/health`) + Destroy 36720632838 green (`regression.txt`)
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 255/255 (+7 flux.bats), tofu test 7/7, tflint, checkov (`init.txt`)
+Evaluator: acceptance=4 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 4.8  (PASS)
+Notes: fresh-cluster-from-zero not run (quota/Docker) — parked in the contract. KEDA trim needed a manual a4 run + a temporary
+notification-controller scale-down to break a CPU surge deadlock during install.
+
 ## 2026-09-30 — F018 OpenTofu infra stack — COMPLETE
 Branch/commit: feat/F018   Contract: `verification/contracts/F018.md`   DEC-048
 Evidence (`evidence/F018/`):

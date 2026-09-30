@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # A4: KEDA core + HTTP add-on (pinned). Verifies the interceptor proxy service the chart targets.
+# SUPERSEDED on Flux clusters (F019, DEC-049): clusters/<team>/ + OpenTofu own this; kept for clusters without Flux.
 # Usage: bootstrap/a4-keda.sh [--apply] [--env FILE]   (default: dry-run)
 set -euo pipefail
 export SCRIPT_NAME=a4-keda
@@ -16,7 +17,7 @@ INTERCEPTOR_PORT=8080
 
 run helm repo add kedacore https://kedacore.github.io/charts --force-update
 run helm upgrade --install keda kedacore/keda -n keda --create-namespace \
-  --version "$KEDA_CHART_VERSION" --wait --timeout 5m
+  --version "$KEDA_CHART_VERSION" -f "$here/values/keda.yaml" --wait --timeout 5m
 run helm upgrade --install http-add-on kedacore/keda-add-ons-http -n keda \
   --version "$KEDA_HTTP_CHART_VERSION" -f "$here/values/keda-http.yaml" --wait --timeout 5m
 

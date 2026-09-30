@@ -1,0 +1,51 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: flux-system
+spec:
+  releaseName: cert-manager
+  targetNamespace: cert-manager
+  storageNamespace: cert-manager # adopt the release a1-a4 installed (same name + storage ns)
+  install:
+    createNamespace: true
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: ["/spec/replicas"] # owned by HPAs (KEDA interceptor) / scaling, not the chart
+        target:
+          kind: Deployment
+      # caBundles injected at runtime (cert-manager cainjector, KEDA cert rotation) — not chart-owned
+      - paths: ["/webhooks"]
+        target:
+          kind: ValidatingWebhookConfiguration
+      - paths: ["/webhooks"]
+        target:
+          kind: MutatingWebhookConfiguration
+      - paths: ["/spec/caBundle"]
+        target:
+          kind: APIService
+      - paths: ["/spec/conversion/webhook/clientConfig/caBundle"]
+        target:
+          kind: CustomResourceDefinition
+  interval: 30m
+  timeout: 5m
+  chart:
+    spec:
+      chart: cert-manager
+      version: "v1.21.2"
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+  # values: bootstrap/values/cert-manager.yaml (kept identical by tests/flux.bats)
+  values:
+    crds:
+      enabled: true
+    podLabels:
+      azure.workload.identity/use: "true"
+    serviceAccount:
+      labels:
+        azure.workload.identity/use: "true"

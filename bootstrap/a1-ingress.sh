@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # A1: Traefik v3 ingress controller (replaces EOL ingress-nginx, DEC-021). Prints the LB IP.
+# SUPERSEDED on Flux clusters (F019, DEC-049): clusters/<team>/ + OpenTofu own this; kept for clusters without Flux.
 # Usage: bootstrap/a1-ingress.sh [--apply] [--env FILE]   (default: dry-run)
 set -euo pipefail
 export SCRIPT_NAME=a1-ingress

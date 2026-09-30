@@ -138,3 +138,56 @@ run "rejects_bad_inputs" {
   }
   expect_failures = [var.acr_name, var.node_count]
 }
+
+run "flux_off_by_default" {
+  command = plan
+  plan_options {
+    target = [azurerm_kubernetes_cluster.this]
+  }
+  assert {
+    condition     = length(azurerm_kubernetes_cluster_extension.flux) == 0 && length(azurerm_kubernetes_flux_configuration.platform) == 0
+    error_message = "No Flux unless var.flux is set."
+  }
+}
+
+run "flux_releases_then_config" {
+  command = plan
+  variables {
+    flux = {
+      repository_url = "https://github.com/example/platform"
+      branch         = "main"
+      path           = "./clusters/team"
+    }
+  }
+  plan_options {
+    target = [azurerm_kubernetes_cluster_extension.flux, azurerm_kubernetes_flux_configuration.platform]
+  }
+  assert {
+    condition     = azurerm_kubernetes_cluster_extension.flux[0].configuration_settings["notification-controller.enabled"] == "false"
+    error_message = "Notification controller off (CPU budget, DEC-049)."
+  }
+  assert {
+    condition = (
+      { for k in azurerm_kubernetes_flux_configuration.platform[0].kustomizations : k.name => k.path } == {
+        releases = "./clusters/team/releases", config = "./clusters/team/config"
+      } &&
+      tolist([for k in azurerm_kubernetes_flux_configuration.platform[0].kustomizations : k.depends_on if k.name == "config"][0]) == tolist(["releases"])
+    )
+    error_message = "config kustomization depends on releases (CRDs first)."
+  }
+}
+
+run "flux_rejects_bad_source" {
+  command = plan
+  variables {
+    flux = {
+      repository_url = "git@github.com:example/platform.git"
+      branch         = "main"
+      path           = "clusters/team"
+    }
+  }
+  plan_options {
+    target = [azurerm_kubernetes_flux_configuration.platform]
+  }
+  expect_failures = [var.flux]
+}

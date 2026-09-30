@@ -60,3 +60,20 @@ variable "admin_ssh_public_key" {
   type        = string
   default     = null
 }
+
+variable "flux" {
+  description = <<-EOT
+    GitOps for in-cluster add-ons (F019, DEC-039): AKS microsoft.flux extension + a flux configuration
+    syncing `<path>/releases` then `<path>/config` from a public Git repo. null = no Flux.
+  EOT
+  type = object({
+    repository_url = string
+    branch         = string
+    path           = string # e.g. ./clusters/nimat
+  })
+  default = null
+  validation {
+    condition     = var.flux == null || (startswith(try(var.flux.repository_url, ""), "https://") && startswith(try(var.flux.path, ""), "./"))
+    error_message = "flux.repository_url must be https://..., flux.path must start with ./"
+  }
+}

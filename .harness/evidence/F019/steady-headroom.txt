@@ -1,0 +1,17 @@
+## steady state (3 min after all Ready)
+NAME                                                          AGE   READY   STATUS
+kustomization.kustomize.toolkit.fluxcd.io/platform-config     27m   True    Applied revision: feat/F019@sha1:460e1584a787e4bd007735a6d9c250472c1b24de
+kustomization.kustomize.toolkit.fluxcd.io/platform-releases   27m   True    Applied revision: feat/F019@sha1:460e1584a787e4bd007735a6d9c250472c1b24de
+
+NAME                                              AGE   READY   STATUS
+helmrelease.helm.toolkit.fluxcd.io/cert-manager   27m   True    Helm upgrade succeeded for release cert-manager/cert-manager.v2 with chart cert-manager@v1.21.2
+helmrelease.helm.toolkit.fluxcd.io/http-add-on    27m   True    Helm install succeeded for release keda/http-add-on.v1 with chart keda-add-ons-http@0.16.0
+helmrelease.helm.toolkit.fluxcd.io/keda           27m   True    Helm upgrade succeeded for release keda/keda.v4 with chart keda@2.21.0
+helmrelease.helm.toolkit.fluxcd.io/traefik        27m   True    Helm upgrade succeeded for release traefik/traefik.v2 with chart traefik@41.6.0
+DriftDetected events in last 3m: 0
+## node headroom (1x Standard_D2as_v7, allocatable cpu 1900m / mem ~5.6Gi)
+  cpu                1597m (84%)   17732m (933%)
+  memory             1846Mi (31%)  20654368Ki (348%)
+aks-nodepool1-38714034-vmss000001   87m   4%    2378Mi   41%   
+flux-system requests: 170m cpu
+free cpu for previews: 303m (each component requests 100m)

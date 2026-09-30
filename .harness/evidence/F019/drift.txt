@@ -1,0 +1,9 @@
+## 1. kustomize drift: delete ClusterRole preview-deployer
+clusterrole.rbac.authorization.k8s.io "preview-deployer" deleted
+after reconcile: preview-deployer labels=platform-config (5s)
+## 2. helm drift: env var injected into cert-manager-cainjector template
+DRIFT_TEST after correction: '1' (200s); event: Cluster state of release cert-manager/cert-manager.v2 has been corrected: ValidatingWebhookConfiguration/cert-manager-webhook configured
+## 2b. helm drift on a Flux-owned field: cainjector imagePullPolicy IfNotPresent -> Always
+before: IfNotPresent
+tampered: Always
+after: IfNotPresent (25s); last DriftDetected: Cluster state of release cert-manager/cert-manager.v2 has drifted from the desired state: Deployment/cert-manager/cert-manager-cainjector changed (0 additions, 1 changes, 0 removals)

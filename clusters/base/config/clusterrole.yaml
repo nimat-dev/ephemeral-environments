@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: preview-deployer
+rules:
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: [get, list, watch, create, update, patch, delete]
+  # No secrets: cluster-wide read would expose the wildcard TLS key. Helm release state
+  # lives in configmaps instead (workflows set HELM_DRIVER=configmap, DEC-026).
+  - apiGroups: [""]
+    resources: [services, resourcequotas, configmaps]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [""]
+    resources: [pods, events]
+    verbs: [get, list, watch]
+  - apiGroups: [apps]
+    resources: [deployments, replicasets]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [http.keda.sh]
+    resources: [httpscaledobjects]
+    verbs: [get, list, watch, create, update, patch, delete]
