@@ -1,0 +1,7 @@
+purge dry-run 36708609459 exit 0
+[info] preview-ci: purge: todo in use [4d38b38], keep newest 3, older than 7d
+[info] preview-ci: purge: todo nothing to purge
+[info] preview-ci: purge: todo/api in use [4d38b38], keep newest 3, older than 7d
+[info] preview-ci: purge: todo/api nothing to purge
+[info] preview-ci: purge: todo/web in use [4d38b38], keep newest 3, older than 7d
+[info] preview-ci: purge: todo/web nothing to purge

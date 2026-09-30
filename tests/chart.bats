@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# F003: deploy/preview chart — verbatim to spec + render assertions.
+# F003/F016: deploy/preview chart — legacy render golden + component render assertions.
 
 ROOT="$BATS_TEST_DIRNAME/.."
 CHART="$ROOT/deploy/preview"
@@ -11,17 +11,8 @@ setup() { export PATH="$HOME/go/bin:$PATH"; }
 render() { helm template t "$CHART" -f "$VALUES" "$@"; }
 only()   { local t="$1"; shift; render --show-only "templates/$t" "$@"; }
 
-@test "spec files are byte-identical to spec Part B" {
-  run python3 - "$ROOT" <<'PY'
-import re, sys, pathlib
-root = pathlib.Path(sys.argv[1])
-spec = (root / ".harness/preview-environments-implementation.md").read_text()
-blocks = re.findall(r"### `(deploy/preview/[^`]+)`\n(?:.*?\n)*?```yaml\n(.*?)```", spec, re.S)
-assert len(blocks) == 9, f"expected 9 spec blocks, got {len(blocks)}"
-bad = [p for p, body in blocks if (root / p).read_text() != body]
-if bad: sys.exit("drift from spec: " + ", ".join(bad))
-PY
-  [ "$status" -eq 0 ] || { echo "$output"; false; }
+@test "legacy (no components) render is byte-identical to the pre-F016 chart (golden, DEC-044)" {
+  diff <(render) "$ROOT/tests/fixtures/legacy-render.yaml"
 }
 
 @test "helm lint passes" {
@@ -104,4 +95,45 @@ PY
 @test "missing image.tag fails render" {
   run helm template t "$CHART" -f "$VALUES" --set image.tag=
   [ "$status" -ne 0 ]; [[ "$output" == *"image.tag is required"* ]] || false
+}
+
+# --- F016 components ---
+COMP="$ROOT/tests/fixtures/components.yaml"
+crender() { helm template t "$CHART" -f "$COMP" "$@"; }
+kinds() { crender | yq -N '.kind + "/" + .metadata.name' | sort; }
+
+@test "components: one Deployment/Service/HSO per component + one Ingress, kubeconform strict" {
+  [ "$(kinds | tr '\n' ' ')" = "Deployment/feature-login-api Deployment/feature-login-web HTTPScaledObject/feature-login-api HTTPScaledObject/feature-login-web Ingress/feature-login ResourceQuota/preview-quota Service/feature-login-api Service/feature-login-web Service/keda-http-interceptor " ]
+  crender | kubeconform -strict -summary -ignore-missing-schemas
+}
+
+@test "components: image, port, probe, selector per component; resources merged over defaults" {
+  d=$(crender --show-only templates/deployment.yaml | yq -o=json -I0 'select(.metadata.name == "feature-login-api")')
+  [ "$(jq -r '.spec.template.spec.containers[0].image' <<<"$d")" = example.azurecr.io/todo/api:abc1234 ]
+  [ "$(jq -r '.spec.template.spec.containers[0].ports[0].containerPort' <<<"$d")" = 3000 ]
+  [ "$(jq -r '.spec.template.spec.containers[0].readinessProbe.httpGet.path' <<<"$d")" = /api/health ]
+  [ "$(jq -r '.spec.selector.matchLabels["app.kubernetes.io/name"]' <<<"$d")" = feature-login-api ]
+  [ "$(jq -cS '.spec.template.spec.containers[0].resources' <<<"$d")" = '{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"250m","memory":"128Mi"}}' ]
+  s=$(crender --show-only templates/service.yaml | yq -o=json -I0 'select(.metadata.name == "feature-login-api")')
+  [ "$(jq -r '.spec.ports[0].targetPort' <<<"$s")" = 3000 ]
+}
+
+@test "components: HSO routes host + path prefix; legacy HSO has no pathPrefixes" {
+  h=$(crender --show-only templates/httpscaledobject.yaml | yq -o=json -I0 'select(.metadata.name == "feature-login-api")')
+  [ "$(jq -c '.spec.pathPrefixes' <<<"$h")" = '["/api"]' ]
+  [ "$(jq -c '.spec.hosts' <<<"$h")" = '["feature-login.preview.example.com"]' ]
+  [ "$(jq -r '.spec.scaleTargetRef.service' <<<"$h")" = feature-login-api ]
+  [ -z "$(render --show-only templates/httpscaledobject.yaml | grep pathPrefixes)" ]
+}
+
+@test "components: ingress keeps a single / path to the interceptor" {
+  i=$(crender --show-only templates/ingress.yaml | yq -o=json -I0 .)
+  [ "$(jq -c '[.spec.rules[0].http.paths[] | .path + ">" + .backend.service.name]' <<<"$i")" = '["/>keda-http-interceptor"]' ]
+}
+
+@test "components: missing component image fails render; long release name keeps names <= 63" {
+  run helm template t "$CHART" --set host=h.example --set 'components[0].name=web' --set 'components[0].image.tag=abc1234'
+  [ "$status" -ne 0 ]; [[ "$output" == *"components[web].image.repository is required"* ]] || false
+  n=$(crender --set name="$(printf 'x%.0s' {1..60})" | yq -N 'select(.kind == "Deployment") | .metadata.name' | awk '{ print length }' | sort -n | tail -1)
+  [ "$n" -le 63 ]
 }

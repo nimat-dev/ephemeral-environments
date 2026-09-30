@@ -11,7 +11,8 @@ Change them in the same commit as the code that consumes them.
 | `lifetime_custom` | string | — | `12h`, `3d`… (only when `custom`) |
 | `idle_timeout` | choice, required | `30m` | `15m` `30m` `1h` `6h` `never` |
 | `max_replicas` | string | `3` | int 1..6 (≤ quota.pods) |
-Output: job summary (branch, commit, image, namespace, idle, lifetime, **URL**).
+Jobs: `plan` (identity + `.preview.yaml`) → `build` (matrix per component, pinned to the planned sha) → `deploy`.
+Output: job summary (branch, commit, images, namespace, idle, lifetime, **URL**). Verify: every component route 200.
 Concurrency: `preview-<branch>`, no cancel-in-progress.
 Failure: non-200 from URL after 30×5s → job fails.
 
@@ -38,7 +39,8 @@ One failed delete → others still deleted, run fails. Concurrency: `preview-rea
 `name`, `host`, `image.repository`, `image.tag`, `image.pullPolicy`, `containerPort` (8080),
 `probePath` (`/`), `replicas.min` (0), `replicas.max` (3), `idleTimeoutSeconds` (1800),
 `resources.*`, `quota.{cpu,memory,pods}` (2 / 4Gi / 6), `interceptor.{fqdn,port}`,
-`ingressClassName` (nginx), `commit`, `branch`.
+`ingressClassName` (nginx), `commit`, `branch`, `components[]` (F016: name, image.{repository,tag}, port, probePath,
+route, resources — empty = legacy single workload, render byte-identical to pre-F016).
 
 ## Repo / `preview` environment variables (no secrets — OIDC only)
 `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `ACR_NAME`, `ACR_LOGIN_SERVER`,

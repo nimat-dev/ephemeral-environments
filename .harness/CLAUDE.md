@@ -36,11 +36,11 @@ also add" the next thing.
 | What to do when state is abnormal | `loops/failure-modes.md` |
 
 ## Commands
-Toolchain: helm, kubectl, az, actionlint, shellcheck, yamllint, kubeconform, bats, jq.
+Toolchain: helm, kubectl, az, actionlint, shellcheck, yamllint, kubeconform, bats, jq, yq (mikefarah v4, F016).
 
 | Action | Command |
 |---|---|
-| Install | `brew install helm kubectl azure-cli actionlint shellcheck yamllint kubeconform bats-core jq` (no brew: `pipx install yamllint`, `go install github.com/yannh/kubeconform/cmd/kubeconform@latest`, `npm i -g bats`) |
+| Install | `brew install helm kubectl azure-cli actionlint shellcheck yamllint kubeconform bats-core jq` (no brew: `pipx install yamllint`, `go install github.com/yannh/kubeconform/cmd/kubeconform@latest`, `npm i -g bats`, `go install github.com/mikefarah/yq/v4@v4.54.1`) |
 | Dev server | N/A (infra repo) |
 | Typecheck | `helm template t ./deploy/preview -f tests/fixtures/values.yaml \| kubeconform -strict -summary -ignore-missing-schemas` |
 | Lint | `yamllint . && shellcheck scripts/*.sh scripts/lib/*.sh bootstrap/*.sh .claude/hooks/*.sh && actionlint && helm lint ./deploy/preview` |

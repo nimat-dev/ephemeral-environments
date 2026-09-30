@@ -1,0 +1,15 @@
+$ curl https://feat-f016.preview.nimat.dev/ -> 200 text/html body: <!doctype html> <html lang="en">   <head>     <meta charset="UTF-8" />     <link
+$ curl https://feat-f016.preview.nimat.dev/api/health -> {"component":"api","status":"ok"} [200 application/json]
+$ curl https://feat-f016.preview.nimat.dev/api/items/1 -> {"component":"api","path":"/api/items/1"} [200]
+$ curl https://feat-f016.preview.nimat.dev/apix (not /api prefix -> web SPA) -> 200 text/html
+$ kubectl get deploy,httpscaledobject -n preview-todo-feat-f016
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/feat-f016-api   1/1     1            1           42s
+deployment.apps/feat-f016-web   1/1     1            1           42s
+
+NAME                                          TARGETWORKLOAD                     TARGETSERVICE      MINREPLICAS   MAXREPLICAS   AGE   READY
+httpscaledobject.http.keda.sh/feat-f016-api   apps/v1/Deployment/feat-f016-api   feat-f016-api:80   0             3             42s   True
+httpscaledobject.http.keda.sh/feat-f016-web   apps/v1/Deployment/feat-f016-web   feat-f016-web:80   0             3             42s   True
+redeploy 36710182013 exit 0
+[info] preview-ci: verify ok https://feat-f016.preview.nimat.dev/
+[info] preview-ci: verify ok https://feat-f016.preview.nimat.dev/api/health

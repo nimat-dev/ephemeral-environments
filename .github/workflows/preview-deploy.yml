@@ -37,14 +37,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Identity + app contract (.preview.yaml, F016). Everything downstream uses these outputs.
+  plan:
     runs-on: ubuntu-latest
-    environment: preview
+    environment: preview # vars (PREVIEW_DOMAIN, PREVIEW_APP) are environment-scoped
     env:
       # Dispatch inputs reach shell only via env (no ${{ }} inside run: blocks).
       BRANCH: ${{ inputs.branch }}
-      IMAGE_REPOSITORY: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.APP_IMAGE_NAME }}
-      HELM_DRIVER: configmap # DEC-026
+    outputs:
+      app: ${{ steps.id.outputs.app }}
+      preview_id: ${{ steps.id.outputs.preview_id }}
+      namespace: ${{ steps.id.outputs.namespace }}
+      host: ${{ steps.id.outputs.host }}
+      short_sha: ${{ steps.id.outputs.short_sha }}
+      sha: ${{ steps.id.outputs.sha }}
+      idle: ${{ steps.id.outputs.idle }}
+      max_replicas: ${{ steps.id.outputs.max_replicas }}
+      lifetime: ${{ steps.id.outputs.lifetime }}
+      expires_at: ${{ steps.id.outputs.expires_at }}
+      config: ${{ steps.id.outputs.config }}
+      components: ${{ steps.id.outputs.components }}
+      verify_paths: ${{ steps.id.outputs.verify_paths }}
     steps:
       # Tooling (lib, chart, scripts) from the workflow's own ref; app code from the input branch.
       - uses: actions/checkout@v7.0.1
@@ -55,7 +68,7 @@ jobs:
           path: src
           persist-credentials: false
 
-      - name: Compute preview identity
+      - name: Compute preview identity + read .preview.yaml
         id: id
         env:
           LIFETIME: ${{ inputs.lifetime }}
@@ -66,6 +79,22 @@ jobs:
           PREVIEW_APP: ${{ vars.PREVIEW_APP }} # F015: ns preview-<app>-<branch>; empty -> repo name
           SRC_DIR: src
         run: ./scripts/preview-ci.sh plan
+
+  # One image per component: <ACR>/<APP_IMAGE_NAME>/<component>:<short sha> (DEC-046), built from the planned commit.
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: preview
+    strategy:
+      fail-fast: true
+      matrix:
+        component: ${{ fromJSON(needs.plan.outputs.components) }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          path: src
+          persist-credentials: false
 
       - uses: azure/login@v3.1.0
         with:
@@ -82,12 +111,30 @@ jobs:
 
       - uses: docker/build-push-action@v7.4.0
         with:
-          context: src/todo # BLK-002 / DEC-012: the preview target is the todo app
+          context: src/${{ matrix.component.context }}
+          file: src/${{ matrix.component.context }}/${{ matrix.component.dockerfile }}
           platforms: linux/amd64 # DEC-025: AKS node pool is amd64
           push: true
-          tags: ${{ env.IMAGE_REPOSITORY }}:${{ steps.id.outputs.short_sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.APP_IMAGE_NAME }}/${{ matrix.component.name }}:${{ needs.plan.outputs.short_sha }}
+          cache-from: type=gha,scope=${{ matrix.component.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component.name }}
+
+  deploy:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    environment: preview
+    env:
+      BRANCH: ${{ inputs.branch }}
+      IMAGE_REPOSITORY: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.APP_IMAGE_NAME }}
+      HELM_DRIVER: configmap # DEC-026
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: azure/login@v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - uses: azure/use-kubelogin@v1.3
         with:
@@ -102,38 +149,41 @@ jobs:
 
       - name: Create/label namespace
         env:
-          NAMESPACE: ${{ steps.id.outputs.namespace }}
-          PREVIEW_ID: ${{ steps.id.outputs.preview_id }}
-          SHORT_SHA: ${{ steps.id.outputs.short_sha }}
-          EXPIRES_AT: ${{ steps.id.outputs.expires_at }}
-          APP: ${{ steps.id.outputs.app }}
+          NAMESPACE: ${{ needs.plan.outputs.namespace }}
+          PREVIEW_ID: ${{ needs.plan.outputs.preview_id }}
+          SHORT_SHA: ${{ needs.plan.outputs.short_sha }}
+          EXPIRES_AT: ${{ needs.plan.outputs.expires_at }}
+          APP: ${{ needs.plan.outputs.app }}
         run: ./scripts/preview-ci.sh namespace
 
       - name: Deploy chart
         env:
-          PREVIEW_ID: ${{ steps.id.outputs.preview_id }}
-          NAMESPACE: ${{ steps.id.outputs.namespace }}
-          HOST: ${{ steps.id.outputs.host }}
-          SHORT_SHA: ${{ steps.id.outputs.short_sha }}
-          IDLE_SECONDS: ${{ steps.id.outputs.idle }}
-          MAX_REPLICAS: ${{ steps.id.outputs.max_replicas }}
+          PREVIEW_ID: ${{ needs.plan.outputs.preview_id }}
+          NAMESPACE: ${{ needs.plan.outputs.namespace }}
+          HOST: ${{ needs.plan.outputs.host }}
+          SHORT_SHA: ${{ needs.plan.outputs.short_sha }}
+          IDLE_SECONDS: ${{ needs.plan.outputs.idle }}
+          MAX_REPLICAS: ${{ needs.plan.outputs.max_replicas }}
+          CONFIG: ${{ needs.plan.outputs.config }}
           INTERCEPTOR_FQDN: ${{ vars.INTERCEPTOR_FQDN }}
           INTERCEPTOR_PORT: ${{ vars.INTERCEPTOR_PORT }}
           INGRESS_CLASS: ${{ vars.INGRESS_CLASS }} # DEC-022
         run: ./scripts/preview-ci.sh deploy
 
-      - name: Verify (cold-start proof)
+      - name: Verify (cold-start proof, every route)
         env:
-          HOST: ${{ steps.id.outputs.host }}
+          HOST: ${{ needs.plan.outputs.host }}
+          VERIFY_PATHS: ${{ needs.plan.outputs.verify_paths }}
         run: ./scripts/preview-ci.sh verify
 
       - name: Summary
         if: always()
         env:
-          SHORT_SHA: ${{ steps.id.outputs.short_sha }}
-          NAMESPACE: ${{ steps.id.outputs.namespace }}
-          HOST: ${{ steps.id.outputs.host }}
+          SHORT_SHA: ${{ needs.plan.outputs.short_sha }}
+          NAMESPACE: ${{ needs.plan.outputs.namespace }}
+          HOST: ${{ needs.plan.outputs.host }}
+          COMPONENTS: ${{ needs.plan.outputs.components }}
           IDLE_TIMEOUT: ${{ inputs.idle_timeout }}
-          LIFETIME: ${{ steps.id.outputs.lifetime || inputs.lifetime }}
+          LIFETIME: ${{ needs.plan.outputs.lifetime || inputs.lifetime }}
           JOB_STATUS: ${{ job.status }}
         run: ./scripts/preview-ci.sh summary

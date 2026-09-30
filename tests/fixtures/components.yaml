@@ -1,0 +1,17 @@
+# F016 sample: two components on one host (what preview-ci deploy passes as a values file).
+name: feature-login
+host: feature-login.preview.example.com
+commit: abc1234
+branch: feature-login
+components:
+  - name: web
+    image: {repository: example.azurecr.io/todo/web, tag: abc1234}
+    port: 8080
+    probePath: /
+    route: /
+  - name: api
+    image: {repository: example.azurecr.io/todo/api, tag: abc1234}
+    port: 3000
+    probePath: /api/health
+    route: /api
+    resources: {requests: {cpu: 250m}}

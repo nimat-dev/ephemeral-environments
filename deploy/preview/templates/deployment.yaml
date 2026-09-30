@@ -1,45 +1,50 @@
+{{- range $i, $c := (include "preview.components" . | fromJson).items }}
+{{- if $i }}
+---
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "preview.fullname" . }}
+  name: {{ $c.fullname }}
   labels:
-    {{- include "preview.labels" . | nindent 4 }}
+    {{- include "preview.componentLabels" (dict "c" $c "root" $) | nindent 4 }}
   annotations:
-    preview.branch: {{ .Values.branch | quote }}
-    preview.commit: {{ .Values.commit | quote }}
+    preview.branch: {{ $.Values.branch | quote }}
+    preview.commit: {{ $.Values.commit | quote }}
 spec:
   # No replicas field: KEDA owns the replica count. Setting it here fights the autoscaler.
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "preview.fullname" . }}
+      app.kubernetes.io/name: {{ $c.fullname }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "preview.fullname" . }}
+        app.kubernetes.io/name: {{ $c.fullname }}
     spec:
       containers:
         - name: app
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ $c.image.repository }}:{{ $c.image.tag }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.containerPort }}
+            - containerPort: {{ $c.port }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.probePath }}
-              port: {{ .Values.containerPort }}
+              path: {{ $c.probePath }}
+              port: {{ $c.port }}
             initialDelaySeconds: 3
             periodSeconds: 5
           livenessProbe:
             httpGet:
-              path: {{ .Values.probePath }}
-              port: {{ .Values.containerPort }}
+              path: {{ $c.probePath }}
+              port: {{ $c.port }}
             initialDelaySeconds: 20
             periodSeconds: 15
             failureThreshold: 4
           resources:
             requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ $c.resources.requests.cpu }}
+              memory: {{ $c.resources.requests.memory }}
             limits:
-              cpu: {{ .Values.resources.limits.cpu }}
-              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ $c.resources.limits.cpu }}
+              memory: {{ $c.resources.limits.memory }}
+{{- end }}

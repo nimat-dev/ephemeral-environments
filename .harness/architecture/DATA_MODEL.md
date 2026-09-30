@@ -13,9 +13,23 @@ that deploy, destroy, and reap agree on. Defined in `scripts/lib/preview.sh` (pu
 | `namespace` | `preview-<app>-<preview_id>`; > 63 → first 54 chars + `-` + 8-hex cksum (F015) | `preview-todo-feature-jira-123-login` |
 | `host` | `<preview_id>.<PREVIEW_DOMAIN>` | `feature-jira-123-login.preview.nimat.dev` |
 | `short_sha` | `git rev-parse --short HEAD` of branch | `a1b2c3d` |
-| `image` | `<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>:<short_sha>` | |
+| `image` | `<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>/<component>:<short_sha>` (F016; legacy: `<APP_IMAGE_NAME>:<sha>`) | `…/todo/web:a1b2c3d` |
 | `idle_seconds` | `15m/30m/1h/6h` → seconds; `never` → 31536000 | `1800` |
 | `expires_at` | now (UTC epoch) + lifetime seconds (`24h/48h/7d/custom Nh|Nd|Nm`) | `1759190400` |
+
+## App contract `.preview.yaml` (F016, app branch root; normalized by `preview_config`)
+```yaml
+components:            # 1..4
+  - name: web          # [a-z][a-z0-9-]{0,14}; workload <release>-<name>
+    context: .         # relative, no ..; default .
+    dockerfile: Dockerfile   # relative to context
+    port: 8080
+    probePath: /
+    route: /           # path prefix on the preview host; unique
+    resources: {requests: {cpu, memory}, limits: {cpu, memory}}   # optional, merged over chart defaults
+addons: []             # none supported yet
+```
+Absent → `{components: [{name: web}]}`. Unknown keys fail (DEC-045).
 
 ## Namespace label contract (read by the reaper)
 ```

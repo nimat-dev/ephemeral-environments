@@ -37,6 +37,44 @@ deploy_env() {
   grep -qx idle=1800 "$GITHUB_OUTPUT"
   grep -qx lifetime=48h "$GITHUB_OUTPUT"
   grep -qE '^expires_at=[0-9]+$' "$GITHUB_OUTPUT"
+  grep -qx "sha=$(git -C "$SRC_DIR" rev-parse HEAD)" "$GITHUB_OUTPUT"
+  # no .preview.yaml -> default single component from the repo root (F016)
+  grep -qxF 'components=[{"name":"web","context":".","dockerfile":"Dockerfile"}]' "$GITHUB_OUTPUT"
+  grep -qx 'verify_paths=/' "$GITHUB_OUTPUT"
+  grep -q '^config={"components":\[{"name":"web"' "$GITHUB_OUTPUT"
+}
+
+@test "plan: .preview.yaml with two components -> config, build matrix, routes" {
+  cat >"$SRC_DIR/.preview.yaml" <<'YAML'
+components:
+  - name: web
+    context: todo
+  - name: api
+    context: svc/api
+    dockerfile: Dockerfile.prod
+    port: 3000
+    route: /api/
+YAML
+  run "$CI" plan
+  [ "$status" -eq 0 ]
+  grep -qxF 'components=[{"name":"web","context":"todo","dockerfile":"Dockerfile"},{"name":"api","context":"svc/api","dockerfile":"Dockerfile.prod"}]' "$GITHUB_OUTPUT"
+  grep -qx 'verify_paths=/ /api' "$GITHUB_OUTPUT"
+  [ "$(grep '^config=' "$GITHUB_OUTPUT" | cut -d= -f2- | jq -r '.components[1].port')" = 3000 ]
+}
+
+@test "plan: invalid .preview.yaml (bad key, bad YAML) -> exit 1; yq missing -> exit 2; nothing written" {
+  printf 'components:\n  - name: web\n    prot: 80\n' >"$SRC_DIR/.preview.yaml"
+  run "$CI" plan
+  [ "$status" -eq 1 ]; [[ "$output" == *"unknown key(s): prot"* ]] || false
+  printf 'components: [\n' >"$SRC_DIR/.preview.yaml"
+  run "$CI" plan
+  [ "$status" -eq 1 ]; [[ "$output" == *"invalid YAML"* ]] || false
+  printf '' >"$SRC_DIR/.preview.yaml"
+  run "$CI" plan; [ "$status" -eq 1 ]
+  printf 'components: [{name: web}]\n' >"$SRC_DIR/.preview.yaml"
+  YQ=/nonexistent/yq run "$CI" plan
+  [ "$status" -eq 2 ]; [[ "$output" == *"yq (mikefarah v4) is required"* ]] || false
+  [ ! -s "$GITHUB_OUTPUT" ]
 }
 
 @test "plan: invalid input -> exit 1, nothing written" {
@@ -125,6 +163,24 @@ SH
   done
 }
 
+@test "deploy: CONFIG -> components values file with per-component images, no top-level image" {
+  deploy_env
+  cat >"$T/helm" <<'SH'
+#!/usr/bin/env bash
+echo "$*" >>"$HELM_LOG"
+while [ $# -gt 0 ]; do [ "$1" = -f ] && cp "$2" "$HELM_LOG.values"; shift; done
+SH
+  chmod +x "$T/helm"
+  export CONFIG='{"components":[{"name":"web","context":"todo","dockerfile":"Dockerfile","port":8080,"probePath":"/","route":"/"},{"name":"api","context":"a","dockerfile":"Dockerfile","port":3000,"probePath":"/api/health","route":"/api"}],"addons":[]}'
+  PATH="$T:$PATH" run "$CI" deploy
+  [ "$status" -eq 0 ]
+  ! grep -q 'image.repository' "$HELM_LOG"
+  grep -q -- ' -f ' "$HELM_LOG"
+  [ "$(jq -r '[.components[].image | .repository + ":" + .tag] | join(" ")' "$HELM_LOG.values")" = 'acr.example/todo/web:1234e56 acr.example/todo/api:1234e56' ]
+  [ "$(jq -r '.components[1].route' "$HELM_LOG.values")" = /api ]
+  CONFIG='{bad' PATH="$T:$PATH" run "$CI" deploy; [ "$status" -eq 1 ]
+}
+
 @test "deploy: helm failure propagates; missing env -> exit 2" {
   deploy_env
   FAKE_HELM_FAIL=upgrade run "$CI" deploy
@@ -166,6 +222,16 @@ SH
   [ "$(grep -c 'curl ' "$KUBECTL_LOG")" -eq 4 ]
 }
 
+@test "verify: every route in VERIFY_PATHS must return 200" {
+  HOST=h.example VERIFY_SLEEP=0 VERIFY_PATHS='/ /api' FAKE_CURL_OUT=200 run "$CI" verify
+  [ "$status" -eq 0 ]
+  grep -qE 'https://h.example/$' "$KUBECTL_LOG"; grep -q 'https://h.example/api' "$KUBECTL_LOG"
+  printf '%s\n' 200 404 >"$T/seq"
+  HOST=h.example VERIFY_SLEEP=0 VERIFY_ATTEMPTS=2 VERIFY_PATHS='/ /api' FAKE_CURL_SEQ="$T/seq" run "$CI" verify
+  [ "$status" -eq 1 ]; [[ "$output" == *"https://h.example/api"* ]] || false
+  HOST=h.example VERIFY_PATHS='api' run "$CI" verify; [ "$status" -eq 2 ]
+}
+
 # --- summary ---
 @test "summary: full table with URL" {
   export SHORT_SHA=abc1234 NAMESPACE=preview-x HOST=x.example IMAGE_REPOSITORY=acr/todo LIFETIME=12h JOB_STATUS=success
@@ -174,6 +240,12 @@ SH
   for s in '(success)' '`Feature/JIRA-1`' '`abc1234`' '`acr/todo:abc1234`' '`preview-x`' '| 30m |' '| 12h |' 'https://x.example'; do
     grep -qF -- "$s" "$GITHUB_STEP_SUMMARY" || { echo "missing: $s"; return 1; }
   done
+}
+
+@test "summary: components listed as one image each" {
+  export SHORT_SHA=abc1234 HOST=x.example IMAGE_REPOSITORY=acr/todo COMPONENTS='[{"name":"web"},{"name":"api"}]'
+  run "$CI" summary
+  grep -qF '`acr/todo/web:abc1234` `acr/todo/api:abc1234`' "$GITHUB_STEP_SUMMARY"
 }
 
 @test "summary: after an early failure (no plan outputs) still writes, no URL" {
@@ -200,14 +272,23 @@ SH
   grep -qx '    environment: preview' "$WF"
 }
 
-@test "workflow: configmap driver, todo context, amd64, ingress class var, summary always" {
+@test "workflow: plan -> build matrix -> deploy; configmap driver, amd64, ingress class var, summary always" {
+  [ "$(yq -r '.jobs | keys | join(" ")' "$WF")" = 'plan build deploy' ]
+  [ "$(yq -r '.jobs.build.needs' "$WF")" = plan ]
+  [ "$(yq -r '.jobs.deploy.needs | join(" ")' "$WF")" = 'plan build' ]
+  for j in plan build deploy; do [ "$(yq -r ".jobs.$j.environment" "$WF")" = preview ] || { echo "$j env"; return 1; }; done
+  grep -qF 'component: ${{ fromJSON(needs.plan.outputs.components) }}' "$WF"
+  grep -qF 'ref: ${{ needs.plan.outputs.sha }}' "$WF"
+  grep -qF 'context: src/${{ matrix.component.context }}' "$WF"
+  grep -qF 'file: src/${{ matrix.component.context }}/${{ matrix.component.dockerfile }}' "$WF"
+  grep -qF 'CONFIG: ${{ needs.plan.outputs.config }}' "$WF"
+  grep -qF 'VERIFY_PATHS: ${{ needs.plan.outputs.verify_paths }}' "$WF"
   grep -qE '^      HELM_DRIVER: configmap' "$WF"
-  grep -qE '^          context: src/todo' "$WF"
   grep -qE '^          platforms: linux/amd64' "$WF"
   grep -qF 'INGRESS_CLASS: ${{ vars.INGRESS_CLASS }}' "$WF"
   grep -qF 'PREVIEW_APP: ${{ vars.PREVIEW_APP }}' "$WF"
-  grep -qF 'APP: ${{ steps.id.outputs.app }}' "$WF"
-  grep -qF 'tags: ${{ env.IMAGE_REPOSITORY }}:${{ steps.id.outputs.short_sha }}' "$WF"
+  grep -qF 'APP: ${{ needs.plan.outputs.app }}' "$WF"
+  grep -qF 'tags: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.APP_IMAGE_NAME }}/${{ matrix.component.name }}:${{ needs.plan.outputs.short_sha }}' "$WF"
   awk '/name: Summary/{f=1} f&&/if: always\(\)/{ok=1} END{exit !ok}' "$WF"
 }
 
@@ -429,6 +510,32 @@ purge_env() {
   [ "$status" -eq 1 ]
   grep -q 'delete -n acr1 --image todo:aaaaaaa' "$AZ_LOG"
   grep -qF 'FAILED to purge `todo:ccccccc`' "$GITHUB_STEP_SUMMARY"
+}
+
+@test "purge: walks APP_IMAGE_NAME and APP_IMAGE_NAME/* repos only (F016)" {
+  purge_env
+  FAKE_REPOS_JSON='["todo","todo/web","todo/api","todoist","other/todo","shop/web"]' PURGE_KEEP=3 run "$CI" purge
+  [ "$status" -eq 0 ]
+  [ "$(grep -o 'show-tags -n acr1 --repository [^ ]*' "$AZ_LOG" | awk '{print $NF}' | tr '\n' ' ')" = 'todo todo/web todo/api ' ]
+  grep -q 'delete -n acr1 --image todo/web:aaaaaaa' "$AZ_LOG"
+}
+
+@test "purge: pod running a component image protects that tag in its repo" {
+  purge_env
+  FAKE_REPOS_JSON='["todo/web"]' FAKE_WORKLOADS_JSON='{"items":[{"kind":"Pod","metadata":{"namespace":"preview-x"},"spec":{"containers":[{"image":"acr1.azurecr.io/todo/web:aaaaaaa"}]}}]}' \
+    PURGE_KEEP=0 run "$CI" purge
+  [ "$status" -eq 0 ]
+  ! grep -q 'todo/web:aaaaaaa --yes' "$AZ_LOG"
+  grep -q 'todo/web:ccccccc --yes' "$AZ_LOG"
+}
+
+@test "purge: repository list unreadable -> exit 1, deletes nothing; no repos -> nothing to purge" {
+  purge_env
+  FAKE_REPOS_FAIL=1 run "$CI" purge
+  [ "$status" -eq 1 ]; [[ "$output" == *"cannot list repositories"* ]] || false
+  ! grep -q '^acr repository delete' "$AZ_LOG"
+  FAKE_REPOS_JSON='["other"]' run "$CI" purge
+  [ "$status" -eq 0 ]; grep -qF 'Nothing to purge.' "$GITHUB_STEP_SUMMARY"
 }
 
 @test "purge: config errors -> exit 2, nothing listed" {

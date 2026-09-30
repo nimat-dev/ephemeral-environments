@@ -375,3 +375,82 @@ JSON
   run iso_epoch 2026-09-30T00:00:00.9876543Z; [ "$status" -eq 0 ]; [ "$output" = 1790726400 ]
   run iso_epoch nope; [ "$status" -ne 0 ]
 }
+
+# --- F016: .preview.yaml (as JSON) -> normalized config; helm values ---
+cfg() { printf '%s' "$1" | preview_config; }
+cfg_fails() {  # cfg_fails JSON EXPECTED_MSG_SUBSTRING
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; printf '%s' \"\$1\" | preview_config" _ "$1"
+  [ "$status" -ne 0 ] && [[ "$output" == *"$2"* ]] || { echo "want fail '$2' for $1, got $status: $output"; return 1; }
+}
+
+@test "preview_config: minimal component gets defaults" {
+  out=$(cfg '{"components":[{"name":"web"}]}')
+  [ "$out" = '{"components":[{"name":"web","context":".","dockerfile":"Dockerfile","port":8080,"probePath":"/","route":"/"}],"addons":[]}' ]
+}
+
+@test "preview_config: full two-component config kept; trailing '/' on route normalized; resources kept" {
+  out=$(cfg '{"components":[{"name":"web","context":"todo","route":"/"},
+    {"name":"api","context":"svc/api","dockerfile":"build/Dockerfile","port":3000,"probePath":"/api/health","route":"/api/",
+     "resources":{"requests":{"cpu":"250m","memory":"256Mi"},"limits":{"cpu":1}}}],"addons":[]}')
+  [ "$(jq -c '.components[1]' <<<"$out")" = '{"name":"api","context":"svc/api","dockerfile":"build/Dockerfile","port":3000,"probePath":"/api/health","route":"/api","resources":{"requests":{"cpu":"250m","memory":"256Mi"},"limits":{"cpu":1}}}' ]
+  [ "$(jq -r '.components[0].context' <<<"$out")" = todo ]
+}
+
+@test "preview_config: shape errors" {
+  cfg_fails 'null' 'must be a mapping'
+  cfg_fails '[]' 'must be a mapping'
+  cfg_fails '{}' 'components must be a non-empty list'
+  cfg_fails '{"components":[]}' 'components must be a non-empty list'
+  cfg_fails '{"components":{"name":"web"}}' 'components must be a non-empty list'
+  cfg_fails '{"components":[{"name":"a"},{"name":"b"},{"name":"c"},{"name":"d"},{"name":"e"}]}' 'at most 4'
+  cfg_fails '{"component":[{"name":"web"}]}' 'unknown key(s): component'
+  cfg_fails '{"components":[{"name":"web","prot":80}]}' 'unknown key(s): prot'
+  cfg_fails '{"components":["web"]}' 'must be a mapping'
+}
+
+@test "preview_config: field validation" {
+  for n in '"Web"' '"1web"' '"web-"' '"a-very-long-name-x"' '""' '5' 'null'; do
+    cfg_fails "{\"components\":[{\"name\":$n}]}" 'name' || return 1
+  done
+  cfg_fails '{"components":[{"name":"web"},{"name":"web","route":"/x"}]}' 'duplicate component name'
+  cfg_fails '{"components":[{"name":"a"},{"name":"b"}]}' 'duplicate route'
+  cfg_fails '{"components":[{"name":"a","route":"/x/"},{"name":"b","route":"/x"}]}' 'duplicate route'
+  for p in 0 65536 '"80"' 8.5; do cfg_fails "{\"components\":[{\"name\":\"a\",\"port\":$p}]}" 'port' || return 1; done
+  for c in '"/abs"' '"../up"' '"a/../../b"' '"a b"' '""'; do
+    cfg_fails "{\"components\":[{\"name\":\"a\",\"context\":$c}]}" 'context' || return 1
+    cfg_fails "{\"components\":[{\"name\":\"a\",\"dockerfile\":$c}]}" 'dockerfile' || return 1
+  done
+  for r in '"api"' '"/a b"' '"/$(x)"' '""'; do
+    cfg_fails "{\"components\":[{\"name\":\"a\",\"route\":$r}]}" 'route' || return 1
+    cfg_fails "{\"components\":[{\"name\":\"a\",\"probePath\":$r}]}" 'probePath' || return 1
+  done
+}
+
+@test "preview_config: resources and addons validation" {
+  cfg_fails '{"components":[{"name":"a","resources":{"requests":{"cpu":"lots"}}}]}' 'resources'
+  cfg_fails '{"components":[{"name":"a","resources":{"requests":{"gpu":"1"}}}]}' 'resources'
+  cfg_fails '{"components":[{"name":"a","resources":{"burst":{}}}]}' 'resources'
+  cfg_fails '{"components":[{"name":"a","resources":"big"}]}' 'resources'
+  cfg_fails '{"components":[{"name":"a"}],"addons":["postgres"]}' 'unsupported addon(s): postgres'
+  cfg_fails '{"components":[{"name":"a"}],"addons":"postgres"}' 'addons must be a list'
+  cfg '{"components":[{"name":"a","resources":{"limits":{"memory":"1Gi","cpu":"0.5"}}}]}' >/dev/null
+}
+
+@test "preview_values: config -> helm components with per-component image; bad args fail" {
+  out=$(cfg '{"components":[{"name":"web"},{"name":"api","route":"/api","port":3000}]}' | preview_values acr.io/todo abc1234)
+  [ "$(jq -c '.components[1]' <<<"$out")" = '{"name":"api","image":{"repository":"acr.io/todo/api","tag":"abc1234"},"port":3000,"probePath":"/","route":"/api"}' ]
+  [ "$(jq -r '.components[0].image.repository' <<<"$out")" = acr.io/todo/web ]
+  run preview_values '' abc1234 </dev/null; [ "$status" -ne 0 ]
+  run preview_values acr.io/todo '' </dev/null; [ "$status" -ne 0 ]
+}
+
+@test "preview_default_config is a valid config" {
+  [ "$(printf '%s' "$PREVIEW_DEFAULT_CONFIG" | preview_config | jq -c '[.components[].name, .components[].context]')" = '["web","."]' ]
+}
+
+@test "preview_verify_paths: probe under own route, else route" {
+  out=$(cfg '{"components":[{"name":"web"},{"name":"api","route":"/api","probePath":"/api/health"},
+    {"name":"adm","route":"/admin","probePath":"/healthz"},{"name":"x","route":"/api2","probePath":"/api2"}]}' | preview_verify_paths)
+  [ "$out" = '/ /api/health /admin /api2' ]
+  [ "$(cfg '{"components":[{"name":"a","route":"/ap","probePath":"/apx"}]}' | preview_verify_paths)" = /ap ]
+}

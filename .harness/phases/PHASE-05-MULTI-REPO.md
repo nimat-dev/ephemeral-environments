@@ -19,14 +19,14 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] Full verify green (206/206); e2e: Deploy 36706339119 (200) + Destroy 36706663297 (404) green on real cluster.
 
 ## F016 — `.preview.yaml` app contract with components
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] Schema-validated `.preview.yaml` in the app repo: `components[]` (name, build.context, build.dockerfile, port, probePath, route, resources), `addons[]` (empty for now), defaults (lifetime, idle, maxReplicas).
-- [ ] Chart loops over components (Deployment + Service + HTTPScaledObject each); path routing on one host (`/` web, `/api` backend).
-- [ ] Missing file → current single-component behaviour (todo keeps working).
-- [ ] Full verify green; e2e deploy of `todo` via `.preview.yaml`.
+**Status**: COMPLETE (2026-09-30) — contract `verification/contracts/F016.md`, evidence `evidence/F016/`, DEC-044–046
+- [x] Schema-validated `.preview.yaml` in the app repo: `components[]` (name, context, dockerfile, port, probePath, route, resources), `addons[]` (none supported yet). `defaults` deferred to F021 (DEC-046).
+- [x] Chart loops over components (Deployment + Service + HTTPScaledObject each, `pathPrefixes`); one host, interceptor routes `/` web, `/api` api (longest prefix; `/apix` stays on web).
+- [x] Missing file → single component from repo root; legacy chart render byte-identical (golden `tests/fixtures/legacy-render.yaml`).
+- [x] Full verify green (227/227); e2e: this repo deployed with 2 matrix builds (runs 36708302080, 36710182013), both components idle to 0 and wake independently; Destroy 36710425734 → 404; purge dry-run 36708609459 walks `todo`, `todo/web`, `todo/api`.
 
 ## F017 — Multiple project domains per cluster
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (2026-09-30)
 - [ ] One Azure DNS zone per project domain (delegated from the parent registrar, DEC-040), wildcard A → ingress LB.
 - [ ] cert-manager DNS-01 identity has DNS Zone Contributor on each zone; wildcard `Certificate` per domain.
 - [ ] Traefik default TLSStore lists every project wildcard cert; SNI serves the right one.

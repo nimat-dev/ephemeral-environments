@@ -116,6 +116,6 @@ protocol above (commit + update the tracker), then fail over to the other runtim
 - **Packaging**: Helm 3 chart `deploy/preview`.
 - **CI/CD**: GitHub Actions (`azure/login@v3.1.0`, `azure/aks-set-context@v5.0.0` + kubelogin,
   `docker/setup-buildx-action@v4.4.1`, `docker/build-push-action@v7.4.0`, `actions/checkout@v7.0.1`).
-- **Scripting**: bash (`set -euo pipefail`) + jq. Tests: bats-core.
+- **Scripting**: bash (`set -euo pipefail`) + jq + yq v4 (`.preview.yaml`, F016). Tests: bats-core.
 - **Linters**: actionlint, shellcheck, yamllint, helm lint, kubeconform.
 - Spec with verbatim file contents: `preview-environments-implementation.md`.

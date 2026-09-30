@@ -1,0 +1,153 @@
+---
+# Source: preview/templates/resourcequota.yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: preview-quota
+  labels:
+    app.kubernetes.io/name: feature-login
+    app.kubernetes.io/managed-by: helm
+    preview.commit: "abc1234"
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: "4Gi"
+    limits.cpu: "2"
+    limits.memory: "4Gi"
+    pods: "6"
+---
+# Source: preview/templates/interceptor-externalname.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: keda-http-interceptor
+  labels:
+    app.kubernetes.io/name: feature-login
+    app.kubernetes.io/managed-by: helm
+    preview.commit: "abc1234"
+spec:
+  type: ExternalName
+  externalName: keda-add-ons-http-interceptor-proxy.keda.svc.cluster.local
+  ports:
+    - name: proxy
+      port: 8080
+      targetPort: 8080
+---
+# Source: preview/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: feature-login
+  labels:
+    app.kubernetes.io/name: feature-login
+    app.kubernetes.io/managed-by: helm
+    preview.commit: "abc1234"
+spec:
+  selector:
+    app.kubernetes.io/name: feature-login
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+# Source: preview/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feature-login
+  labels:
+    app.kubernetes.io/name: feature-login
+    app.kubernetes.io/managed-by: helm
+    preview.commit: "abc1234"
+  annotations:
+    preview.branch: "feature-login"
+    preview.commit: "abc1234"
+spec:
+  # No replicas field: KEDA owns the replica count. Setting it here fights the autoscaler.
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: feature-login
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: feature-login
+    spec:
+      containers:
+        - name: app
+          image: "example.azurecr.io/todo:abc1234"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+# Source: preview/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: feature-login
+  labels:
+    app.kubernetes.io/name: feature-login
+    app.kubernetes.io/managed-by: helm
+    preview.commit: "abc1234"
+  annotations:
+    nginx.ingress.kubernetes.io/upstream-vhost: "feature-login.preview.example.com"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "feature-login.preview.example.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keda-http-interceptor
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - "feature-login.preview.example.com"
+      # secretName omitted on purpose: nginx serves its default wildcard cert.
+---
+# Source: preview/templates/httpscaledobject.yaml
+apiVersion: http.keda.sh/v1alpha1
+kind: HTTPScaledObject
+metadata:
+  name: feature-login
+  labels:
+    app.kubernetes.io/name: feature-login
+    app.kubernetes.io/managed-by: helm
+    preview.commit: "abc1234"
+spec:
+  hosts:
+    - "feature-login.preview.example.com"
+  scaleTargetRef:
+    name: feature-login
+    kind: Deployment
+    apiVersion: apps/v1
+    service: feature-login
+    port: 80
+  replicas:
+    min: 0
+    max: 3
+  scaledownPeriod: 1800

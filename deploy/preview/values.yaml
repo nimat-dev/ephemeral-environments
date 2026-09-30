@@ -35,5 +35,15 @@ interceptor:
   port: 8080
 
 ingressClassName: nginx
+
+# F016 (DEC-044): one entry per workload, routed by path prefix on the same host. Empty = legacy single
+# workload from name/image/containerPort/probePath above. Set per deploy from the app's .preview.yaml:
+#   - name: api
+#     image: {repository: <acr>/<app>/api, tag: <sha>}
+#     port: 8080
+#     probePath: /api/health
+#     route: /api
+#     resources: {requests: {cpu: 250m}}   # merged over `resources`
+components: []
 commit: ""
 branch: ""
