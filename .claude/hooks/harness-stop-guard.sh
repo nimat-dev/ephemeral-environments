@@ -21,12 +21,10 @@ changed=$(
 )
 [ -n "$changed" ] || exit 0
 
-code=$(grep -v '^\.harness/' <<<"$changed" || true)
-[ -n "$code" ] || exit 0
-grep -qx '\.harness/PROJECT_STATE\.md' <<<"$changed" && exit 0
+# The state rule itself lives once, in scripts/harness-check.sh (also run by pre-commit + CI).
+out=$(scripts/harness-check.sh --files <<<"$changed" 2>&1) && exit 0
 
-# shellcheck disable=SC2001  # prefix every line of a multi-line list
-reason="Harness guard: files changed outside .harness/ this session without updating .harness/PROJECT_STATE.md:
-$(sed 's/^/  - /' <<<"$code")
+reason="Harness guard (session changes):
+$out
 Run the Session-completion protocol (AGENTS.md): CHANGELOG evidence, ROADMAP/phase status, PROJECT_STATE, CURRENT_TASK, BLOCKERS/DECISIONS."
 jq -n --arg r "$reason" '{decision:"block",reason:$r}'

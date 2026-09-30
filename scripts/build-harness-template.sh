@@ -33,6 +33,7 @@ stale=0
 place() { # SRC DEST
   if [ "$check" -eq 1 ]; then
     cmp -s "$1" "$2" || { log error "stale: $2 (from $1)"; stale=1; }
+    [ "$(test -x "$1" && echo x)" = "$(test -x "$2" && echo x)" ] || { log error "exec bit differs: $2 (from $1)"; stale=1; }
   else
     mkdir -p "$(dirname "$2")"; cp -p "$1" "$2"
   fi

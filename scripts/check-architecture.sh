@@ -68,11 +68,12 @@ scan 4 '^[ \t]*kind:[ \t]*Namespace[ \t]*$' '' ${tpl[@]+"${tpl[@]}"}
 dep=(deploy/preview/templates/deployment.yaml)
 [ -f "${dep[0]}" ] && scan 5 '^[ \t]*replicas:' '' "${dep[@]}"
 
-# 6. No hard-coded environment in workflows (pattern from .harness/rules/architecture.conf, F022).
-HARDCODED_ENV_RE='azurecr\.io|svc\.cluster\.local'
+# 6. No hard-coded environment in workflows: generic ACR/cluster-DNS pattern, EXTENDED (never replaced) by the
+#    project's HARDCODED_ENV_RE in .harness/rules/architecture.conf (F022).
+HARDCODED_ENV_RE=''
 # shellcheck disable=SC1091
 [ -f .harness/rules/architecture.conf ] && . .harness/rules/architecture.conf
-scan 6 "$HARDCODED_ENV_RE" '' ${wf[@]+"${wf[@]}"}
+scan 6 "azurecr\.io|svc\.cluster\.local${HARDCODED_ENV_RE:+|$HARDCODED_ENV_RE}" '' ${wf[@]+"${wf[@]}"}
 
 # 7. Least-privilege tokens: top-level permissions == {id-token: write, contents: read}; no job overrides.
 #    Read-only workflows may drop id-token (harness-check.yml, DEC-052). Sole write exception: kit-release.yml

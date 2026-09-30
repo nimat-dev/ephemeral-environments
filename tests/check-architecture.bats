@@ -128,13 +128,16 @@ run_check() { run "$CHECK" --root "$R"; }
   run_check; [ "$status" -eq 1 ]; [[ "$output" == *"rule 6"* ]] || false
 }
 
-@test "rule 6: another project's domain comes from its own config; generic default still catches ACR/cluster DNS" {
+@test "rule 6: another project's domain comes from its own config; generic default still catches ACR/cluster DNS (config extends, never replaces)" {
   all_ok; echo '      - run: curl https://x.shop.example.org' >>"$R/.github/workflows/preview-deploy.yml"
   run_check; [ "$status" -eq 0 ]
   mkdir -p "$R/.harness/rules"; printf "HARDCODED_ENV_RE='shop\\.example\\.org'\n" >"$R/.harness/rules/architecture.conf"
   run_check; [ "$status" -eq 1 ]; [[ "$output" == *"rule 6"* ]] || false
-  rm "$R/.harness/rules/architecture.conf"; echo '      - run: echo acr1.azurecr.io' >>"$R/.github/workflows/preview-deploy.yml"
-  run_check; [ "$status" -eq 1 ]
+  # the project pattern extends the generic one: ACR still caught while the config is present
+  sed -i.bak '/shop\.example\.org/d' "$R/.github/workflows/preview-deploy.yml"; run_check; [ "$status" -eq 0 ]
+  echo '      - run: echo acr1.azurecr.io' >>"$R/.github/workflows/preview-deploy.yml"
+  run_check; [ "$status" -eq 1 ]; [[ "$output" == *"rule 6"* ]] || false
+  rm "$R/.harness/rules/architecture.conf"; run_check; [ "$status" -eq 1 ]
 }
 
 @test "rule 7: missing top-level permissions" {

@@ -1,8 +1,9 @@
 # Copier template: the agent-agnostic project harness (F022, DEC-052).
-#   copier copy gh:nimat-dev/ephemeral-environments --vcs-ref v1.1.0 . --data project_name=my-app   (template at templates/harness)
-#   copier update            # pull later harness improvements into a project
-# Generic files under template/ are copied from this repo by scripts/build-harness-template.sh (tested for drift).
-_subdirectory: template
+# Lives at the repo root because Copier only reads copier.yml there; the template itself is templates/harness/template.
+#   copier copy gh:nimat-dev/ephemeral-environments --vcs-ref v1.1.0 . --data project_name=my-app
+#   copier update            # pull later harness improvements (uses .harness/.copier-answers.yml)
+# Generic files under the template are copied from this repo by scripts/build-harness-template.sh (tested for drift).
+_subdirectory: templates/harness/template
 _min_copier_version: "9.0.0"
 _answers_file: .harness/.copier-answers.yml
 

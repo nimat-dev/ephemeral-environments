@@ -44,26 +44,8 @@ step() {
 # need TOOL NAME -- true if TOOL exists, else records a failure for NAME.
 need() { command -v "$1" >/dev/null 2>&1 || { fail "$2 (tool missing: $1)"; return 1; }; }
 
-# feature_statuses FILE -> the status of each `- [ ] **F…**` line: its LAST backtick span, so a
-# description that mentions `COMPLETE` (or `IN PROGRESS`) never counts as that status.
-feature_statuses() {
-  # shellcheck disable=SC2016  # backticks are literal markdown
-  grep -E '^- \[.\] \*\*F[0-9]+\*\*' "$1" | sed -E 's/^.*`([^`]+)`[^`]*$/\1/' || true
-}
-
-check_roadmap() {
-  [ -f "$roadmap" ] || { log error "roadmap not found: $roadmap"; return 1; }
-  local st n total done_n
-  st=$(feature_statuses "$roadmap")
-  n=$(grep -cx 'IN PROGRESS' <<<"$st" || true)
-  total=$(grep -c . <<<"$st" || true)
-  done_n=$(grep -cxE 'COMPLETE|DEPRECATED' <<<"$st" || true)
-  # Roadmap finished: zero IN PROGRESS is valid only when every feature is COMPLETE/DEPRECATED.
-  if [ "$n" -eq 0 ] && [ "$total" -gt 0 ] && [ "$done_n" -eq "$total" ]; then
-    log info "roadmap complete: all $total features COMPLETE/DEPRECATED"; return 0
-  fi
-  [ "$n" -eq 1 ] || { log error "expected exactly 1 IN PROGRESS feature in $roadmap, found $n"; return 1; }
-}
+# The gate lives once, in scripts/harness-check.sh (also run by pre-commit + CI).
+check_roadmap() { "$root/scripts/harness-check.sh" --roadmap-only --roadmap "$roadmap"; }
 
 log info "start root=$root"
 

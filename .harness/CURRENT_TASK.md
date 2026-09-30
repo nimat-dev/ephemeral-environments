@@ -5,9 +5,9 @@
 
 ## Exact next step
 Done: kit v1.0.0 released (F021); all F022 pieces built; local verify GREEN (bats 281/281, Copier render, hook e2e — `evidence/F022/`).
-1. Commit on `feat/F022`; push; open PR → `harness-check` CI must be green (contract §3 e2e).
-2. Branch protection: `harness-check` required status check on `main` (admins not enforced).
-3. Review PR (`loops/pr-review-loop.md`), fix findings; CHANGELOG COMPLETE entry + evaluator score; ROADMAP/phase COMPLETE.
+1. DONE: PR #28, harness-check CI green, `main` requires `harness-check`; review round 1 fixed (`reviews/F022-review.md`).
+2. CI green on the fix push; review round 2 (`loops/pr-review-loop.md`, max 4 rounds).
+3. Clean → CHANGELOG COMPLETE entry + evaluator score; ROADMAP/phase/contract COMPLETE; merge.
 4. Then F023 (pilot second repo).
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):

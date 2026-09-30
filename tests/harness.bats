@@ -49,6 +49,35 @@ commit() { git -C "$R" add -A && git -C "$R" -c user.name=t -c user.email=t@t co
   run "$HC" --root "$R" --range "nope...HEAD"; [ "$status" -eq 2 ]
 }
 
+@test "state rule: a move from code into .harness/ still counts as a code change (no rename folding)" {
+  echo x >"$R/app.sh"; echo more >>"$R/.harness/PROJECT_STATE.md"; commit code
+  mkdir -p "$R/.harness/notes"; git -C "$R" mv app.sh .harness/notes/app.sh
+  run "$HC" --root "$R" --staged; [ "$status" -eq 1 ]; [[ "$output" == *"  - app.sh"* ]] || false
+}
+
+@test "--range: all-zero base (branch creation push) diffs from the empty tree, not exit 2" {
+  run "$HC" --root "$R" --range "0000000000000000000000000000000000000000...HEAD"
+  [ "$status" -eq 0 ]; [[ "$output" == *"state rule ok"* ]] || false
+}
+
+@test "--staged judges the index: unstaged good mirrors don't hide a stale commit; unstaged bad roadmap doesn't block" {
+  echo 'extra line' >>"$R/.harness/commands/start-session.md"
+  "$R/scripts/sync-agent-commands.sh" --root "$R" 2>/dev/null
+  git -C "$R" add .harness/commands/start-session.md
+  run "$HC" --root "$R" --staged; [ "$status" -eq 1 ]; [[ "$output" == *"out of sync"* ]] || false
+  echo more >>"$R/.harness/PROJECT_STATE.md"; git -C "$R" add -A
+  run "$HC" --root "$R" --staged; [ "$status" -eq 0 ]
+  printf '# ROADMAP\n' >"$R/.harness/ROADMAP.md"
+  run "$HC" --root "$R" --staged; [ "$status" -eq 0 ]
+}
+
+@test "--files (Claude Stop hook): state rule over stdin paths only; init.sh gate delegates to harness-check" {
+  run "$HC" --root "$R" --files <<<"todo/x"; [ "$status" -eq 1 ]
+  run "$HC" --root "$R" --files <<<$'todo/x\n.harness/PROJECT_STATE.md'; [ "$status" -eq 0 ]
+  grep -q 'harness-check.sh" --roadmap-only' "$ROOT/scripts/init.sh"
+  grep -q 'harness-check.sh --files' "$ROOT/.claude/hooks/harness-stop-guard.sh"
+}
+
 @test "mirrors: editing a command source without re-sync fails; re-sync fixes; other prompt files untouched" {
   echo 'extra line' >>"$R/.harness/commands/start-session.md"
   run "$HC" --root "$R"; [ "$status" -eq 1 ]; [[ "$output" == *"out of sync"* ]] || false
@@ -111,8 +140,11 @@ commit() { git -C "$R" add -A && git -C "$R" -c user.name=t -c user.email=t@t co
   for hooks in true false; do
     out="$T/new-$hooks"
     copier copy --defaults --quiet --vcs-ref HEAD --data project_name=Acme --data "claude_hooks=$hooks" \
-      "$ROOT/templates/harness" "$out"
+      "$ROOT" "$out"
     [ -f "$out/AGENTS.md" ] && grep -q 'Acme' "$out/AGENTS.md"
+    [ ! -e "$out/platform" ] && [ ! -e "$out/copier.yml" ]            # only the template subdirectory
+    grep -q '^_src_path:' "$out/.harness/.copier-answers.yml"          # `copier update` can find its source
+    [ -x "$out/scripts/harness-check.sh" ] && [ -x "$out/.githooks/pre-commit" ]
     grep -q 'F001' "$out/.harness/ROADMAP.md"
     ( cd "$out" && git init -q && ./scripts/harness-check.sh )
     if [ "$hooks" = true ]; then [ -f "$out/.claude/settings.json" ] && [ -f "$out/CLAUDE.md" ]

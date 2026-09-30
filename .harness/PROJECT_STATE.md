@@ -21,7 +21,8 @@ F022 on `feat/F022` — local verify DONE 2026-09-30: `./scripts/init.sh` BASELI
 (Copier render with/without Claude hooks, no skips); hook e2e rejects code-only commit (`evidence/F022/`). Fixes found by verify:
 `build-harness-template.sh` exec bit, template generic copies generated, `sync-agent-commands.sh --check` no longer creates/demands
 `.claude/commands` when the repo has no `.claude/` (Claude opt-out render failed its own gate; test added).
-Next: commit, push, PR (harness-check CI must pass), branch protection (required check on `main`), PR review, CHANGELOG COMPLETE, then F023.
+PR #28 open, harness-check CI green (run 36735975654); `main` protected: required check `harness-check` (admins exempt).
+Review round 1: 10 findings fixed (`reviews/F022-review.md`), bats 285/285. Next: CI on the fix push, review round 2, CHANGELOG COMPLETE, then F023.
 Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers

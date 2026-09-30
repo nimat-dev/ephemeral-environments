@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One source of agent commands (F022, DEC-052): .harness/commands/<name>.md (first line `# <description>`)
+# One source of agent commands: .harness/commands/<name>.md (first line `# <description>`)
 # rendered for Claude Code (.claude/commands/harness-<name>.md) and GitHub Copilot
 # (.github/prompts/harness-<name>.prompt.md). Usage: scripts/sync-agent-commands.sh [--check] [--root DIR]
 # Exit: 0 in sync / written, 1 out of sync (--check), 2 usage.
