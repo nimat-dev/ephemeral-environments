@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Delete what provision.sh created: AKS, ACR, DNS zone. Never deletes the resource group.
+# Delete what provision.sh created: AKS, ACR, DNS zone (+ PROJECT_DOMAINS zones from a7). Never deletes the resource group.
 # Usage: bootstrap/teardown.sh [--yes] [--env FILE]   (without --yes: print only)
 # Exit: 0 ok, 1 failure, 2 usage/config error.
 set -euo pipefail
@@ -29,6 +29,13 @@ else log info "skip AKS $AKS_NAME (absent)"; fi
 if az_s acr show -n "$ACR_NAME" -g "$AZ_RESOURCE_GROUP" -o none 2>/dev/null; then
   run az acr delete -n "$ACR_NAME" -g "$AZ_RESOURCE_GROUP" --yes --subscription "$AZ_SUBSCRIPTION_ID"
 else log info "skip ACR $ACR_NAME (absent)"; fi
+
+# Project zones added by a7 (F017) — before DNS_ZONE, which may hold their delegation.
+for d in ${PROJECT_DOMAINS:-}; do
+  if az_s network dns zone show -n "$d" -g "$AZ_RESOURCE_GROUP" -o none 2>/dev/null; then
+    run az network dns zone delete -n "$d" -g "$AZ_RESOURCE_GROUP" --yes --subscription "$AZ_SUBSCRIPTION_ID"
+  else log info "skip DNS zone $d (absent)"; fi
+done
 
 if az_s network dns zone show -n "$DNS_ZONE" -g "$AZ_RESOURCE_GROUP" -o none 2>/dev/null; then
   run az network dns zone delete -n "$DNS_ZONE" -g "$AZ_RESOURCE_GROUP" --yes --subscription "$AZ_SUBSCRIPTION_ID"

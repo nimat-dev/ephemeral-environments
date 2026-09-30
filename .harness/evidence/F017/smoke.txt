@@ -1,0 +1,14 @@
+=== smoke --domain shop.preview.nimat.dev
+CP1 PASS valid TLS for smoke.shop.preview.nimat.dev
+CP2 PASS cold start 0→1 ready in 8.554646s, HTTP 200
+CP3 PASS back to 0 after 125s
+[info] smoke: smoke PASSED
+--- cert served for smoke.shop.preview.nimat.dev:
+subject=CN=*.shop.preview.nimat.dev issuer=C=US, O=Let's Encrypt, CN=YR1 X509v3 Subject Alternative Name:      DNS:*.shop.preview.nimat.dev 
+=== smoke --domain preview.nimat.dev
+CP1 PASS valid TLS for smoke.preview.nimat.dev
+CP2 PASS cold start 0→1 ready in 8.481731s, HTTP 200
+CP3 PASS back to 0 after 126s
+[info] smoke: smoke PASSED
+--- cert served for smoke.preview.nimat.dev:
+subject=CN=*.preview.nimat.dev issuer=C=US, O=Let's Encrypt, CN=YR2 X509v3 Subject Alternative Name:      DNS:*.preview.nimat.dev 

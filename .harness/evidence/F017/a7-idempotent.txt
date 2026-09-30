@@ -1,0 +1,9 @@
+[info] a7-project-domain: skip zone shop.preview.nimat.dev (exists)
+[info] a7-project-domain: skip NS shop.preview.nimat.dev -> ns1-09.azure-dns.com. (exists)
+[info] a7-project-domain: skip NS shop.preview.nimat.dev -> ns2-09.azure-dns.net. (exists)
+[info] a7-project-domain: skip NS shop.preview.nimat.dev -> ns3-09.azure-dns.org. (exists)
+[info] a7-project-domain: skip NS shop.preview.nimat.dev -> ns4-09.azure-dns.info. (exists)
+[info] a7-project-domain: skip *.shop.preview.nimat.dev -> 74.151.139.236 (already set)
+[info] a7-project-domain: skip role DNS Zone Contributor on shop.preview.nimat.dev (assigned)
+[info] a7-project-domain: skip TLSStore entry wildcard-shop-preview-nimat-dev-tls (present)
+[info] a7-project-domain: done

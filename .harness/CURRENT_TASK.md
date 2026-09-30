@@ -1,15 +1,14 @@
 # CURRENT TASK
 
-**Feature**: F017 — Multiple project domains per cluster (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
-**Status**: IN PROGRESS (2026-09-30). Last: F016 COMPLETE.
+**Feature**: F018 — OpenTofu infra stack `team-cluster` (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
+**Status**: IN PROGRESS (2026-09-30). Last: F017 COMPLETE.
 
 ## Exact next step
-1. Branch `feat/F017`; contract `verification/contracts/F017.md`.
-2. `bootstrap/a7-project-domain.sh --domain D [--parent-zone P]`: zone, delegation (NS in parent Azure zone or printed for
-   registrar), wildcard A → Traefik LB, UAMI DNS Zone Contributor, ClusterIssuer + wildcard Certificate per domain, secret
-   added to Traefik default TLSStore `certificates`. Tests with fake az/kubectl. a6: `PREVIEW_DOMAIN` overridable per repo.
-3. e2e: `--domain shop.preview.nimat.dev --parent-zone preview.nimat.dev --apply`; smoke on both domains (valid cert each).
-4. Cluster RUNNING — `az aks stop -g nimatresourceg -n aks-preview` when idle.
+1. Branch `feat/F018`; contract `verification/contracts/F018.md`.
+2. `platform/` OpenTofu (latest release): state backend (Azure Storage + lock) with OpenTofu state encryption (Key Vault key);
+   module `team-cluster` (RG-scoped AKS 1 node OIDC+WI+Entra RBAC, ACR, DNS zone, cert-manager UAMI); `envs/nimat` instance.
+3. Import the live resources (no recreate): `tofu import` / import blocks; `tofu plan` → no changes. Bash provision stays (DEC-042).
+4. Lint: `tofu fmt -check`, `tofu validate`, tflint, checkov in init.sh.
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. BLK-008 (→ F020): `bootstrap/teardown.sh` leaves Entra app `gh-preview-deployer` (+SP, federated creds) and UAMI

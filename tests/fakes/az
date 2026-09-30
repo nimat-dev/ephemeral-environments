@@ -6,6 +6,7 @@
 #   FAKE_TAG_UPDATED=<lastUpdateTime of any tag on re-read before delete>
 #   FAKE_REPOS_JSON=<acr repository list output, default ["todo"]>  FAKE_REPOS_FAIL=1
 #   FAKE_TAGS_JSON=<acr show-tags --detail output>  FAKE_TAGS_FAIL=1  (delete of one tag: FAKE_FAIL="todo:<tag>")
+#   FAKE_NS_RECORDS="ns1 ns2" (record-set ns show; empty = absent). `dns zone create` makes the zone exist.
 #   FAKE_GHFIC_SUBJECT / FAKE_GHFIC_IMM_SUBJECT = stored subject of gh-preview-env / -immutable (with ghfic)
 echo "$*" >>"$AZ_LOG"
 args=" $* "
@@ -51,8 +52,10 @@ case "$args" in
     has aks || exit 3
     o=${FAKE_AKS_OIDC:-true}
     echo "{\"oidcIssuerProfile\":{\"enabled\":$o},\"securityProfile\":{\"workloadIdentity\":{\"enabled\":$o}}}" ;;
+  *" dns zone create "*) touch "$AZ_LOG.zone"; exit 0 ;;
+  *" record-set ns show "*) [ -n "${FAKE_NS_RECORDS:-}" ] || exit 3; tr ' ' '\n' <<<"$FAKE_NS_RECORDS" ;;
   *" dns zone show "*)
-    has zone || exit 3
+    has zone || [ -e "$AZ_LOG.zone" ] || exit 3
     [[ "$args" == *" nameServers "* ]] && printf 'ns1-01.azure-dns.com.\nns2-01.azure-dns.net.\n'
     [[ "$args" == *" --query id "* ]] && echo /subscriptions/sub-1/zone
     exit 0 ;;
