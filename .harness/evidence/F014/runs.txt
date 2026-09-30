@@ -1,0 +1,5 @@
+Deploy  https://github.com/nimat-dev/ephemeral-environments/actions/runs/36655482441 success
+Purge(dry_run) https://github.com/nimat-dev/ephemeral-environments/actions/runs/36655484550 success
+Reap    https://github.com/nimat-dev/ephemeral-environments/actions/runs/36655486789 success
+Destroy https://github.com/nimat-dev/ephemeral-environments/actions/runs/36655606524 success
+ns preview-feat-f014 gone after destroy

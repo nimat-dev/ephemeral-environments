@@ -114,8 +114,8 @@ protocol above (commit + update the tracker), then fail over to the other runtim
 - **Platform**: AKS (Standard/Automatic), ACR, Azure DNS sub-zone, Entra ID OIDC.
 - **In-cluster**: ingress-nginx, cert-manager (DNS-01, Let's Encrypt), KEDA core + KEDA HTTP add-on.
 - **Packaging**: Helm 3 chart `deploy/preview`.
-- **CI/CD**: GitHub Actions (`azure/login@v2`, `azure/aks-set-context@v4` + kubelogin,
-  `docker/setup-buildx-action@v3`, `docker/build-push-action@v6`, `actions/checkout@v4`).
+- **CI/CD**: GitHub Actions (`azure/login@v3.1.0`, `azure/aks-set-context@v5.0.0` + kubelogin,
+  `docker/setup-buildx-action@v4.4.1`, `docker/build-push-action@v7.4.0`, `actions/checkout@v7.0.1`).
 - **Scripting**: bash (`set -euo pipefail`) + jq. Tests: bats-core.
 - **Linters**: actionlint, shellcheck, yamllint, helm lint, kubeconform.
 - Spec with verbatim file contents: `preview-environments-implementation.md`.

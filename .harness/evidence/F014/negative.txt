@@ -1,0 +1,12 @@
+$ bats tests/workflow-pins.bats   # with reap reverted to checkout@v4 (negative)
+1..4
+ok 1 workflows reference at least one action
+not ok 2 every action ref is a full release tag
+# (in test file tests/workflow-pins.bats, line 16)
+#   `[ -z "$bad" ] || { echo "not a full tag: $bad"; false; }' failed
+# not a full tag: actions/checkout@v4
+not ok 3 no floating major-only tag
+# (in test file tests/workflow-pins.bats, line 21)
+#   `[ -z "$bad" ] || { echo "major-only: $bad"; false; }' failed
+# major-only: actions/checkout@v4
+ok 4 no commit-SHA pin

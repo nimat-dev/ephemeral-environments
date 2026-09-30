@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 13 / 13 COMPLETE (100%) — Phases 01–03 COMPLETE
+**Progress**: 14 / 14 COMPLETE (100%) — Phases 01–04 COMPLETE
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -26,3 +26,6 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F009** — Scoped ClusterRole already in F004 (DEC-024); remaining: restrict SP namespace create/delete to `preview-*` (ValidatingAdmissionPolicy) + negative tests — `COMPLETE`
 - [x] **F010** — Prove per-namespace `ResourceQuota` enforced — `COMPLETE`
 - [x] **F011** — `preview` env required reviewers (optional gate) + ACR retention policy for SHA tags — `COMPLETE` (reviewers skipped, DEC-033)
+
+## Phase 04 — Maintenance — COMPLETE (2026-09-29)
+- [x] **F014** — Pin GitHub Actions to latest full release tags (Node 24; issue #17, DEC-035) — `COMPLETE`

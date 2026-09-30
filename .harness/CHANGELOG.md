@@ -18,6 +18,19 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-29 — F014 GitHub Actions pinned to latest full tags — COMPLETE (Phase 04)
+Branch/commit: feat/F014 @ 17ced57   Issue: https://github.com/nimat-dev/ephemeral-environments/issues/17   DEC-035
+Evidence (`evidence/F014/`):
+  - bumps (from `gh api repos/<r>/releases/latest`, all `using: node24`): checkout v4→v7.0.1, azure/login v2→v3.1.0,
+    use-kubelogin v1→v1.3, aks-set-context v4→v5.0.0, setup-buildx-action v3→v4.4.1, build-push-action v6→v7.4.0
+  - guard: `tests/workflow-pins.bats` 4/4; negative (reap reverted to checkout@v4) → 2 fail (`negative.txt`)
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 192/192, actionlint + check-architecture clean (`init.txt`)
+  - e2e (`runs.txt`): Deploy 36655482441 → https://feat-f014.preview.nimat.dev 200; Purge dry_run 36655484550; Reap 36655486789;
+    Destroy 36655606524 → 404, ns gone. All green; annotations: no Node 20 deprecation (`annotations.txt`)
+  - edge cases: major-only tag, SHA pin, non-tag ref rejected by guard; breaking changes N/A (no pull_request_target, no removed inputs)
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=4 evidence=5 => avg 4.8  (PASS)
+Notes: new runner notice — ubuntu-latest → Ubuntu 26 from 2026-10-19 (follow-up in CURRENT_TASK).
+
 ## 2026-09-29 — F011 env gate + ACR retention — COMPLETE (Phase 03 + roadmap COMPLETE, 13/13)
 Branch/commit: feat/F011 merged to main @ 733daba   PR: https://github.com/nimat-dev/ephemeral-environments/pull/15   DEC-033, DEC-034
 Evidence (`evidence/F011/`):

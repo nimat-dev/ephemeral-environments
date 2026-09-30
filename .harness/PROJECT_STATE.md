@@ -3,16 +3,16 @@
 > Read this first, every session. Rewrite it for a cold reader before you stop.
 
 ## Where we are
-- **Phase**: ALL COMPLETE — Phase 01 (2026-09-28), Phase 02 + Phase 03 (2026-09-29)
-- **Active feature**: none. Last: F011 (reviewers skipped DEC-033; daily ACR purge DEC-034). Follow-ups in `CURRENT_TASK.md`.
-- **Overall progress**: 13 / 13 features COMPLETE (100%)
+- **Phase**: ALL COMPLETE — Phase 01 (2026-09-28), Phases 02–04 (2026-09-29)
+- **Active feature**: none. Last: F014 action pins → latest full tags (issue #17, DEC-035). Follow-ups in `CURRENT_TASK.md`.
+- **Overall progress**: 14 / 14 features COMPLETE (100%)
 
 ## Last verified
 - **Date**: 2026-09-29
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-29)
-- **Full suite + check-architecture**: green — `bats tests/` 188/188; check-architecture clean
-- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags) (`evidence/F006`–`F011`)
-- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`.
+- **Full suite + check-architecture**: green — `bats tests/` 192/192; check-architecture clean (F014, 2026-09-29)
+- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags); F014 new pins: Deploy 36655482441, Purge 36655484550, Reap 36655486789, Destroy 36655606524 green (`evidence/F006`–`F014`)
+- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`. PR #18 (F014, issue #17) merged to `main`.
 
 ## Next step
 Roadmap done. Pick a follow-up from `CURRENT_TASK.md` (new FID first) or pause the cluster to stop cost. Mirrors `CURRENT_TASK.md`.

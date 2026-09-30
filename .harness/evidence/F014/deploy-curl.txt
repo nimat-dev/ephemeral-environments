@@ -1,0 +1,2 @@
+$ curl https://feat-f014.preview.nimat.dev -> 200
+$ curl https://feat-f014.preview.nimat.dev (after destroy) -> 404
