@@ -1,0 +1,17 @@
+deploy 36724289952 exit 0
+  preview / plan success
+  preview / build (api, examples/echo-api, Dockerfile) success
+  preview / build (web, todo, Dockerfile) success
+  preview / deploy success
+[info] preview-ci: verify ok https://feat-f021.preview.nimat.dev/
+[info] preview-ci: verify ok https://feat-f021.preview.nimat.dev/api/health
+preview-destroy.yml 36724554226 exit 0
+  [info] preview-ci: destroy: deleting preview-todo-feat-f021
+preview-reap.yml 36724558780 exit 0
+  [info] preview-ci: reap: nothing to reap (now=1790776228)
+preview-acr-purge.yml 36724563167 exit 0
+  [info] preview-ci: purge: todo in use [21f993b], keep newest 3, older than 7d
+  [info] preview-ci: purge: todo nothing to purge
+  [info] preview-ci: purge: todo/api in use [21f993b], keep newest 3, older than 7d
+  [info] preview-ci: purge: todo/api nothing to purge
+curl -> 404
