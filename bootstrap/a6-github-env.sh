@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # A6: GitHub `preview` environment + the variables the preview workflows read (no secrets).
+# SUPERSEDED (F020, DEC-050): platform/modules/repo-onboarding (OpenTofu) owns the repo identity, roles, GitHub env/vars and k8s guard; kept for non-OpenTofu setups.
 # Needs `gh` authenticated with admin on GH_REPO.
 # Usage: bootstrap/a6-github-env.sh [--apply] [--env FILE]   (default: dry-run)
 set -euo pipefail

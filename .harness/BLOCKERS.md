@@ -6,12 +6,12 @@ out-of-scope temptation (scope-guard) also lands here until it becomes a real RO
 ## Open
 ```
 (id | opened | feature | description | what would unblock it)
-BLK-008 | 2026-09-28 | F013 follow-up | `bootstrap/teardown.sh` leaves Entra app `gh-preview-deployer` (+SP, federated cred) and UAMI `cert-manager-dns` (PR #5 review) | teardown removes them (next bootstrap touch; not Phase 02 critical path)
 ```
 
 ## Resolved
 ```
 (id | resolved | how)
+BLK-008 | 2026-09-30 | F020: Entra app/SP/federated creds (`repo-onboarding`) and UAMI `cert-manager-dns` (`team-cluster`) are OpenTofu-managed in `platform/envs/nimat` — `tofu destroy` removes them; bash teardown stays AKS/ACR/zones only
 BLK-010 | 2026-09-29 | user granted permission; `a5 --apply` applied `preview-deployer-guard`, probes "guard verified" (`evidence/F009/live-apply.txt`)
 BLK-009 | 2026-09-29 | user merged PRs #8–#11 into `main`; workflows listed active; dispatch runs executed
 BLK-002 | 2026-09-28 | F006 builds `context: src/todo` (app branch checked out into `src/`); bats `workflow: … todo context`

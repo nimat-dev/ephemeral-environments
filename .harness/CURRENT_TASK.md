@@ -1,15 +1,14 @@
 # CURRENT TASK
 
-**Feature**: F020 — OpenTofu `repo-onboarding` module (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
-**Status**: IN PROGRESS (2026-09-30). Last: F019 COMPLETE.
+**Feature**: F021 — Kit extraction + releases (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
+**Status**: IN PROGRESS (2026-09-30). Last: F020 COMPLETE.
 
 ## Exact next step
-0. After the F019 PR merges: `cd platform/envs/nimat && tofu apply` (Flux branch feat/F019 → main); check GitRepository revision main@….
-1. Branch `feat/F020`; contract `verification/contracts/F020.md`.
-2. Module `repo-onboarding` (azuread + github providers): per-repo Entra app + SP + federated creds (legacy + immutable subject),
-   AcrPush/AcrDelete + AKS Cluster User, GitHub env `preview` + variables; Flux-side: per-repo ClusterRoleBinding + VAP guard
-   confined to `preview-<app>-*`. Import this repo's existing app/SP/creds/vars (no recreate).
-3. BLK-008 (teardown leftovers) closes via `tofu destroy` of the onboarding instance.
+0. After the F020 PR merges: Flux prunes `preview-deployer` / `preview-deployer-guard`, keeps `*-todo` (check `kubectl get vap`).
+1. Branch `feat/F021`; contract `verification/contracts/F021.md`.
+2. `kit/`: composite action (`kit/action.yml`, runs `preview-ci.sh` via `github.action_path`) + reusable workflows
+   (`workflow_call`: deploy, destroy, reap, purge); chart published to ACR OCI; `.preview.yaml` `defaults`.
+3. Semver release workflow (full tags only, DEC-035); this repo's workflows consume the kit (dogfood); consumer example ≤ 25 lines.
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. BLK-008 (→ F020): `bootstrap/teardown.sh` leaves Entra app `gh-preview-deployer` (+SP, federated creds) and UAMI

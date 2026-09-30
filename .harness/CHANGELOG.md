@@ -18,6 +18,18 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-30 — F020 Repo onboarding module — COMPLETE
+Branch/commit: feat/F020   Contract: `verification/contracts/F020.md`   DEC-050   BLK-008 resolved
+Evidence (`evidence/F020/`):
+  - `envs/nimat/repos.tf` (todo): plan 21 import, 2 add (guard files), 2 change (owners added) (`plan.txt`); apply (`apply.txt`); re-plan No changes (`plan-after.txt`)
+  - generated `clusters/nimat/config/repos/{todo.yaml,kustomization.yaml}`; server-side applied pre-merge (`guard-apply.txt`)
+  - probes as SP b34bba52…: create ns preview-todo-probe ALLOWED; preview-shop-probe / preview-probe / cm kube-system / cm default DENIED
+    by preview-deployer-guard-todo; secret DENIED by RBAC (`guard-probes.txt`)
+  - e2e: Deploy 36722280404 (ns preview-todo-feat-f020, verify `/` + `/api/health`) + Destroy 36722549593 green (`e2e.txt`)
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 255/255, tofu test (team-cluster 7, repo-onboarding 3), tflint, checkov (`init.txt`)
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0  (PASS)
+Notes: envs/nimat plans need `GITHUB_TOKEN=$(gh auth token)`. Old global guard/binding are pruned by Flux after merge (verify).
+
 ## 2026-09-30 — F019 Flux add-ons — COMPLETE
 Branch/commit: feat/F019   Contract: `verification/contracts/F019.md`   DEC-049
 Evidence (`evidence/F019/`):

@@ -1,0 +1,24 @@
+  # local_file.repo_guard["todo"] will be created
+  # local_file.repos_kustomization will be created
+  # module.repo["todo"].azuread_application.this will be updated in-place
+  # module.repo["todo"].azuread_application_federated_identity_credential.github["gh-preview-env"] will be imported
+  # module.repo["todo"].azuread_application_federated_identity_credential.github["gh-preview-env-immutable"] will be imported
+  # module.repo["todo"].azuread_service_principal.this will be updated in-place
+  # module.repo["todo"].azurerm_role_assignment.acr["AcrDelete"] will be imported
+  # module.repo["todo"].azurerm_role_assignment.acr["AcrPush"] will be imported
+  # module.repo["todo"].azurerm_role_assignment.aks_user will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["ACR_LOGIN_SERVER"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["ACR_NAME"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["AKS_CLUSTER"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["AKS_RESOURCE_GROUP"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["APP_IMAGE_NAME"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["AZURE_CLIENT_ID"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["AZURE_SUBSCRIPTION_ID"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["AZURE_TENANT_ID"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["INGRESS_CLASS"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["INTERCEPTOR_FQDN"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["INTERCEPTOR_PORT"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["PREVIEW_APP"] will be imported
+  # module.repo["todo"].github_actions_environment_variable.this["PREVIEW_DOMAIN"] will be imported
+  # module.repo["todo"].github_repository_environment.preview will be imported
+Plan: 21 to import, 2 to add, 2 to change, 0 to destroy.

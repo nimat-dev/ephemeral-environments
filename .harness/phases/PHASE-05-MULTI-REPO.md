@@ -48,13 +48,13 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] Smoke (F005) green on the Flux-managed cluster; a1/a3/a4 marked superseded (kept for non-Flux clusters, DEC-042).
 
 ## F020 — Repo onboarding module
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] OpenTofu module `repo-onboarding`: per-repo Entra app + SP + federated creds (legacy + immutable subject), GitHub env `preview` + vars (`github` provider), DNS zone/cert hookup for its domain.
-- [ ] Per-repo SP confined by VAP to `preview-<app>-*` only.
-- [ ] Replaces `a5`/`a6`; BLK-008 (teardown leftovers) resolved by `tofu destroy`.
+**Status**: COMPLETE (2026-09-30) — contract `verification/contracts/F020.md`, evidence `evidence/F020/`, DEC-050
+- [x] OpenTofu module `repo-onboarding`: per-repo Entra app + SP + federated creds (legacy + immutable subject), AcrPush/AcrDelete + AKS Cluster User, GitHub env `preview` + 13 vars (`github` provider), generated k8s guard for Flux. This repo imported (21 imports, re-plan No changes).
+- [x] Per-repo SP confined by VAP to `preview-<app>-*` only (live probes: `preview-todo-*` allowed; `preview-shop-*`, `preview-*`, kube-system, default denied).
+- [x] Replaces `a5`/`a6` (superseded); BLK-008 resolved (identity + UAMI destroyed by `tofu destroy`).
 
 ## F021 — Kit extraction + releases
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (2026-09-30)
 - [ ] `kit/` composite action (scripts via `github.action_path`) + `workflow_call` deploy/destroy/reap/purge; chart pushed to ACR OCI.
 - [ ] Semver release workflow, full tags only (DEC-035); consumer example ≤ 25 lines.
 - [ ] This repo's own workflows consume the kit (dogfood).

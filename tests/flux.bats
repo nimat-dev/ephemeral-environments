@@ -60,9 +60,17 @@ hr() { yq -o=json -I0 "$REL/$1.yaml"; }
   [ "$(yq -N 'select(.kind == "TLSStore") | .spec.certificates[].secretName' <<<"$out")" = wildcard-shop-preview-nimat-dev-tls ]
 }
 
-@test "config overlay: ClusterRole + guard identical to what a5 renders (no drift between bash and Flux)" {
-  a5=$(sed -n '/^rbac_manifest()/,/^YAML$/p' "$ROOT/bootstrap/a5-github-oidc.sh" | sed '1,2d;$d' | sed 's/\$sp_id/SP/g' | yq -o=json -I0 '.' | jq -cS . | sort)
-  sp=$(yq -N 'select(.kind == "ClusterRoleBinding") | .subjects[0].name' "$ROOT/clusters/nimat/config/deployer-guard.yaml")
-  flux=$(kubectl kustomize "$ROOT/clusters/nimat/config" | yq -o=json -I0 'select(.kind == "ClusterRole" or .kind == "ClusterRoleBinding" or .kind == "ValidatingAdmissionPolicy" or .kind == "ValidatingAdmissionPolicyBinding")' | sed "s/$sp/SP/g" | jq -cS . | sort)
-  [ "$a5" = "$flux" ]
+@test "config overlay: ClusterRole identical to a5's; each repo guard confines its SP to preview-<app>-*" {
+  a5=$(sed -n '/^rbac_manifest()/,/^YAML$/p' "$ROOT/bootstrap/a5-github-oidc.sh" | sed '1,2d;$d' | yq -o=json -I0 'select(.kind == "ClusterRole")' | jq -cS .)
+  [ "$a5" = "$(yq -o=json -I0 '.' "$ROOT/clusters/base/config/clusterrole.yaml" | jq -cS .)" ]
+  out=$(kubectl kustomize "$ROOT/clusters/nimat/config")
+  for app in $(yq -N '.resources[]' "$ROOT/clusters/nimat/config/repos/kustomization.yaml" | sed 's/\.yaml$//'); do
+    sp=$(yq -N "select(.kind == \"ClusterRoleBinding\" and .metadata.name == \"preview-deployer-$app\") | .subjects[0].name" <<<"$out")
+    [[ "$sp" =~ ^[0-9a-f-]{36}$ ]] || { echo "no binding for $app"; return 1; }
+    vap=$(yq -o=json -I0 "select(.kind == \"ValidatingAdmissionPolicy\" and .metadata.name == \"preview-deployer-guard-$app\")" <<<"$out")
+    [ "$(jq -r '.spec.matchConditions[0].expression' <<<"$vap")" = "request.userInfo.username == '$sp'" ]
+    [[ "$(jq -r '.spec.validations[0].expression' <<<"$vap")" == *"startsWith('preview-$app-')"* ]] || false
+    [ "$(yq -N "select(.kind == \"ValidatingAdmissionPolicyBinding\" and .metadata.name == \"preview-deployer-guard-$app\") | .spec.policyName" <<<"$out")" = "preview-deployer-guard-$app" ]
+  done
+  ! grep -rq 'preview-deployer-guard$' "$ROOT/clusters/nimat/config"/*.yaml
 }
