@@ -1,0 +1,2 @@
+destroy 36710425734 exit 0
+$ curl https://feat-f016.preview.nimat.dev -> 404

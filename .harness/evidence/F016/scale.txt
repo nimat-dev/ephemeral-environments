@@ -1,0 +1,5 @@
+after idle (14 min polling): web=0 api=0
+$ curl https://feat-f016.preview.nimat.dev/api/health (cold) -> {"component":"api","status":"ok"} [200] 8.533929s
+after /api request: web=0 api=1
+$ curl https://feat-f016.preview.nimat.dev/ (cold) -> 200 7.733620s
+after / request: web=1 api=1

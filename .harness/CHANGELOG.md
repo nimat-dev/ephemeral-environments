@@ -18,6 +18,18 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-30 — F016 `.preview.yaml` app contract with components — COMPLETE
+Branch/commit: feat/F016 @ a556bdd   Contract: `verification/contracts/F016.md`   DEC-044, DEC-045, DEC-046
+Evidence (`evidence/F016/`):
+  - lib `preview_config` (strict schema, unknown keys fail), `preview_values`, `preview_verify_paths`; chart components loop; workflow plan → build matrix → deploy
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 227/227 (+21 new), legacy render golden identical (`init.txt`)
+  - e2e: Deploy 36708302080 → jobs plan, build(api), build(web), deploy green; `/` todo HTML 200, `/api/health` + `/api/items/1` api JSON 200,
+    `/apix` → web (`deploy.txt`); idle 15m → web=0 api=0; `/api/health` cold 200 in 8.5s → api=1 web=0; `/` → web=1 (`scale.txt`);
+    redeploy 36710182013 verify ok `/` + `/api/health`; Destroy 36710425734 → 404 (`destroy.txt`); purge dry-run 36708609459 walks todo, todo/api, todo/web (`purge.txt`)
+  - edge cases: shape/field/resource/addon validation battery, bad YAML / empty file / yq missing, partial resources merge, names ≤ 63, repo list unreadable
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0  (PASS)
+Notes: image repos now `todo/<component>`; old flat `todo` repo still purged. Review fix a556bdd: verify uses the component's health path when under its route.
+
 ## 2026-09-30 — F015 Repo-scoped preview identity — COMPLETE
 Branch/commit: feat/F015 @ 855e284   Contract: `verification/contracts/F015.md`   DEC-036, DEC-040
 Evidence (`evidence/F015/`):
