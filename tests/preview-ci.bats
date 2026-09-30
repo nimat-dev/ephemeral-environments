@@ -40,7 +40,7 @@ deploy_env() {
   grep -qx "sha=$(git -C "$SRC_DIR" rev-parse HEAD)" "$GITHUB_OUTPUT"
   # no .preview.yaml -> default single component from the repo root (F016)
   grep -qxF 'components=[{"name":"web","context":".","dockerfile":"Dockerfile"}]' "$GITHUB_OUTPUT"
-  grep -qx 'routes=/' "$GITHUB_OUTPUT"
+  grep -qx 'verify_paths=/' "$GITHUB_OUTPUT"
   grep -q '^config={"components":\[{"name":"web"' "$GITHUB_OUTPUT"
 }
 
@@ -58,7 +58,7 @@ YAML
   run "$CI" plan
   [ "$status" -eq 0 ]
   grep -qxF 'components=[{"name":"web","context":"todo","dockerfile":"Dockerfile"},{"name":"api","context":"svc/api","dockerfile":"Dockerfile.prod"}]' "$GITHUB_OUTPUT"
-  grep -qx 'routes=/ /api' "$GITHUB_OUTPUT"
+  grep -qx 'verify_paths=/ /api' "$GITHUB_OUTPUT"
   [ "$(grep '^config=' "$GITHUB_OUTPUT" | cut -d= -f2- | jq -r '.components[1].port')" = 3000 ]
 }
 
@@ -282,7 +282,7 @@ SH
   grep -qF 'context: src/${{ matrix.component.context }}' "$WF"
   grep -qF 'file: src/${{ matrix.component.context }}/${{ matrix.component.dockerfile }}' "$WF"
   grep -qF 'CONFIG: ${{ needs.plan.outputs.config }}' "$WF"
-  grep -qF 'VERIFY_PATHS: ${{ needs.plan.outputs.routes }}' "$WF"
+  grep -qF 'VERIFY_PATHS: ${{ needs.plan.outputs.verify_paths }}' "$WF"
   grep -qE '^      HELM_DRIVER: configmap' "$WF"
   grep -qE '^          platforms: linux/amd64' "$WF"
   grep -qF 'INGRESS_CLASS: ${{ vars.INGRESS_CLASS }}' "$WF"

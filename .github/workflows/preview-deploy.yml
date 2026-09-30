@@ -57,7 +57,7 @@ jobs:
       expires_at: ${{ steps.id.outputs.expires_at }}
       config: ${{ steps.id.outputs.config }}
       components: ${{ steps.id.outputs.components }}
-      routes: ${{ steps.id.outputs.routes }}
+      verify_paths: ${{ steps.id.outputs.verify_paths }}
     steps:
       # Tooling (lib, chart, scripts) from the workflow's own ref; app code from the input branch.
       - uses: actions/checkout@v7.0.1
@@ -173,7 +173,7 @@ jobs:
       - name: Verify (cold-start proof, every route)
         env:
           HOST: ${{ needs.plan.outputs.host }}
-          VERIFY_PATHS: ${{ needs.plan.outputs.routes }}
+          VERIFY_PATHS: ${{ needs.plan.outputs.verify_paths }}
         run: ./scripts/preview-ci.sh verify
 
       - name: Summary

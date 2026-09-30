@@ -447,3 +447,10 @@ cfg_fails() {  # cfg_fails JSON EXPECTED_MSG_SUBSTRING
 @test "preview_default_config is a valid config" {
   [ "$(printf '%s' "$PREVIEW_DEFAULT_CONFIG" | preview_config | jq -c '[.components[].name, .components[].context]')" = '["web","."]' ]
 }
+
+@test "preview_verify_paths: probe under own route, else route" {
+  out=$(cfg '{"components":[{"name":"web"},{"name":"api","route":"/api","probePath":"/api/health"},
+    {"name":"adm","route":"/admin","probePath":"/healthz"},{"name":"x","route":"/api2","probePath":"/api2"}]}' | preview_verify_paths)
+  [ "$out" = '/ /api/health /admin /api2' ]
+  [ "$(cfg '{"components":[{"name":"a","route":"/ap","probePath":"/apx"}]}' | preview_verify_paths)" = /ap ]
+}

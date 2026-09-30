@@ -23,7 +23,7 @@ out() { printf '%s\n' "$@" >>"${GITHUB_OUTPUT:-/dev/stdout}"; }
 # plan: validate dispatch inputs + the app contract, derive identity. Env: BRANCH LIFETIME LIFETIME_CUSTOM
 # IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR (checkout of BRANCH) GITHUB_REPOSITORY [PREVIEW_APP].
 # Outputs the identity plus sha (full, for the build jobs), config (normalized .preview.yaml JSON),
-# components (build matrix) and routes (verify). Nothing is written unless everything validates.
+# components (build matrix) and verify_paths (one per component). Nothing is written unless everything validates.
 cmd_plan() {
   need BRANCH LIFETIME IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR GITHUB_REPOSITORY
   local sha full app plan config
@@ -39,7 +39,7 @@ cmd_plan() {
   # shellcheck disable=SC2086 # one KEY=VALUE per line, no spaces by construction
   out $plan "sha=$full" "config=$config" \
     "components=$(jq -c '[.components[] | {name, context, dockerfile}]' <<<"$config")" \
-    "routes=$(jq -r '[.components[].route] | join(" ")' <<<"$config")"
+    "verify_paths=$(preview_verify_paths <<<"$config")"
 }
 
 # read_config DIR -> normalized app contract from DIR/.preview.yaml (F016), or the default single
@@ -107,7 +107,7 @@ cmd_deploy() {
   [ -z "${vf-}" ] || rm -f "$vf"
 }
 
-# verify: cold-start proof -- HTTP 200 from every component route (VERIFY_PATHS, space-separated,
+# verify: cold-start proof -- HTTP 200 from every component (VERIFY_PATHS from plan, space-separated,
 # default "/") within VERIFY_ATTEMPTS x VERIFY_SLEEP each. Env: HOST [VERIFY_PATHS] [VERIFY_ATTEMPTS=30] [VERIFY_SLEEP=5]
 cmd_verify() {
   need HOST

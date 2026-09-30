@@ -286,6 +286,14 @@ preview_config() {
     | {components: $c, addons: []}'
 }
 
+# preview_verify_paths < normalized-config.json -> one URL path per component, space-separated: its
+# probePath when that sits under its own route (a health endpoint the ingress routes to it), else its
+# route (e.g. probe /healthz on route /api would be served by another component).
+preview_verify_paths() {
+  jq -r '[.components[] | .route as $r
+    | if $r == "/" or .probePath == $r or (.probePath | startswith($r + "/")) then .probePath else $r end] | join(" ")'
+}
+
 # preview_values IMAGE_REPOSITORY TAG < normalized-config.json -> helm values JSON {components:[...]} with
 # image <IMAGE_REPOSITORY>/<component>:<TAG> per component (DEC-046).
 preview_values() {
