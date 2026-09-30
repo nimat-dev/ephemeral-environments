@@ -26,14 +26,14 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] Full verify green (227/227); e2e: this repo deployed with 2 matrix builds (runs 36708302080, 36710182013), both components idle to 0 and wake independently; Destroy 36710425734 → 404; purge dry-run 36708609459 walks `todo`, `todo/web`, `todo/api`.
 
 ## F017 — Multiple project domains per cluster
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] One Azure DNS zone per project domain (delegated from the parent registrar, DEC-040), wildcard A → ingress LB.
-- [ ] cert-manager DNS-01 identity has DNS Zone Contributor on each zone; wildcard `Certificate` per domain.
-- [ ] Traefik default TLSStore lists every project wildcard cert; SNI serves the right one.
-- [ ] e2e: two domains on one cluster, both HTTPS valid.
+**Status**: COMPLETE (2026-09-30) — contract `verification/contracts/F017.md`, evidence `evidence/F017/`, DEC-047
+- [x] One Azure DNS zone per project domain (`bootstrap/a7-project-domain.sh`; delegated via NS in a parent Azure zone, or NS printed for the registrar), wildcard A → ingress LB.
+- [x] cert-manager DNS-01 identity has DNS Zone Contributor on each zone; ClusterIssuer + wildcard `Certificate` per domain.
+- [x] Traefik default TLSStore lists every project wildcard cert; SNI serves the right one (default cert unchanged).
+- [x] e2e: `shop.preview.nimat.dev` + `preview.nimat.dev` on one cluster, smoke PASS on both, served cert SAN matches each host.
 
 ## F018 — OpenTofu infra stack
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (2026-09-30)
 - [ ] `platform/` OpenTofu (latest release at start; DEC-038) module `team-cluster`: RG, AKS (1 node, OIDC + workload identity, Entra RBAC), ACR, identities; one instance per team (DEC-036).
 - [ ] Remote state in Azure Storage with locking + OpenTofu state encryption (key in Key Vault).
 - [ ] `tofu fmt/validate`, tflint, checkov in `init.sh` + CI; import or recreate current cluster documented.

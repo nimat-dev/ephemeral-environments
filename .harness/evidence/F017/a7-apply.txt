@@ -1,0 +1,156 @@
+[info] a7-project-domain: + az network dns zone create -g nimatresourceg -n shop.preview.nimat.dev --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "etag": "d3a03fae-00f7-45f9-8125-c0f1e5d7f5bc",
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/shop.preview.nimat.dev",
+  "location": "global",
+  "maxNumberOfRecordSets": 10000,
+  "name": "shop.preview.nimat.dev",
+  "nameServers": [
+    "ns1-09.azure-dns.com.",
+    "ns2-09.azure-dns.net.",
+    "ns3-09.azure-dns.org.",
+    "ns4-09.azure-dns.info."
+  ],
+  "numberOfRecordSets": 2,
+  "resourceGroup": "nimatresourceg",
+  "tags": {},
+  "type": "Microsoft.Network/dnszones",
+  "zoneType": "Public"
+}
+[info] a7-project-domain: + az network dns record-set ns add-record -g nimatresourceg -z preview.nimat.dev -n shop -d ns1-09.azure-dns.com. --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "NSRecords": [
+    {
+      "nsdname": "ns1-09.azure-dns.com."
+    }
+  ],
+  "TTL": 3600,
+  "etag": "0a1f4090-1ff5-431b-be64-f7abfad11d69",
+  "fqdn": "shop.preview.nimat.dev.",
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/preview.nimat.dev/NS/shop",
+  "name": "shop",
+  "provisioningState": "Succeeded",
+  "resourceGroup": "nimatresourceg",
+  "targetResource": {},
+  "trafficManagementProfile": {},
+  "type": "Microsoft.Network/dnszones/NS"
+}
+[info] a7-project-domain: + az network dns record-set ns add-record -g nimatresourceg -z preview.nimat.dev -n shop -d ns2-09.azure-dns.net. --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "NSRecords": [
+    {
+      "nsdname": "ns1-09.azure-dns.com."
+    },
+    {
+      "nsdname": "ns2-09.azure-dns.net."
+    }
+  ],
+  "TTL": 3600,
+  "etag": "2e6dddbd-b1bf-434b-be6d-6bc45737c5dd",
+  "fqdn": "shop.preview.nimat.dev.",
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/preview.nimat.dev/NS/shop",
+  "name": "shop",
+  "provisioningState": "Succeeded",
+  "resourceGroup": "nimatresourceg",
+  "targetResource": {},
+  "trafficManagementProfile": {},
+  "type": "Microsoft.Network/dnszones/NS"
+}
+[info] a7-project-domain: + az network dns record-set ns add-record -g nimatresourceg -z preview.nimat.dev -n shop -d ns3-09.azure-dns.org. --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "NSRecords": [
+    {
+      "nsdname": "ns1-09.azure-dns.com."
+    },
+    {
+      "nsdname": "ns2-09.azure-dns.net."
+    },
+    {
+      "nsdname": "ns3-09.azure-dns.org."
+    }
+  ],
+  "TTL": 3600,
+  "etag": "372fe57e-62cf-4326-9d45-e06128b310e4",
+  "fqdn": "shop.preview.nimat.dev.",
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/preview.nimat.dev/NS/shop",
+  "name": "shop",
+  "provisioningState": "Succeeded",
+  "resourceGroup": "nimatresourceg",
+  "targetResource": {},
+  "trafficManagementProfile": {},
+  "type": "Microsoft.Network/dnszones/NS"
+}
+[info] a7-project-domain: + az network dns record-set ns add-record -g nimatresourceg -z preview.nimat.dev -n shop -d ns4-09.azure-dns.info. --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "NSRecords": [
+    {
+      "nsdname": "ns1-09.azure-dns.com."
+    },
+    {
+      "nsdname": "ns2-09.azure-dns.net."
+    },
+    {
+      "nsdname": "ns3-09.azure-dns.org."
+    },
+    {
+      "nsdname": "ns4-09.azure-dns.info."
+    }
+  ],
+  "TTL": 3600,
+  "etag": "6a249223-027d-4fb7-a7d9-671ee291d55b",
+  "fqdn": "shop.preview.nimat.dev.",
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/preview.nimat.dev/NS/shop",
+  "name": "shop",
+  "provisioningState": "Succeeded",
+  "resourceGroup": "nimatresourceg",
+  "targetResource": {},
+  "trafficManagementProfile": {},
+  "type": "Microsoft.Network/dnszones/NS"
+}
+[info] a7-project-domain: + az network dns record-set a add-record -g nimatresourceg -z shop.preview.nimat.dev -n * --ipv4-address 74.151.139.236 --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "ARecords": [
+    {
+      "ipv4Address": "74.151.139.236"
+    }
+  ],
+  "TTL": 3600,
+  "etag": "c38b8309-15cc-48d1-9d6b-e509f27d1175",
+  "fqdn": "*.shop.preview.nimat.dev.",
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/shop.preview.nimat.dev/A/*",
+  "name": "*",
+  "provisioningState": "Succeeded",
+  "resourceGroup": "nimatresourceg",
+  "targetResource": {},
+  "trafficManagementProfile": {},
+  "type": "Microsoft.Network/dnszones/A"
+}
+[info] a7-project-domain: + az role assignment create --assignee-object-id 9219f116-07f9-4f07-999f-39333cbd0709 --assignee-principal-type ServicePrincipal --role DNS Zone Contributor --scope /subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/shop.preview.nimat.dev --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+{
+  "condition": null,
+  "conditionVersion": null,
+  "createdBy": null,
+  "createdOn": "2026-09-30T11:49:56.984228+00:00",
+  "delegatedManagedIdentityResourceId": null,
+  "description": null,
+  "id": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/shop.preview.nimat.dev/providers/Microsoft.Authorization/roleAssignments/bb14c468-36a5-448b-844e-f7cc54176de5",
+  "name": "bb14c468-36a5-448b-844e-f7cc54176de5",
+  "principalId": "9219f116-07f9-4f07-999f-39333cbd0709",
+  "principalType": "ServicePrincipal",
+  "resourceGroup": "nimatresourceg",
+  "roleDefinitionId": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/providers/Microsoft.Authorization/roleDefinitions/befefa01-2a29-4197-83a8-272ff33ce314",
+  "scope": "/subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Network/dnszones/shop.preview.nimat.dev",
+  "systemData": null,
+  "type": "Microsoft.Authorization/roleAssignments",
+  "updatedBy": "732ce8a2-c831-4654-b753-24da581ee38f",
+  "updatedOn": "2026-09-30T11:49:57.187225+00:00"
+}
+[info] a7-project-domain: + kubectl apply -f -
+clusterissuer.cert-manager.io/letsencrypt-dns-shop-preview-nimat-dev created
+certificate.cert-manager.io/wildcard-shop-preview-nimat-dev created
+[info] a7-project-domain: + kubectl wait --for=condition=Ready certificate/wildcard-shop-preview-nimat-dev -n traefik --timeout 10m
+certificate.cert-manager.io/wildcard-shop-preview-nimat-dev condition met
+[info] a7-project-domain: + kubectl patch tlsstore default -n traefik --type merge -p {"spec":{"certificates":[{"secretName":"wildcard-shop-preview-nimat-dev-tls"}]}}
+tlsstore.traefik.io/default patched
+DOMAIN=shop.preview.nimat.dev WILDCARD=*.shop.preview.nimat.dev -> 74.151.139.236 CERT=traefik/wildcard-shop-preview-nimat-dev-tls
+[info] a7-project-domain: done
