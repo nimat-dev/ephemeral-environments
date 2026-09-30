@@ -129,6 +129,15 @@ resource "azurerm_kubernetes_cluster_extension" "flux" {
   name           = "flux"
   cluster_id     = azurerm_kubernetes_cluster.this.id
   extension_type = "microsoft.flux"
+
+  # Fits a single 2-vCPU node next to the add-ons and previews (DEC-041/049): no notification
+  # controller (alerts/receivers unused; status comes from fluxconfig-agent), 50m CPU requests.
+  configuration_settings = {
+    "notification-controller.enabled"             = "false"
+    "helm-controller.resources.requests.cpu"      = "50m"
+    "kustomize-controller.resources.requests.cpu" = "50m"
+    "source-controller.resources.requests.cpu"    = "50m"
+  }
 }
 
 resource "azurerm_kubernetes_flux_configuration" "platform" {

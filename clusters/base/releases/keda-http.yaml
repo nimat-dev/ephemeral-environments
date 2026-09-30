@@ -18,6 +18,19 @@ spec:
       - paths: ["/spec/replicas"] # owned by HPAs (KEDA interceptor) / scaling, not the chart
         target:
           kind: Deployment
+      # caBundles injected at runtime (cert-manager cainjector, KEDA cert rotation) — not chart-owned
+      - paths: ["/webhooks"]
+        target:
+          kind: ValidatingWebhookConfiguration
+      - paths: ["/webhooks"]
+        target:
+          kind: MutatingWebhookConfiguration
+      - paths: ["/spec/caBundle"]
+        target:
+          kind: APIService
+      - paths: ["/spec/conversion/webhook/clientConfig/caBundle"]
+        target:
+          kind: CustomResourceDefinition
   interval: 30m
   timeout: 5m
   dependsOn:
