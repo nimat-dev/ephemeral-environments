@@ -15,3 +15,19 @@
 | 10 | Claude Stop hook duplicated the state rule | hook pipes its changed list to `harness-check.sh --files`; test |
 
 Verify after fixes: `./scripts/init.sh` BASELINE GREEN, bats 285/285.
+
+## Round 2 (2026-09-30, `/code-review high` on the round-1 fixes + full diff) — 10 findings, all fixed
+| # | Finding | Fix |
+|---|---|---|
+| 1 | Stop hook still folded renames (fix #7 only in harness-check) | hook lists `git diff --no-renames` vs session-start commit + untracked; real-hook test (git mv committed → block) |
+| 2 | Already-dirty PROJECT_STATE edited again was invisible → false block | baseline stores content hash per dirty path; changed = hash differs; test both ways |
+| 3 | Copier default = latest tag v1.0.0, which predates the template | copier.yml documents it (`--vcs-ref main` until v1.1.0); DEC-052: template versioned by this repo's tags; cut v1.1.0 after merge |
+| 4 | Zero-base CI range diffed the empty tree → always passed | skipped with an explicit warning; test asserts warning, not "ok" |
+| 5 | Quoted porcelain paths (spaces) misread as code | `core.quotePath=false`, no porcelain parsing; test with `run 1.txt` |
+| 6 | Hook tests only grepped | 3 bats cases run the real SessionStart + Stop hooks in a temp repo |
+| 7 | `--staged` materialised the whole index | checks out only ROADMAP, commands, `.claude`, prompts |
+| 8 | init kept its own status parser for "Active feature" | `harness-check.sh --current`; unused regex dropped |
+| 9 | PR body / DEC-052 / docs stale; modes undocumented | PR body + DEC-052 updated; `harness-check` contract in SCRIPTS.md; Commands row in `.harness/CLAUDE.md` |
+| 10 | PR body carried a Claude attribution line (user CLAUDE.md forbids) | removed |
+
+Verify after fixes: `./scripts/init.sh` BASELINE GREEN, bats 288/288, 0 skipped.

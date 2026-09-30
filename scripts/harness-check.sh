@@ -3,11 +3,13 @@
 #   1. roadmap gate: exactly one IN PROGRESS feature (or all COMPLETE/DEPRECATED)
 #   2. state rule: changes outside .harness/ must come with a .harness/PROJECT_STATE.md update
 #   3. agent command mirrors (.claude/commands, .github/prompts) match .harness/commands
-# Usage: scripts/harness-check.sh [--staged | --range BASE...HEAD | --files | --roadmap-only] [--roadmap FILE] [--root DIR]
+# Usage: scripts/harness-check.sh [--staged | --range BASE...HEAD | --files | --roadmap-only | --current]
+#                                 [--roadmap FILE] [--root DIR]
 #   --staged  (pre-commit) all checks against the INDEX, not the working tree
-#   --range   (CI) state rule over the diff; an all-zero BASE (branch creation) diffs from the empty tree
+#   --range   (CI) state rule over the diff; an all-zero BASE (branch creation, no base) skips it with a warning
 #   --files   state rule only, over changed paths read from stdin (Claude Stop hook)
-#   --roadmap-only  roadmap gate only (scripts/init.sh)      no mode: roadmap + mirrors
+#   --roadmap-only  roadmap gate only (scripts/init.sh)   --current  print the IN PROGRESS roadmap line(s)
+#   no mode   roadmap + mirrors
 # Exit: 0 ok, 1 check failed, 2 usage.
 set -euo pipefail
 
@@ -22,7 +24,8 @@ while [ $# -gt 0 ]; do
     --roadmap) [ $# -ge 2 ] || { log error "--roadmap needs a file"; exit 2; }
       roadmap="$(cd "$(dirname "$2")" 2>/dev/null && pwd)/$(basename "$2")" || roadmap="$2"; shift 2 ;;
     --root) [ $# -ge 2 ] || { log error "--root needs a directory"; exit 2; }; root="$(cd "$2" && pwd)"; shift 2 ;;
-    -h|--help) sed -n '2,11p' "$0"; exit 0 ;;
+    --current) mode=current; shift ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
     *) log error "unknown argument: $1"; exit 2 ;;
   esac
 done
@@ -33,15 +36,20 @@ failed=0
 tree="$root"
 if [ "$mode" = staged ]; then
   tree=$(mktemp -d); trap 'rm -rf "$tree"' EXIT
-  git checkout-index -a --prefix="$tree/"
+  # only what the checks read — not the whole index (large / LFS / sparse repos)
+  git ls-files -z -- .harness/ROADMAP.md .harness/commands .claude .github/prompts >"$tree.list"
+  [ -s "$tree.list" ] && xargs -0 git checkout-index --prefix="$tree/" -- <"$tree.list"
+  rm -f "$tree.list"
 fi
 
-# 1. roadmap gate — status = LAST backtick span of each `- [ ] **F…**` line
+# 1. roadmap gate — status = LAST backtick span of each `- [ ] **F…**` line (the one parser; init.sh uses it too)
+features() { grep -E '^- \[.\] \*\*F[0-9]+\*\*' "$1" || true; }
+# shellcheck disable=SC2016  # backticks are literal markdown
+status_of() { sed -E 's/^.*`([^`]+)`[^`]*$/\1/'; }
 check_roadmap() {
   local f="${roadmap:-$tree/.harness/ROADMAP.md}" st n total done_n
   [ -f "$f" ] || { log error "roadmap not found: $f"; return 1; }
-  # shellcheck disable=SC2016  # backticks are literal markdown
-  st=$(grep -E '^- \[.\] \*\*F[0-9]+\*\*' "$f" | sed -E 's/^.*`([^`]+)`[^`]*$/\1/' || true)
+  st=$(features "$f" | status_of)
   n=$(grep -cx 'IN PROGRESS' <<<"$st" || true); total=$(grep -c . <<<"$st" || true)
   done_n=$(grep -cxE 'COMPLETE|DEPRECATED' <<<"$st" || true)
   if [ "$n" -eq 0 ] && [ "$total" -gt 0 ] && [ "$done_n" -eq "$total" ]; then
@@ -49,6 +57,10 @@ check_roadmap() {
   elif [ "$n" -eq 1 ]; then log info "roadmap ok (1 IN PROGRESS, $done_n/$total done)"
   else log error "roadmap: expected exactly 1 IN PROGRESS feature (or all done) in $f, found $n of $total"; return 1; fi
 }
+if [ "$mode" = current ]; then
+  features "${roadmap:-.harness/ROADMAP.md}" | while IFS= read -r l; do
+    [ "$(status_of <<<"$l")" = 'IN PROGRESS' ] && sed -E 's/^- \[.\] //' <<<"$l"; done; exit 0
+fi
 [ "$mode" = files ] || check_roadmap || failed=1
 if [ "$mode" = roadmap ]; then exit "$failed"; fi
 
@@ -60,14 +72,16 @@ if [ -n "$mode" ]; then
     range)
       base=${range%%...*} head=${range#*...}
       if [[ "$base" =~ ^0+$ ]]; then
-        changed=$(git diff --no-renames --name-only "$(git hash-object -t tree /dev/null)" "$head") ||
-          { log error "cannot diff range $range"; exit 2; }
+        # branch creation: there is no "before" to judge against (an empty-tree diff would always contain
+        # PROJECT_STATE.md and pass silently) — say so instead of pretending
+        log warn "no base commit (branch creation push, head $head): state rule skipped"; changed=""
       else
         changed=$(git diff --no-renames --name-only "$range") || { log error "cannot diff range $range"; exit 2; }
       fi ;;
   esac
   code=$(grep -v '^\.harness/' <<<"$changed" | grep . || true)
-  if [ -n "$code" ] && ! grep -qx '\.harness/PROJECT_STATE\.md' <<<"$changed"; then
+  if [ "$mode" = range ] && [ -z "$changed" ]; then :
+  elif [ -n "$code" ] && ! grep -qx '\.harness/PROJECT_STATE\.md' <<<"$changed"; then
     log error "files outside .harness/ changed without .harness/PROJECT_STATE.md (Session-completion protocol, AGENTS.md):"
     while IFS= read -r f; do printf '  - %s\n' "$f" >&2; done <<<"$code"; failed=1
   else log info "state rule ok ($(grep -c . <<<"$changed" || true) changed file(s))"; fi

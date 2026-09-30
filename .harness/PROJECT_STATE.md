@@ -10,7 +10,7 @@
 ## Last verified
 - **Date**: 2026-09-30
 - **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-30, F022 local)
-- **Full suite + check-architecture**: green — `bats tests/` 281/281 (F022) + tofu test 10/10 + tflint/checkov; check-architecture clean (F021, 2026-09-30)
+- **Full suite + check-architecture**: green — `bats tests/` 288/288 (F022) + tofu test 10/10 + tflint/checkov; check-architecture clean (F021, 2026-09-30)
 - **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags); F014 new pins: Deploy 36655482441, Purge 36655484550, Reap 36655486789, Destroy 36655606524 green; F015: Deploy 36706339119 (ns `preview-todo-feat-f015`, 200), Reap 36706523897 (foreign expired ns kept), Destroy 36706532056 (legacy) / 36706594874 (foreign refused) / 36706663297 (404) ; F016: Deploy 36708302080/36710182013 (2 components, path routing, per-component scale-to-zero), Destroy 36710425734 ; F017: smoke PASS on `shop.preview.nimat.dev` + `preview.nimat.dev` ; F018: OpenTofu adopted 7 resources, plan No changes; regression Deploy 36713711855 + Destroy 36714179601 ; F019: Flux adopted add-ons, drift reverted, reinstall from scratch, smoke + Deploy 36720360228/Destroy 36720632838 ; F020: per-repo guard probes, Deploy 36722280404 + Destroy 36722549593 ; F021 dogfood via kit: Deploy 36724289952, Destroy 36724554226, Reap 36724558780, Purge 36724563167 (`evidence/F006`–`F021`)
 - **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`. PR #18 (F014, issue #17) merged to `main`. PR #19 (cluster paused) merged (45a50da). PR #20 (Phase 05 plan) merged (084f9b0). PR #21 (F015) merged (ee1a62b). PR #22 (F016) merged (2cdcf0a). PR #23 (F017) merged (09f100e). PR #24 (F018) merged (09c2c5c). PR #25 (F019) merged (cdaaeac), Flux on main. PR #26 (F020) merged (dbfd648); Flux pruned the global guard (only `*-todo` left).
   F021 on `feat/F021` (21f993b), PR pending.
@@ -22,7 +22,8 @@ F022 on `feat/F022` — local verify DONE 2026-09-30: `./scripts/init.sh` BASELI
 `build-harness-template.sh` exec bit, template generic copies generated, `sync-agent-commands.sh --check` no longer creates/demands
 `.claude/commands` when the repo has no `.claude/` (Claude opt-out render failed its own gate; test added).
 PR #28 open, harness-check CI green (run 36735975654); `main` protected: required check `harness-check` (admins exempt).
-Review round 1: 10 findings fixed (`reviews/F022-review.md`), bats 285/285. Next: CI on the fix push, review round 2, CHANGELOG COMPLETE, then F023.
+Review rounds 1+2: 20 findings fixed (`reviews/F022-review.md`), bats 288/288. Next: CI on the round-2 push, review round 3,
+CHANGELOG COMPLETE, merge, cut release v1.1.0 (first with the Copier template), then F023.
 Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers

@@ -8,7 +8,16 @@ sid=$(jq -r '.session_id // "unknown"' <<<"$input")
 
 state_dir="${TMPDIR:-/tmp}/claude-harness"
 mkdir -p "$state_dir"
-{ git rev-parse HEAD 2>/dev/null || echo none; git status --porcelain 2>/dev/null; } >"$state_dir/$sid"
+# Baseline: HEAD, then "<content hash>\t<path>" of every path already dirty (tracked or untracked), so the
+# Stop guard judges only what THIS session changed — including further edits to already-dirty files.
+git() { command git -c core.quotePath=false "$@"; }
+{
+  git rev-parse HEAD 2>/dev/null || echo none
+  { git diff --no-renames --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } |
+    sort -u | while IFS= read -r p; do
+      [ -n "$p" ] && printf '%s\t%s\n' "$(git hash-object -- "$p" 2>/dev/null || echo -)" "$p"
+    done
+} >"$state_dir/$sid"
 
 where=$(sed -n '/^## Where we are/,/^## /p' .harness/PROJECT_STATE.md | sed '$d')
 next=$(sed -n '/^## Exact next step/,/^## /p' .harness/CURRENT_TASK.md | sed '$d')

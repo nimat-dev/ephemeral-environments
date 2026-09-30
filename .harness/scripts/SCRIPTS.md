@@ -23,6 +23,19 @@ files.
 - **Exit**: `0` if the baseline is clean and buildable; non-zero listing exactly what is not.
 - **Used by**: every session start; the goal loop; the timer loop.
 
+## harness-check
+- **Purpose**: the one implementation of the harness rules, for every agent and for humans:
+  roadmap gate (exactly one `IN PROGRESS`, or all `COMPLETE`/`DEPRECATED`; status = the LAST
+  backtick span of a feature line), state rule (changes outside `.harness/` need a
+  `.harness/PROJECT_STATE.md` update; renames count as delete + add), agent command mirrors in sync.
+- **Modes**: `--staged` (pre-commit; judges the index, not the working tree) · `--range BASE...HEAD`
+  (CI; an all-zero BASE = branch creation, state rule skipped with a warning) · `--files` (state
+  rule over stdin paths; Claude Stop hook) · `--roadmap-only [--roadmap FILE]` (init's gate) ·
+  `--current` (print the `IN PROGRESS` line) · no mode (roadmap + mirrors).
+- **Exit**: `0` ok, `1` a check failed (reasons on stderr), `2` usage / undiffable range.
+- **Used by**: `.githooks/pre-commit`, the `harness-check` CI workflow (required check), init,
+  the Claude Stop hook.
+
 ## check-architecture
 - **Purpose**: enforce `rules/layer-boundaries.md`.
 - **Inputs**: the source tree.

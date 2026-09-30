@@ -12,10 +12,6 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root" || exit 2
 export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"   # pipx / go install locations
 
-# Backticks are literal markdown, not command substitution.
-# shellcheck disable=SC2016
-in_progress_re='^- \[.\] \*\*F[0-9]+\*\*.*`IN PROGRESS`'
-
 log() { printf '[%s] init: %s\n' "$1" "$2" >&2; }
 
 roadmap=".harness/ROADMAP.md"
@@ -116,8 +112,7 @@ log info "skip e2e smoke (no runner yet — F005)"
 
 echo
 echo "== Active feature =="
-# shellcheck disable=SC2016  # backticks are literal markdown
-grep -E "$in_progress_re" "$roadmap" | grep -E '`IN PROGRESS`[^`]*$' | sed -E 's/^- \[.\] //' || true
+"$root/scripts/harness-check.sh" --current --roadmap "$roadmap"
 echo "== Next step (CURRENT_TASK.md) =="
 sed -n '/^## Exact next step/,/^## /p' .harness/CURRENT_TASK.md | sed '1d;$d'
 

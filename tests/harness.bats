@@ -14,6 +14,7 @@ setup() {
   cp "$ROOT"/.harness/commands/*.md "$R/.harness/commands/"
   printf '# ROADMAP\n- [x] **F001** — done — `COMPLETE`\n- [ ] **F002** — mentions `COMPLETE` in text — `IN PROGRESS`\n' >"$R/.harness/ROADMAP.md"
   echo state >"$R/.harness/PROJECT_STATE.md"
+  printf '# CURRENT TASK\n## Exact next step\nx\n' >"$R/.harness/CURRENT_TASK.md"
   git -C "$R" init -q && git -C "$R" -c user.name=t -c user.email=t@t add -A && git -C "$R" -c user.name=t -c user.email=t@t commit -qm init
   "$R/scripts/sync-agent-commands.sh" --root "$R" 2>/dev/null
   git -C "$R" add -A && git -C "$R" -c user.name=t -c user.email=t@t commit -qm mirrors
@@ -55,9 +56,10 @@ commit() { git -C "$R" add -A && git -C "$R" -c user.name=t -c user.email=t@t co
   run "$HC" --root "$R" --staged; [ "$status" -eq 1 ]; [[ "$output" == *"  - app.sh"* ]] || false
 }
 
-@test "--range: all-zero base (branch creation push) diffs from the empty tree, not exit 2" {
+@test "--range: all-zero base (branch creation push) skips the state rule with a warning, not exit 2 / silent pass" {
+  echo x >"$R/app.txt"; commit code
   run "$HC" --root "$R" --range "0000000000000000000000000000000000000000...HEAD"
-  [ "$status" -eq 0 ]; [[ "$output" == *"state rule ok"* ]] || false
+  [ "$status" -eq 0 ]; [[ "$output" == *"state rule skipped"* ]] || false; [[ "$output" != *"state rule ok"* ]] || false
 }
 
 @test "--staged judges the index: unstaged good mirrors don't hide a stale commit; unstaged bad roadmap doesn't block" {
@@ -71,11 +73,44 @@ commit() { git -C "$R" add -A && git -C "$R" -c user.name=t -c user.email=t@t co
   run "$HC" --root "$R" --staged; [ "$status" -eq 0 ]
 }
 
-@test "--files (Claude Stop hook): state rule over stdin paths only; init.sh gate delegates to harness-check" {
+@test "--files: state rule over stdin paths only; init.sh gate + current feature delegate to harness-check" {
   run "$HC" --root "$R" --files <<<"todo/x"; [ "$status" -eq 1 ]
   run "$HC" --root "$R" --files <<<$'todo/x\n.harness/PROJECT_STATE.md'; [ "$status" -eq 0 ]
+  run "$HC" --root "$R" --current; [ "$output" = '**F002** — mentions `COMPLETE` in text — `IN PROGRESS`' ]
   grep -q 'harness-check.sh" --roadmap-only' "$ROOT/scripts/init.sh"
-  grep -q 'harness-check.sh --files' "$ROOT/.claude/hooks/harness-stop-guard.sh"
+  grep -q 'harness-check.sh" --current' "$ROOT/scripts/init.sh"
+}
+
+# run the real Claude hooks in $R: session start (baseline), then Stop -> "block" or "allow"
+hooks_start() { mkdir -p "$R/.claude/hooks"; cp "$ROOT"/.claude/hooks/*.sh "$R/.claude/hooks/"
+  ( cd "$R" && echo '{"session_id":"s1"}' | TMPDIR="$T" CLAUDE_PROJECT_DIR="$R" .claude/hooks/harness-session-start.sh >/dev/null ); }
+hooks_stop() { local o; o=$(cd "$R" && echo '{"session_id":"s1"}' | TMPDIR="$T" CLAUDE_PROJECT_DIR="$R" .claude/hooks/harness-stop-guard.sh)
+  if [ -n "$o" ] && [ "$(jq -r .decision <<<"$o")" = block ]; then echo block; else echo allow; fi; }
+
+@test "Stop hook: code change blocks; + PROJECT_STATE allows; harness-only path with a space allows" {
+  mkdir -p "$R/.harness/evidence"; touch "$R/.harness/evidence/.keep"; echo "/.claude/" >"$R/.gitignore"; commit base
+  hooks_start
+  echo "x" >"$R/.harness/evidence/run 1.txt"; [ "$(hooks_stop)" = allow ]
+  echo x >"$R/app.txt"; [ "$(hooks_stop)" = block ]
+  echo more >>"$R/.harness/PROJECT_STATE.md"; [ "$(hooks_stop)" = allow ]
+}
+
+@test "Stop hook: a code file moved into .harness/ (git mv, committed) still blocks" {
+  echo x >"$R/app.sh"; echo "/.claude/" >"$R/.gitignore"; commit base
+  hooks_start
+  mkdir -p "$R/.harness/notes"; git -C "$R" mv app.sh .harness/notes/app.sh; commit move
+  [ "$(hooks_stop)" = block ]
+}
+
+@test "Stop hook: PROJECT_STATE already dirty at start and edited again counts; untouched dirty files don't" {
+  echo "/.claude/" >"$R/.gitignore"; echo x >"$R/old.txt"; commit base
+  echo dirty >>"$R/.harness/PROJECT_STATE.md"; echo dirty >>"$R/old.txt"   # dirty before the session
+  hooks_start
+  [ "$(hooks_stop)" = allow ]                                              # nothing changed this session
+  echo x >"$R/app.txt"; echo again >>"$R/.harness/PROJECT_STATE.md"
+  [ "$(hooks_stop)" = allow ]
+  git -C "$R" checkout -q .harness/PROJECT_STATE.md; echo dirty >>"$R/.harness/PROJECT_STATE.md"  # back to start content
+  [ "$(hooks_stop)" = block ]
 }
 
 @test "mirrors: editing a command source without re-sync fails; re-sync fixes; other prompt files untouched" {
