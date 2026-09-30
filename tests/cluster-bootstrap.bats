@@ -312,7 +312,7 @@ A6="$ROOT/bootstrap/a6-github-env.sh"
   [ "$status" -eq 0 ]
   grep -q '^api -X PUT repos/nimat-dev/ephemeral-environments/environments/preview' "$GH_LOG"
   for k in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID ACR_NAME ACR_LOGIN_SERVER APP_IMAGE_NAME \
-           AKS_CLUSTER AKS_RESOURCE_GROUP PREVIEW_DOMAIN INTERCEPTOR_FQDN INTERCEPTOR_PORT INGRESS_CLASS; do
+           AKS_CLUSTER AKS_RESOURCE_GROUP PREVIEW_DOMAIN INTERCEPTOR_FQDN INTERCEPTOR_PORT INGRESS_CLASS PREVIEW_APP; do
     grep -q "^variable set $k --env preview" "$GH_LOG" || { echo "missing $k"; false; }
   done
   grep -q 'variable set AZURE_CLIENT_ID .* --body app-123' "$GH_LOG"
