@@ -35,7 +35,7 @@ See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
 - CI SP writes are confined to `preview-*` by VAP `preview-deployer-guard` (DEC-031); a new resource type in the chart still needs a ClusterRole rule in a5.
 - 2026-09-28 Azure discovery: single subscription, empty RG `nimatresourceg` (eastus); no AKS/ACR/DNS.
   F013 DONE: AKS `aks-preview` (1× D2as_v7, k8s 1.35.8), ACR `nimatpreviewacr`, zone `preview.nimat.dev`.
-  COST IS RUNNING — pause: `az aks stop -g nimatresourceg -n aks-preview`; remove: `bootstrap/teardown.sh --yes`.
+  PAUSED 2026-09-30 (`az aks stop`) — resume: `az aks start -g nimatresourceg -n aks-preview`; remove: `bootstrap/teardown.sh --yes`.
 - Tooling lives outside brew: yamllint (~/.local/bin, pipx), kubeconform (~/go/bin), bats (npm).
   `scripts/init.sh` adds those to PATH. Brew blocked until `sudo xcodebuild -license accept`.
 - Hooks (`.claude/settings.json`, DEC-013) enforce the loop: Stop is blocked if you change
