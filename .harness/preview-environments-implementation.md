@@ -589,7 +589,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: preview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ inputs.branch }}
 
@@ -633,7 +633,7 @@ jobs:
             echo "expires_at=$EXPIRES_AT"
           } >> "$GITHUB_OUTPUT"
 
-      - uses: azure/login@v2
+      - uses: azure/login@v3.1.0
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -642,9 +642,9 @@ jobs:
       - name: ACR login
         run: az acr login -n ${{ vars.ACR_NAME }}
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4.4.1
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7.4.0
         with:
           context: .
           push: true
@@ -652,7 +652,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - uses: azure/aks-set-context@v4
+      - uses: azure/aks-set-context@v5.0.0
         with:
           cluster-name: ${{ vars.AKS_CLUSTER }}
           resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
@@ -755,13 +755,13 @@ jobs:
             | sed -E 's#[^a-z0-9]+#-#g; s#^-+##; s#-+$##' | cut -c1-40 | sed -E 's#-+$##')
           echo "namespace=preview-${PREVIEW_ID}" >> "$GITHUB_OUTPUT"
 
-      - uses: azure/login@v2
+      - uses: azure/login@v3.1.0
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - uses: azure/aks-set-context@v4
+      - uses: azure/aks-set-context@v5.0.0
         with:
           cluster-name: ${{ vars.AKS_CLUSTER }}
           resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
@@ -790,13 +790,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: preview
     steps:
-      - uses: azure/login@v2
+      - uses: azure/login@v3.1.0
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - uses: azure/aks-set-context@v4
+      - uses: azure/aks-set-context@v5.0.0
         with:
           cluster-name: ${{ vars.AKS_CLUSTER }}
           resource-group: ${{ vars.AKS_RESOURCE_GROUP }}

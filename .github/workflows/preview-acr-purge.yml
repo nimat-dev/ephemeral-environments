@@ -33,19 +33,19 @@ jobs:
     runs-on: ubuntu-latest
     environment: preview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
-      - uses: azure/login@v2
+      - uses: azure/login@v3.1.0
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - uses: azure/use-kubelogin@v1
+      - uses: azure/use-kubelogin@v1.3
         with:
           kubelogin-version: v0.2.20
 
-      - uses: azure/aks-set-context@v4
+      - uses: azure/aks-set-context@v5.0.0
         with:
           cluster-name: ${{ vars.AKS_CLUSTER }}
           resource-group: ${{ vars.AKS_RESOURCE_GROUP }}
