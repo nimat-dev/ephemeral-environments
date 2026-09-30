@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # A4: KEDA core + HTTP add-on (pinned). Verifies the interceptor proxy service the chart targets.
+# SUPERSEDED on Flux clusters (F019, DEC-049): clusters/<team>/ + OpenTofu own this; kept for clusters without Flux.
 # Usage: bootstrap/a4-keda.sh [--apply] [--env FILE]   (default: dry-run)
 set -euo pipefail
 export SCRIPT_NAME=a4-keda

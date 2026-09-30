@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # A3: cert-manager + DNS-01 via workload identity + wildcard cert for *.<DNS_ZONE>,
+# SUPERSEDED on Flux clusters (F019, DEC-049): clusters/<team>/ + OpenTofu own this; kept for clusters without Flux.
 # served by Traefik's default TLSStore (secret lives in the traefik namespace).
 # Usage: bootstrap/a3-cert-manager.sh [--apply] [--env FILE]   (default: dry-run)
 set -euo pipefail

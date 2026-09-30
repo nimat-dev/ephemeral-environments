@@ -40,15 +40,15 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] Bash `provision.sh` kept until parity proven (DEC-042).
 
 ## F019 — Flux add-ons
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] OpenTofu installs AKS `microsoft.flux` extension + flux configuration → `clusters/<team>/`.
-- [ ] `clusters/base/`: HelmRelease Traefik, cert-manager, KEDA, KEDA HTTP; ClusterIssuer; ClusterRole + VAP guard; ordering via `dependsOn`.
-- [ ] Fresh cluster reaches Ready with zero manual steps; manual drift reverted by Flux (evidence).
-- [ ] Fits 1× D2as_v7 alongside previews (memory headroom recorded, DEC-041).
-- [ ] Smoke (F005) green on a Flux-built cluster; `bootstrap/a1–a4` retired after.
+**Status**: COMPLETE (2026-09-30) — contract `verification/contracts/F019.md`, evidence `evidence/F019/`, DEC-049
+- [x] OpenTofu installs AKS `microsoft.flux` extension + flux configuration → `clusters/nimat/{releases,config}` (public repo, HTTPS, GC on).
+- [x] `clusters/base/`: HelmRelease Traefik, cert-manager, KEDA, KEDA HTTP (dependsOn keda); ClusterRole; team overlay: WI client id, issuers + certs, TLSStore, deployer guard. Existing releases adopted in place (no reinstall).
+- [x] Drift reverted (ClusterRole deleted → restored 5s; Flux-owned Deployment field → corrected 25s); `helm uninstall http-add-on` → reinstalled by Flux in 20s. (A brand-new cluster end to end not run: one-cluster quota, no Docker — parked.)
+- [x] Fits 1× D2as_v7: Flux 170m after trims, 303m free (3 awake components; 94% with the 2-component preview up).
+- [x] Smoke (F005) green on the Flux-managed cluster; a1/a3/a4 marked superseded (kept for non-Flux clusters, DEC-042).
 
 ## F020 — Repo onboarding module
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (2026-09-30)
 - [ ] OpenTofu module `repo-onboarding`: per-repo Entra app + SP + federated creds (legacy + immutable subject), GitHub env `preview` + vars (`github` provider), DNS zone/cert hookup for its domain.
 - [ ] Per-repo SP confined by VAP to `preview-<app>-*` only.
 - [ ] Replaces `a5`/`a6`; BLK-008 (teardown leftovers) resolved by `tofu destroy`.

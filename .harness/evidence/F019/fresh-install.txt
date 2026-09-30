@@ -1,0 +1,7 @@
+## 3. fresh install: helm uninstall http-add-on (release + objects gone), Flux reinstalls
+live preview namespaces: 0
+release "http-add-on" uninstalled
+release after uninstall: Error: release: not found
+reinstalled + interceptor ready in 20s: deployed v1 Install complete
+interceptor svc port 8080
+HelmRelease: Running 'install' action with timeout of 5m0s

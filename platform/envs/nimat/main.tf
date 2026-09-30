@@ -15,7 +15,7 @@ module "team_cluster" {
   # Public key az generated at create time (bash provision); kept so import is not a replacement.
   flux = {
     repository_url = "https://github.com/nimat-dev/ephemeral-environments"
-    branch         = "feat/F019" # switched to main once F019 merges
+    branch         = "main"
     path           = "./clusters/nimat"
   }
   admin_ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDtwT2bIEaS8+oKxNCWSQbilwNImRs1m6IgNayIJZ9bnfvIici6grPu9NAT6KT7kKzo5mBa4c0zF7nxX2I+57PAriexj29evxCbhxmPAqkBN9JpLaTsf2bWDUSig5A6VYBAZdcwqzajYUYzIO+4VQNEnc+0dVvQFEYq3c/eAwHUOFrM5/sA1hfUwRRyTvWsivHskuRoMRHdsyNgI5vX95h+Rlqu0e4PZC612SDwcY6MpC+D1M8/YtbE+aeFP27wMftB2qxbaTZWfzVpOaZZ8du/+JJoyuoj4h5I+wRggrDHeuYEweEOqjz5EML5RtkaXwp+c/IymRZC0d4AecsOlAB9"

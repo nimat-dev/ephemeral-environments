@@ -1,0 +1,5 @@
+deploy 36720360228 exit 0
+[info] preview-ci: verify ok https://feat-f019.preview.nimat.dev/
+[info] preview-ci: verify ok https://feat-f019.preview.nimat.dev/api/health
+with preview awake:   cpu                1797m (94%)   18732m (985%)
+destroy 36720632838 exit 0

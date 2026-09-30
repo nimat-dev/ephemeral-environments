@@ -19,6 +19,9 @@ Request path when live:
   Browser → nginx Ingress → ExternalName(svc) → KEDA HTTP interceptor (keda ns)
           → app Service → pod   (interceptor scales 0→1 and holds the request if asleep)
 
+Platform (Phase 05): OpenTofu `platform/envs/<team>` → AKS, ACR, DNS, identities, Flux extension;
+Flux (`clusters/<team>/releases` → `config`) → Traefik, cert-manager, KEDA + HTTP add-on, issuers/certs, TLSStore, RBAC guard.
+
 Wildcard, created once:
   *.preview.nimat.dev  A   → nginx LoadBalancer IP
   *.preview.nimat.dev  TLS → cert-manager (DNS-01), set as nginx default cert

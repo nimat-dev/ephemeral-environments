@@ -1,0 +1,4 @@
+CP1 PASS valid TLS for smoke.preview.nimat.dev
+CP2 PASS cold start 0→1 ready in 7.908558s, HTTP 200
+CP3 PASS back to 0 after 125s
+[info] smoke: smoke PASSED
