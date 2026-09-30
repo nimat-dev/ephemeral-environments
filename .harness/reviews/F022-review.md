@@ -31,3 +31,18 @@ Verify after fixes: `./scripts/init.sh` BASELINE GREEN, bats 285/285.
 | 10 | PR body carried a Claude attribution line (user CLAUDE.md forbids) | removed |
 
 Verify after fixes: `./scripts/init.sh` BASELINE GREEN, bats 288/288, 0 skipped.
+
+## Round 3 (2026-09-30, `/code-review high main...feat/F022`) — 9 findings, all fixed
+| # | Finding | Fix |
+|---|---|---|
+| 1 | SessionStart re-fires on resume/compact (same session_id) and re-recorded the baseline → session edits absorbed, guard fails open | baseline written once per session, atomically (tmp + mv); test: re-fire then Stop still blocks |
+| 2 | `--current` exit 1 when the last roadmap line isn't IN PROGRESS (pipefail + `&&` in while) | `if` instead of `&&`; test asserts status on both roadmaps |
+| 3 | Hooks spawned one `git hash-object` (+ grep/tail) per path under a 10 s timeout → fail-open / truncated baseline | `.claude/hooks/harness-lib.sh`: one `git hash-object --stdin-paths` + one awk join; test: 300 pre-dirty + 1000 new files < 5 s |
+| 4 | Any `.claude/` dir (Claude Code's own `settings.local.json`) demanded Claude mirrors | opt-in = `.claude/commands` or `.claude/settings.json`; test with only settings.local.json |
+| 5 | Pre-commit blocked code-only merge/revert/cherry-pick commits | `--staged` skips the state rule with a warning while MERGE_HEAD/REVERT_HEAD/CHERRY_PICK_HEAD exists (CI range still judges); test |
+| 6 | `--roadmap` fallback dead → `/R.md` | `if d=$(cd …)`; test |
+| 7 | Force-pushed main: `event.before` not in clone → exit 2, red main | full-SHA base missing from the clone → skip with warning (garbage base still exit 2); test |
+| 8 | Description YAML escaped only `"` | also `\` + control chars stripped; test parses `C:\tools\init "now" \d+` via yq |
+| 9 | Template `--check` missed orphans / missing scaffolding | `--check` diffs the template tree vs generic+claude+handwritten+.gitkeep sets (non-jinja); test on a repo copy |
+
+Verify after fixes: `./scripts/init.sh` BASELINE GREEN, bats 294/294, shellcheck clean.

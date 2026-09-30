@@ -24,10 +24,14 @@ generic=(
   .github/prompts/harness-finish-session.prompt.md
 )
 # Claude-only files land under a copier-conditional directory name.
-claude=(.claude/settings.json .claude/hooks/harness-session-start.sh .claude/hooks/harness-prompt-reminder.sh
+claude=(.claude/settings.json .claude/hooks/harness-lib.sh .claude/hooks/harness-session-start.sh .claude/hooks/harness-prompt-reminder.sh
   .claude/hooks/harness-stop-guard.sh .claude/commands/harness-start-session.md .claude/commands/harness-start-feature.md
   .claude/commands/harness-finish-session.md)
 cdir='{% if claude_hooks %}.claude{% endif %}'
+# Hand-written, project-neutral non-jinja files (everything else hand-written is *.jinja).
+handwritten=(.harness/BLOCKERS.md .harness/CHANGELOG.md .harness/DECISIONS.md .harness/loops/loop-state.md
+  .harness/rules/layer-boundaries.md .harness/rules/scope-guard.md)
+keep=(.harness/verification/contracts .harness/evidence .harness/product .harness/architecture)
 
 stale=0
 place() { # SRC DEST
@@ -40,10 +44,20 @@ place() { # SRC DEST
 }
 for f in "${generic[@]}"; do place "$f" "$dst/$f"; done
 for f in "${claude[@]}"; do place "$f" "$dst/$cdir/${f#.claude/}"; done
-if [ "$check" -eq 0 ]; then
-  mkdir -p "$dst/.harness/verification/contracts" "$dst/.harness/evidence" "$dst/.harness/product" "$dst/.harness/architecture"
-  touch "$dst/.harness/verification/contracts/.gitkeep" "$dst/.harness/evidence/.gitkeep" \
-        "$dst/.harness/product/.gitkeep" "$dst/.harness/architecture/.gitkeep"
+if [ "$check" -eq 1 ]; then
+  # orphans: a template file no list accounts for (dropped from a list, or renamed in the repo) would
+  # keep shipping to new repos
+  expected=$( { printf '%s\n' "${generic[@]}" "${handwritten[@]}"; printf '%s\n' "${claude[@]/#.claude/$cdir}"
+                printf '%s/.gitkeep\n' "${keep[@]}"; } | LC_ALL=C sort)
+  while IFS= read -r f; do
+    [ -f "$dst/$f" ] || { log error "missing: $dst/$f"; stale=1; }
+  done < <(printf '%s\n' "${handwritten[@]}"; printf '%s/.gitkeep\n' "${keep[@]}")
+  orphans=$(cd "$dst" && find . -type f ! -name '*.jinja' | sed 's|^\./||' | LC_ALL=C sort | LC_ALL=C comm -23 - <(printf '%s\n' "$expected"))
+  if [ -n "$orphans" ]; then
+    while IFS= read -r f; do log error "orphan (in no list): $dst/$f"; done <<<"$orphans"; stale=1
+  fi
+else
+  for d in "${keep[@]}"; do mkdir -p "$dst/$d"; touch "$dst/$d/.gitkeep"; done
   log info "template refreshed ($(( ${#generic[@]} + ${#claude[@]} )) generic files)"
 fi
 [ "$stale" -eq 0 ] || { log error "run scripts/build-harness-template.sh"; exit 1; }

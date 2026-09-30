@@ -22,8 +22,8 @@ F022 on `feat/F022` — local verify DONE 2026-09-30: `./scripts/init.sh` BASELI
 `build-harness-template.sh` exec bit, template generic copies generated, `sync-agent-commands.sh --check` no longer creates/demands
 `.claude/commands` when the repo has no `.claude/` (Claude opt-out render failed its own gate; test added).
 PR #28 open, harness-check CI green (run 36735975654); `main` protected: required check `harness-check` (admins exempt).
-Review rounds 1+2: 20 findings fixed (`reviews/F022-review.md`), bats 288/288. Next: CI on the round-2 push, review round 3,
-CHANGELOG COMPLETE, merge, cut release v1.1.0 (first with the Copier template), then F023.
+Review rounds 1–3: 29 findings fixed (`reviews/F022-review.md`), bats 294/294. Next: CI on the round-3 push, review round 4
+(last), CHANGELOG COMPLETE, merge, cut release v1.1.0 (first with the Copier template), then F023.
 Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers

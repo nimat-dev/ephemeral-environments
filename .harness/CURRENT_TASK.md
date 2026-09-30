@@ -6,7 +6,7 @@
 ## Exact next step
 Done: kit v1.0.0 released (F021); all F022 pieces built; local verify GREEN (bats 281/281, Copier render, hook e2e — `evidence/F022/`).
 1. DONE: PR #28, harness-check CI green, `main` requires `harness-check`; review round 1 fixed (`reviews/F022-review.md`).
-2. Rounds 1+2 fixed (20 findings). CI green on the round-2 push; review round 3 (max 4 rounds).
+2. Rounds 1–3 fixed (29 findings, bats 294/294). CI on the round-3 push; review round 4 (last of max 4).
 3. Clean → CHANGELOG COMPLETE entry + evaluator score; ROADMAP/phase/contract COMPLETE; merge; `scripts/kit-release.sh prepare 1.1.0`
    → merge → tag v1.1.0 (first release with the Copier template; v1.0.0 predates it).
 4. Then F023 (pilot second repo).

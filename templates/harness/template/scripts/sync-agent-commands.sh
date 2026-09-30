@@ -19,15 +19,17 @@ out=$(mktemp -d); trap 'rm -rf "$out"' EXIT
 mkdir -p "$out/.claude/commands" "$out/.github/prompts"
 for src in .harness/commands/*.md; do
   name=$(basename "$src" .md)
-  desc=$(head -1 "$src" | sed -E 's/^#[[:space:]]*//; s/"/\\"/g')
+  desc=$(head -1 "$src" | sed -E 's/^#[[:space:]]*//; s/\\/\\\\/g; s/"/\\"/g' | tr -d '\000-\037')  # YAML double-quoted scalar
   body=$(tail -n +2 "$src")
   banner="<!-- GENERATED from .harness/commands/$name.md by scripts/sync-agent-commands.sh — edit the source. -->"
   printf -- '---\ndescription: "%s"\n---\n%s\n%s\n' "$desc" "$banner" "$body" >"$out/.claude/commands/harness-$name.md"
   printf -- '---\nmode: agent\ndescription: "%s"\n---\n%s\n%s\n' "$desc" "$banner" "$body" >"$out/.github/prompts/harness-$name.prompt.md"
 done
 rc=0
-# Claude mirrors only when the repo uses Claude Code (.claude/ exists; the template makes it optional).
-dirs=(.github/prompts); [ -d .claude ] && dirs=(.claude/commands "${dirs[@]}")
+# Claude mirrors only when the repo opted into Claude Code commands/hooks — not merely because Claude Code
+# ran here (it creates .claude/settings.local.json on its own).
+dirs=(.github/prompts)
+if [ -d .claude/commands ] || [ -f .claude/settings.json ]; then dirs=(.claude/commands "${dirs[@]}"); fi
 for dir in "${dirs[@]}"; do
   if [ "$check" -eq 1 ]; then
     [ -d "$dir" ] || { log error "$dir missing (run scripts/sync-agent-commands.sh)"; rc=1; continue; }

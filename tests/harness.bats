@@ -62,6 +62,24 @@ commit() { git -C "$R" add -A && git -C "$R" -c user.name=t -c user.email=t@t co
   [ "$status" -eq 0 ]; [[ "$output" == *"state rule skipped"* ]] || false; [[ "$output" != *"state rule ok"* ]] || false
 }
 
+@test "--range: base not in the clone (force-push orphan) skips with a warning, not exit 2" {
+  echo x >"$R/app.txt"; commit code
+  run "$HC" --root "$R" --range "1234567890123456789012345678901234567890...HEAD"
+  [ "$status" -eq 0 ]; [[ "$output" == *"not in this clone"* ]] || false
+}
+
+@test "--staged: merge commit skips the state rule (CI judges the PR range); normal commit still checked" {
+  git -C "$R" checkout -qb side; echo x >"$R/hotfix.txt"; commit hotfix
+  git -C "$R" checkout -q -; git -C "$R" merge -q --no-ff --no-commit side
+  run "$HC" --root "$R" --staged; [ "$status" -eq 0 ]; [[ "$output" == *"MERGE_HEAD in progress"* ]] || false
+  git -C "$R" merge --abort; echo y >"$R/app.txt"; git -C "$R" add app.txt
+  run "$HC" --root "$R" --staged; [ "$status" -eq 1 ]
+}
+
+@test "--roadmap in a missing directory reports the path as given" {
+  run "$HC" --roadmap-only --roadmap /nonexist/R.md; [ "$status" -eq 1 ]; [[ "$output" == *"/nonexist/R.md"* ]] || false
+}
+
 @test "--staged judges the index: unstaged good mirrors don't hide a stale commit; unstaged bad roadmap doesn't block" {
   echo 'extra line' >>"$R/.harness/commands/start-session.md"
   "$R/scripts/sync-agent-commands.sh" --root "$R" 2>/dev/null
@@ -76,7 +94,9 @@ commit() { git -C "$R" add -A && git -C "$R" -c user.name=t -c user.email=t@t co
 @test "--files: state rule over stdin paths only; init.sh gate + current feature delegate to harness-check" {
   run "$HC" --root "$R" --files <<<"todo/x"; [ "$status" -eq 1 ]
   run "$HC" --root "$R" --files <<<$'todo/x\n.harness/PROJECT_STATE.md'; [ "$status" -eq 0 ]
-  run "$HC" --root "$R" --current; [ "$output" = '**F002** — mentions `COMPLETE` in text — `IN PROGRESS`' ]
+  run "$HC" --root "$R" --current; [ "$status" -eq 0 ]; [ "$output" = '**F002** — mentions `COMPLETE` in text — `IN PROGRESS`' ]
+  printf -- '- [ ] **F003** — later — `NOT STARTED`\n' >>"$R/.harness/ROADMAP.md"   # last line not IN PROGRESS
+  run "$HC" --root "$R" --current; [ "$status" -eq 0 ]; [[ "$output" == *F002* ]] || false
   grep -q 'harness-check.sh" --roadmap-only' "$ROOT/scripts/init.sh"
   grep -q 'harness-check.sh" --current' "$ROOT/scripts/init.sh"
 }
@@ -92,6 +112,23 @@ hooks_stop() { local o; o=$(cd "$R" && echo '{"session_id":"s1"}' | TMPDIR="$T" 
   hooks_start
   echo "x" >"$R/.harness/evidence/run 1.txt"; [ "$(hooks_stop)" = allow ]
   echo x >"$R/app.txt"; [ "$(hooks_stop)" = block ]
+  echo more >>"$R/.harness/PROJECT_STATE.md"; [ "$(hooks_stop)" = allow ]
+}
+
+@test "SessionStart re-fire (resume/compact, same session) keeps the first baseline" {
+  echo "/.claude/" >"$R/.gitignore"; commit base
+  hooks_start
+  echo x >"$R/app.txt"
+  hooks_start                                   # compact: same session_id
+  [ "$(hooks_stop)" = block ]
+}
+
+@test "Stop hook: many changed files stay fast (batched hashing)" {
+  echo "/.claude/" >"$R/.gitignore"; mkdir -p "$R/pre" "$R/gen"; for i in $(seq 1 300); do echo "$i" >"$R/pre/$i.txt"; done
+  commit base; for i in $(seq 1 300); do echo d >>"$R/pre/$i.txt"; done   # dirty before the session
+  hooks_start
+  for i in $(seq 1 1000); do echo "$i" >"$R/gen/$i.txt"; done
+  s=$SECONDS; r=$(hooks_stop); [ "$r" = block ]; [ $((SECONDS - s)) -lt 5 ]
   echo more >>"$R/.harness/PROJECT_STATE.md"; [ "$(hooks_stop)" = allow ]
 }
 
@@ -122,10 +159,12 @@ hooks_stop() { local o; o=$(cd "$R" && echo '{"session_id":"s1"}' | TMPDIR="$T" 
   [ "$(cat "$R/.github/prompts/team.prompt.md")" = mine ]
 }
 
-@test "mirrors: Claude commands only when .claude/ exists; --check never creates it" {
+@test "mirrors: Claude commands only when opted in (.claude/settings.json|commands); --check never creates it" {
   run "$HC" --root "$R"; [ "$status" -eq 0 ]
   [ ! -e "$R/.claude" ]
-  mkdir "$R/.claude"
+  mkdir "$R/.claude"; echo '{}' >"$R/.claude/settings.local.json"   # Claude Code merely ran here
+  run "$HC" --root "$R"; [ "$status" -eq 0 ]
+  echo '{}' >"$R/.claude/settings.json"
   run "$HC" --root "$R"; [ "$status" -eq 1 ]; [[ "$output" == *".claude/commands missing"* ]] || false
   "$R/scripts/sync-agent-commands.sh" --root "$R" 2>/dev/null
   [ -f "$R/.claude/commands/harness-start-session.md" ]
@@ -142,6 +181,12 @@ hooks_stop() { local o; o=$(cd "$R" && echo '{"session_id":"s1"}' | TMPDIR="$T" 
     diff <(tail -n +2 "$ROOT/.harness/commands/$n.md") <(awk 'f;/GENERATED from/{f=1}' "$g")
     diff <(tail -n +2 "$ROOT/.harness/commands/$n.md") <(awk 'f;/GENERATED from/{f=1}' "$c")
   done
+}
+
+@test "generated prompts: backslashes / quotes in the title stay valid YAML" {
+  printf '# Run C:\\tools\\init "now" \\d+\nbody\n' >"$R/.harness/commands/odd.md"
+  "$R/scripts/sync-agent-commands.sh" --root "$R" 2>/dev/null
+  [ "$(sed -n '2,/^---$/p' "$R/.github/prompts/harness-odd.prompt.md" | sed '$d' | yq -r .description)" = 'Run C:\tools\init "now" \d+' ]
 }
 
 @test "this repo passes its own gate; pre-commit hook delegates to harness-check --staged" {
@@ -165,9 +210,15 @@ hooks_stop() { local o; o=$(cd "$R" && echo '{"session_id":"s1"}' | TMPDIR="$T" 
   [ "$(yq -r '.jobs.harness-check.steps[1].run' "$W")" = './scripts/harness-check.sh --range "$BASE_SHA...$HEAD_SHA"' ]
 }
 
-@test "Copier template: generic files identical to this repo's (no drift)" {
+@test "Copier template: generic files identical to this repo's (no drift, no orphans)" {
   run "$ROOT/scripts/build-harness-template.sh" --check
   [ "$status" -eq 0 ] || { echo "$output"; false; }
+  # orphan detection, on a copy (never mutate the real template from a test)
+  C="$T/copy"; mkdir -p "$C"; git -C "$ROOT" ls-files -coz --exclude-standard | (cd "$ROOT" && xargs -0 tar cf -) | tar xf - -C "$C"
+  cp "$ROOT/scripts/build-harness-template.sh" "$C/scripts/"   # working-tree version under test
+  run "$C/scripts/build-harness-template.sh" --check; [ "$status" -eq 0 ] || { echo "$output"; false; }
+  touch "$C/templates/harness/template/.harness/stale.md"
+  run "$C/scripts/build-harness-template.sh" --check; [ "$status" -eq 1 ]; [[ "$output" == *"orphan"*"stale.md"* ]] || false
 }
 
 @test "Copier template renders a repo whose own gate passes (with and without Claude hooks)" {

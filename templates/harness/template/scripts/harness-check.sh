@@ -22,7 +22,7 @@ while [ $# -gt 0 ]; do
     --files) mode=files; shift ;;
     --roadmap-only) mode=roadmap; shift ;;
     --roadmap) [ $# -ge 2 ] || { log error "--roadmap needs a file"; exit 2; }
-      roadmap="$(cd "$(dirname "$2")" 2>/dev/null && pwd)/$(basename "$2")" || roadmap="$2"; shift 2 ;;
+      if d=$(cd "$(dirname "$2")" 2>/dev/null && pwd); then roadmap="$d/$(basename "$2")"; else roadmap="$2"; fi; shift 2 ;;
     --root) [ $# -ge 2 ] || { log error "--root needs a directory"; exit 2; }; root="$(cd "$2" && pwd)"; shift 2 ;;
     --current) mode=current; shift ;;
     -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
@@ -59,7 +59,7 @@ check_roadmap() {
 }
 if [ "$mode" = current ]; then
   features "${roadmap:-.harness/ROADMAP.md}" | while IFS= read -r l; do
-    [ "$(status_of <<<"$l")" = 'IN PROGRESS' ] && sed -E 's/^- \[.\] //' <<<"$l"; done; exit 0
+    if [ "$(status_of <<<"$l")" = 'IN PROGRESS' ]; then sed -E 's/^- \[.\] //' <<<"$l"; fi; done; exit 0
 fi
 [ "$mode" = files ] || check_roadmap || failed=1
 if [ "$mode" = roadmap ]; then exit "$failed"; fi
@@ -67,7 +67,12 @@ if [ "$mode" = roadmap ]; then exit "$failed"; fi
 # 2. state rule over the changed files (--no-renames: a move out of the code tree still lists its old path)
 if [ -n "$mode" ]; then
   case "$mode" in
-    staged) changed=$(git diff --cached --no-renames --name-only) ;;
+    staged)
+      # merge / revert / cherry-pick carry someone else's already-judged changes; CI --range still checks the PR
+      op=""; for h in MERGE_HEAD REVERT_HEAD CHERRY_PICK_HEAD; do
+        if [ -f "$(git rev-parse --git-path "$h")" ]; then op=$h; fi; done
+      if [ -n "$op" ]; then log warn "$op in progress: state rule skipped for this commit (CI checks the PR range)"; changed=""
+      else changed=$(git diff --cached --no-renames --name-only); fi ;;
     files) changed=$(cat) ;;
     range)
       base=${range%%...*} head=${range#*...}
@@ -75,6 +80,9 @@ if [ -n "$mode" ]; then
         # branch creation: there is no "before" to judge against (an empty-tree diff would always contain
         # PROJECT_STATE.md and pass silently) — say so instead of pretending
         log warn "no base commit (branch creation push, head $head): state rule skipped"; changed=""
+      elif [[ "$base" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]] && ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+        # force-push: event.before may be an orphaned commit the checkout never fetched
+        log warn "base $base not in this clone (force-push?): state rule skipped"; changed=""
       else
         changed=$(git diff --no-renames --name-only "$range") || { log error "cannot diff range $range"; exit 2; }
       fi ;;

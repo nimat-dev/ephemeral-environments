@@ -10,7 +10,8 @@ sid=$(jq -r '.session_id // "unknown"' <<<"$input")
 base_file="${TMPDIR:-/tmp}/claude-harness/$sid"
 [ -f "$base_file" ] || exit 0   # no baseline (session started before hook) -> don't guess
 
-git() { command git -c core.quotePath=false "$@"; }
+# shellcheck source=harness-lib.sh
+. "$(dirname "$0")/harness-lib.sh"
 base_head=$(head -1 "$base_file")
 # Candidates: everything that differs from the session's start commit (committed or not; renames split into
 # delete + add so a move out of the code tree counts), plus untracked files.
@@ -19,12 +20,9 @@ changed=$(
     if [ "$base_head" != none ]; then git diff --no-renames --name-only "$base_head" 2>/dev/null || true
     else git ls-files 2>/dev/null || true; fi
     git ls-files --others --exclude-standard 2>/dev/null || true
-  } | sort -u | while IFS= read -r p; do
-    [ -n "$p" ] || continue
-    now=$(git hash-object -- "$p" 2>/dev/null || echo -)
-    # already dirty at session start with the same content -> not this session's change
-    grep -qxF "$now	$p" <(tail -n +2 "$base_file") || printf '%s\n' "$p"
-  done
+  } | sort -u | hash_paths |
+    # already dirty at session start with the same content -> not this session's change (one awk join)
+    awk 'NR == FNR { if (FNR > 1) seen[$0] = 1; next } !($0 in seen) { sub(/^[^\t]*\t/, ""); print }' "$base_file" -
 )
 [ -n "$changed" ] || exit 0
 

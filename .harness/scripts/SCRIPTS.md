@@ -28,8 +28,10 @@ files.
   roadmap gate (exactly one `IN PROGRESS`, or all `COMPLETE`/`DEPRECATED`; status = the LAST
   backtick span of a feature line), state rule (changes outside `.harness/` need a
   `.harness/PROJECT_STATE.md` update; renames count as delete + add), agent command mirrors in sync.
-- **Modes**: `--staged` (pre-commit; judges the index, not the working tree) · `--range BASE...HEAD`
-  (CI; an all-zero BASE = branch creation, state rule skipped with a warning) · `--files` (state
+- **Modes**: `--staged` (pre-commit; judges the index, not the working tree; state rule skipped
+  with a warning during merge/revert/cherry-pick — CI judges the PR range) · `--range BASE...HEAD`
+  (CI; an all-zero BASE = branch creation, or a SHA missing from the clone = force-push, skips the
+  state rule with a warning) · `--files` (state
   rule over stdin paths; Claude Stop hook) · `--roadmap-only [--roadmap FILE]` (init's gate) ·
   `--current` (print the `IN PROGRESS` line) · no mode (roadmap + mirrors).
 - **Exit**: `0` ok, `1` a check failed (reasons on stderr), `2` usage / undiffable range.
