@@ -1,0 +1,29 @@
+# CLAUDE.md — Session Bootstrap (agent-neutral checklist)
+
+Quick reference. `AGENTS.md` is the full contract; this is the checklist you run every session.
+
+## On session start (in order)
+1. Read `PROJECT_STATE.md` — the master file. Where we are.
+2. Read `CURRENT_TASK.md` — the one feature + its exact next step.
+3. Read `ROADMAP.md` — the feature list + statuses.
+4. Read the active phase file under `phases/` — acceptance criteria.
+5. Read `DECISIONS.md` + `BLOCKERS.md`.
+6. Run the baseline (Commands → Verify baseline) to confirm a clean start.
+7. **Inspect the actual code.** If it disagrees with the tracking files, correct them and note it in `CHANGELOG.md`.
+
+## The one rule you break most often
+Work the ONE feature that is `IN PROGRESS`. Evidence before you move on. Don't "quickly also add" the next thing.
+
+## Commands
+| Action | Command |
+|---|---|
+| Install | TODO |
+| Lint | TODO |
+| Test (full suite) | TODO |
+| E2E | TODO |
+| Verify baseline | `scripts/harness-check.sh` + TODO (lint + tests) |
+| Sync agent prompts | `scripts/sync-agent-commands.sh` (after editing `.harness/commands/`) |
+
+## Before you stop
+Run the Session-completion protocol in `AGENTS.md`; commit on `feat/<FID>` — the pre-commit hook runs
+`scripts/harness-check.sh --staged`.

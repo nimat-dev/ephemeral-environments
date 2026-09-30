@@ -68,14 +68,19 @@ scan 4 '^[ \t]*kind:[ \t]*Namespace[ \t]*$' '' ${tpl[@]+"${tpl[@]}"}
 dep=(deploy/preview/templates/deployment.yaml)
 [ -f "${dep[0]}" ] && scan 5 '^[ \t]*replicas:' '' "${dep[@]}"
 
-# 6. No hard-coded environment in workflows.
-scan 6 'alleghenycounty\.us|nimat\.dev|azurecr\.io|svc\.cluster\.local' '' ${wf[@]+"${wf[@]}"}
+# 6. No hard-coded environment in workflows (pattern from .harness/rules/architecture.conf, F022).
+HARDCODED_ENV_RE='azurecr\.io|svc\.cluster\.local'
+# shellcheck disable=SC1091
+[ -f .harness/rules/architecture.conf ] && . .harness/rules/architecture.conf
+scan 6 "$HARDCODED_ENV_RE" '' ${wf[@]+"${wf[@]}"}
 
 # 7. Least-privilege tokens: top-level permissions == {id-token: write, contents: read}; no job overrides.
-#    Sole exception: kit-release.yml also writes contents (it creates the GitHub release, DEC-051).
+#    Read-only workflows may drop id-token (harness-check.yml, DEC-052). Sole write exception: kit-release.yml
+#    also writes contents (it creates the GitHub release, DEC-051).
 for f in ${wf[@]+"${wf[@]}"}; do
   want=$'contents: read\nid-token: write'
   [ "$(basename "$f")" = kit-release.yml ] && want=$'contents: write\nid-token: write'
+  [ "$(basename "$f")" = harness-check.yml ] && want='contents: read'
   got=$(awk '
     /^permissions:/ { inb = 1; v = $0; sub(/^permissions:[ \t]*/, "", v); if (v != "") print "INLINE " v; next }
     inb && /^[^ \t#]/ { inb = 0 }

@@ -1,0 +1,16 @@
+# Project Harness — {{ project_name }}
+
+A closed-loop working system for coding agents (any agent: GitHub Copilot, Claude Code, …): the tracking files below
+are the project's memory, the rules keep work in scope, and `scripts/harness-check.sh` (pre-commit + CI) enforces it.
+
+## Read order (every session starts here)
+1. `PROJECT_STATE.md` — **MASTER FILE.** Where the project is.
+2. `CURRENT_TASK.md` — the one feature to work on next.
+3. `ROADMAP.md` — all features across the phases, with status.
+4. `phases/` — acceptance criteria for the active phase.
+5. `DECISIONS.md`, `BLOCKERS.md`.
+
+## Layout
+- `AGENTS.md` (contract), `CLAUDE.md` (session checklist), `commands/` (prompts for every agent)
+- `rules/` (conventions, scope guard, layer boundaries), `verification/` (rubric, roles, edge cases, contracts)
+- `loops/` (maker-checker, PR review, failure modes), `graph/`, `state/`, `evidence/<FID>/`

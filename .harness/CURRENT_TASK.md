@@ -4,11 +4,11 @@
 **Status**: IN PROGRESS (2026-09-30). Last: F021 COMPLETE.
 
 ## Exact next step
-0. After the F021 PR merges: `git tag v1.0.0 <merge sha> && git push origin v1.0.0` → Kit - Release green; record chart + release.
-1. Branch `feat/F022`; contract `verification/contracts/F022.md`.
-2. Root `AGENTS.md` canonical (CLAUDE.md → `@AGENTS.md`, `.github/copilot-instructions.md` pointer); `.harness/commands/*.md`
-   mirrored to `.claude/commands/` + `.github/prompts/*.prompt.md`; pre-commit (roadmap gate + state-updated check) + CI `harness-check`;
-   Copier template of the generic harness; check-architecture rules from config.
+Done: kit v1.0.0 released (F021); all F022 pieces built; local verify GREEN (bats 281/281, Copier render, hook e2e — `evidence/F022/`).
+1. Commit on `feat/F022`; push; open PR → `harness-check` CI must be green (contract §3 e2e).
+2. Branch protection: `harness-check` required status check on `main` (admins not enforced).
+3. Review PR (`loops/pr-review-loop.md`), fix findings; CHANGELOG COMPLETE entry + evaluator score; ROADMAP/phase COMPLETE.
+4. Then F023 (pilot second repo).
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. (done: BLK-008 resolved by F020)

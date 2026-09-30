@@ -1,0 +1,26 @@
+== ./scripts/init.sh (2026-09-30)
+[info] init: ✔ roadmap: one IN PROGRESS (or all COMPLETE)
+[info] init: ✔ yamllint
+[info] init: ✔ shellcheck
+[info] init: ✔ actionlint
+[info] init: ✔ helm lint
+[info] init: ✔ helm template | kubeconform
+[info] init: ✔ bats (full suite)
+[info] init: ✔ tofu fmt + validate + test
+[info] init: ✔ tflint
+[info] init: ✔ checkov
+[info] init: ✔ check-architecture
+BASELINE GREEN
+== bats tests/harness.bats
+1..11
+ok 1 roadmap gate: one IN PROGRESS ok (status = last backtick span); zero or two fail; all done ok
+ok 2 state rule --staged: code change needs PROJECT_STATE staged; harness-only change is fine
+ok 3 state rule --range (CI): judged over the whole PR diff
+ok 4 mirrors: editing a command source without re-sync fails; re-sync fixes; other prompt files untouched
+ok 5 mirrors: Claude commands only when .claude/ exists; --check never creates it
+ok 6 generated prompts: valid front matter (quoted description), Copilot agent mode, banner, same body
+ok 7 this repo passes its own gate; pre-commit hook delegates to harness-check --staged
+ok 8 entry files: AGENTS.md canonical; CLAUDE.md imports it; Copilot instructions point to it
+ok 9 CI: harness-check runs on PRs + main, read-only token, full history, range from the event
+ok 10 Copier template: generic files identical to this repo's (no drift)
+ok 11 Copier template renders a repo whose own gate passes (with and without Claude hooks)

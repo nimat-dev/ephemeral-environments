@@ -1,0 +1,25 @@
+# AGENTS.md
+
+Canonical instructions for every coding agent in this repo — GitHub Copilot, Claude Code, Codex, or any
+other. Agent-specific files only point here: `CLAUDE.md`, `.github/copilot-instructions.md`.
+
+**{{ project_name }}**: {{ project_description }}
+All project state, rules and specs live in [`.harness/`](.harness/README.md).
+
+## Start every session here
+1. Read the operating contract [`.harness/AGENTS.md`](.harness/AGENTS.md) (the ten rules — it overrides your
+   defaults) and the session checklist [`.harness/CLAUDE.md`](.harness/CLAUDE.md) (agent-neutral despite the name).
+2. Then, in order: [`PROJECT_STATE.md`](.harness/PROJECT_STATE.md) → [`CURRENT_TASK.md`](.harness/CURRENT_TASK.md) →
+   [`ROADMAP.md`](.harness/ROADMAP.md) → the active [`phases/`](.harness/phases/) file →
+   [`DECISIONS.md`](.harness/DECISIONS.md) + [`BLOCKERS.md`](.harness/BLOCKERS.md).
+3. Every request maps to a feature id (or a proposed one); work only the one `IN PROGRESS` feature.
+4. Before you stop: the Session-completion protocol in `.harness/AGENTS.md`.
+
+Reusable prompts (generated from [`.harness/commands/`](.harness/commands/) by `scripts/sync-agent-commands.sh`):
+`harness-start-session`, `harness-start-feature`, `harness-finish-session` — Claude: `/harness-…`; Copilot: `.github/prompts/`.
+
+## Enforcement (any agent, and humans)
+- `scripts/harness-check.sh`: roadmap gate, state rule (changes outside `.harness/` need a `PROJECT_STATE.md`
+  update), agent command mirrors in sync.
+- Pre-commit: `git config core.hooksPath .githooks` once per clone.
+- CI: the `harness-check` workflow on every PR — make it a required status check on the default branch.
