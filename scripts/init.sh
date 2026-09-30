@@ -104,6 +104,30 @@ if [ ${#bats_files[@]} -gt 0 ]; then
   need bats bats && need yq yq && step "bats (full suite)" bats tests/
 else log info "skip bats (no tests)"; fi
 
+# platform/ (F018): OpenTofu fmt + offline validate of every stack (throwaway data dir, no backend/state
+# access) + module tests (mock provider) + tflint + checkov.
+platform_checks() {
+  local d data rc=0
+  export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-$HOME/.cache/tofu-plugins}"; mkdir -p "$TF_PLUGIN_CACHE_DIR"
+  tofu fmt -check -recursive platform || rc=1
+  for d in platform/modules/* platform/envs/*; do
+    [ -d "$d" ] || continue
+    data=$(mktemp -d)
+    if ! TF_DATA_DIR="$data" tofu -chdir="$d" init -backend=false -input=false -no-color >/dev/null ||
+       ! TF_DATA_DIR="$data" tofu -chdir="$d" validate -no-color; then rc=1; fi
+    if [ -d "$d/tests" ] && ! TF_DATA_DIR="$data" tofu -chdir="$d" test -no-color >/dev/null; then
+      log error "tofu test failed in $d"; rc=1
+    fi
+    rm -rf "$data"
+  done
+  return "$rc"
+}
+if [ -d platform ]; then
+  need tofu tofu && step "tofu fmt + validate + test" platform_checks
+  need tflint tflint && step tflint tflint --recursive --config "$root/platform/.tflint.hcl" --chdir platform
+  need checkov checkov && step checkov checkov -d platform --config-file platform/.checkov.yaml
+else log info "skip platform checks (no platform/ yet — F018)"; fi
+
 step check-architecture ./scripts/check-architecture.sh
 
 log info "skip e2e smoke (no runner yet — F005)"

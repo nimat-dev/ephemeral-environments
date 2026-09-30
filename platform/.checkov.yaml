@@ -1,0 +1,30 @@
+# Checkov gate for platform/ (F018). Every skip is a deliberate trade-off of a cheap 1-node TEST
+# cluster (DEC-019/041/048); anything not listed here fails `scripts/init.sh`.
+framework:
+  - terraform
+compact: true
+quiet: true
+skip-check:
+  # --- ACR: Basic SKU (cost). These need Premium (or Defender) ---
+  - CKV_AZURE_139   # public network disabled: GitHub-hosted runners push over the internet
+  - CKV_AZURE_163   # vulnerability scanning (Defender for Containers)
+  - CKV_AZURE_164   # content trust (Premium)
+  - CKV_AZURE_165   # geo-replication (Premium)
+  - CKV_AZURE_166   # quarantine (Premium)
+  - CKV_AZURE_167   # untagged-manifest retention (Premium; tag purge is F011/DEC-034)
+  - CKV_AZURE_233   # zone redundancy (Premium)
+  - CKV_AZURE_237   # dedicated data endpoints (Premium)
+  # --- AKS: test cluster, public API for GitHub-hosted runners ---
+  - CKV_AZURE_115   # private cluster: hosted runners have no VNet access
+  - CKV_AZURE_6     # authorized IP ranges: hosted runner IPs are not fixed
+  - CKV_AZURE_170   # paid SLA tier: Free tier by design
+  - CKV_AZURE_141   # local accounts kept as break-glass (DEC-024); CI uses Entra
+  - CKV_AZURE_116   # Azure Policy add-on: VAP guard instead (DEC-031)
+  - CKV_AZURE_117   # disk encryption set (CMK): platform-managed keys suffice for previews
+  - CKV_AZURE_227   # host encryption: not enabled on the subscription / SKU
+  - CKV_AZURE_226   # ephemeral OS disk: changing it replaces the imported node pool
+  - CKV_AZURE_232   # system-only nodes: single node pool (DEC-041)
+  - CKV_AZURE_4     # Azure Monitor logs: cost; app logs via kubectl / Actions
+  - CKV_AZURE_7     # network policy: none as created; previews isolated by namespace + quota
+  - CKV_AZURE_171   # auto upgrade channel: manual k8s upgrades; node OS channel = NodeImage
+  - CKV_AZURE_172   # CSI secrets driver not installed yet (Key Vault add-on is a later feature)

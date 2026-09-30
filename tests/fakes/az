@@ -6,6 +6,7 @@
 #   FAKE_TAG_UPDATED=<lastUpdateTime of any tag on re-read before delete>
 #   FAKE_REPOS_JSON=<acr repository list output, default ["todo"]>  FAKE_REPOS_FAIL=1
 #   FAKE_TAGS_JSON=<acr show-tags --detail output>  FAKE_TAGS_FAIL=1  (delete of one tag: FAKE_FAIL="todo:<tag>")
+#   a0 (F018): FAKE_EXISTS also sa versioning kv kvkey container; FAKE_KEY_OPS=<sorted key ops csv>
 #   FAKE_NS_RECORDS="ns1 ns2" (record-set ns show; empty = absent). `dns zone create` makes the zone exist.
 #   FAKE_GHFIC_SUBJECT / FAKE_GHFIC_IMM_SUBJECT = stored subject of gh-preview-env / -immutable (with ghfic)
 echo "$*" >>"$AZ_LOG"
@@ -13,6 +14,11 @@ args=" $* "
 has() { [[ " ${FAKE_EXISTS:-} " == *" $1 "* ]]; }
 if [ -n "${FAKE_FAIL:-}" ] && [[ "$args" == *" ${FAKE_FAIL} "* ]]; then echo "fake failure: $FAKE_FAIL" >&2; exit 1; fi
 case "$args" in
+  *" storage account blob-service-properties show "*) has versioning && echo true; exit 0 ;;
+  *" storage account show "*) has sa ;;
+  *" storage container show "*) has container ;;
+  *" keyvault key show "*) has kvkey || exit 3; echo "${FAKE_KEY_OPS:-decrypt,encrypt}" ;;
+  *" keyvault show "*) has kv ;;
   *" account show "*) exit "${FAKE_ACCOUNT_FAIL:-0}" ;;
   *" group show "*) [ -z "${FAKE_RG_MISSING:-}" ] ;;
   *" provider show "*)

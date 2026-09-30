@@ -1,1 +1,8 @@
 bootstrap/.env
+
+# OpenTofu (F018): providers/cache and any local state or plans never get committed; lock files do.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log

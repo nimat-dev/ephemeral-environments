@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 17 / 23 COMPLETE (74%) — Phases 01–04 COMPLETE, Phase 05 IN PROGRESS
+**Progress**: 18 / 23 COMPLETE (78%) — Phases 01–04 COMPLETE, Phase 05 IN PROGRESS
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -34,8 +34,8 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F015** — Repo-scoped preview identity: ns `preview-<app>-<branch>`, `preview.repo` label, destroy/reap/purge own-repo only — `COMPLETE`
 - [x] **F016** — `.preview.yaml` app contract with `components[]` + path routing; chart renders N components — `COMPLETE`
 - [x] **F017** — Multiple project domains per cluster (Azure DNS zone each, wildcard cert, TLSStore) — `COMPLETE`
-- [ ] **F018** — OpenTofu infra stack `team-cluster` + encrypted remote state — `IN PROGRESS`
-- [ ] **F019** — Flux (AKS extension) for in-cluster add-ons, `clusters/base` + `clusters/<team>` — `NOT STARTED`
+- [x] **F018** — OpenTofu infra stack `team-cluster` + encrypted remote state — `COMPLETE`
+- [ ] **F019** — Flux (AKS extension) for in-cluster add-ons, `clusters/base` + `clusters/<team>` — `IN PROGRESS`
 - [ ] **F020** — OpenTofu `repo-onboarding` module (per-repo SP, OIDC, GitHub vars, DNS) — `NOT STARTED`
 - [ ] **F021** — Kit extraction: composite action + reusable workflows + OCI chart, semver releases — `NOT STARTED`
 - [ ] **F022** — Agent-agnostic harness (AGENTS.md canonical, Copilot prompts, pre-commit + CI gate, Copier) — `NOT STARTED`

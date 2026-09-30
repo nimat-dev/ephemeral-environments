@@ -1,0 +1,9 @@
+[info] a0-tofu-state: skip provider Microsoft.Storage (registered)
+[info] a0-tofu-state: + az provider register -n Microsoft.KeyVault --wait --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+[info] a0-tofu-state: skip storage account nimattofustate (exists)
+[info] a0-tofu-state: + az storage account blob-service-properties update -g nimatresourceg -n nimattofustate --enable-versioning true --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+[info] a0-tofu-state: + az keyvault create -g nimatresourceg -n nimat-tofu-kv -l eastus --enable-rbac-authorization true --enable-purge-protection true --retention-days 7 --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+[info] a0-tofu-state: + az role assignment create --assignee-object-id 732ce8a2-c831-4654-b753-24da581ee38f --assignee-principal-type User --role Storage Blob Data Contributor --scope /subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.Storage/storageAccounts/nimattofustate --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+[info] a0-tofu-state: + az role assignment create --assignee-object-id 732ce8a2-c831-4654-b753-24da581ee38f --assignee-principal-type User --role Key Vault Crypto Officer --scope /subscriptions/1325f79b-c2c1-437c-a8c7-a0746ab748d4/resourceGroups/nimatresourceg/providers/Microsoft.KeyVault/vaults/nimat-tofu-kv --subscription 1325f79b-c2c1-437c-a8c7-a0746ab748d4
+STATE=nimattofustate/tfstate KEY=https://nimat-tofu-kv.vault.azure.net/keys/tofu-state
+[info] a0-tofu-state: done
