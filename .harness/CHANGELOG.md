@@ -18,6 +18,12 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-09-30 — Phase 05 planned (no feature complete) — tracking only
+Branch: docs/phase-05-plan. Added Phase 05 (F015–F023) + `phases/PHASE-05-MULTI-REPO.md`, DEC-036–043; F015 IN PROGRESS.
+Discrepancy fixed: `rules/scope-guard.md` still said "Current phase: Phase 02" — now Phase 05.
+Discrepancy noted: node is 1× D2as_v7 (8 GB), not B2s as said in planning chat; DEC-041 uses the real SKU.
+Evidence: `./scripts/init.sh` → BASELINE GREEN (roadmap gate: one IN PROGRESS).
+
 ## 2026-09-29 — F014 GitHub Actions pinned to latest full tags — COMPLETE (Phase 04)
 Branch/commit: feat/F014 @ 17ced57   Issue: https://github.com/nimat-dev/ephemeral-environments/issues/17   DEC-035
 Evidence (`evidence/F014/`):

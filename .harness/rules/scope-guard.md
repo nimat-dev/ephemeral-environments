@@ -5,16 +5,13 @@ the leash. The active phase is whatever `PROJECT_STATE.md` says. Building ahead 
 defect, not initiative. Phases are gated (ROADMAP.md order); a phase's features may not start
 until the previous phase's completion criteria pass.
 
-## Current phase: Phase 02 — Workflows (Phase 01 COMPLETE 2026-09-28)
+## Current phase: Phase 05 — Multi-repo, reusable platform (Phases 01–04 COMPLETE)
 
 ### In scope (current phase only)
-- F006 — `preview-deploy.yml`
-- F007 — `preview-destroy.yml`
-- F008 — `preview-reap.yml`
+- F015 (IN PROGRESS), then F016–F023 in ROADMAP order — see `phases/PHASE-05-MULTI-REPO.md`.
 
 ### Off-limits until their phase (do NOT build now)
-- **Phase 03 — Hardening**: F009 namespace-prefix admission guard, F010 quota enforcement proof,
-  F011 env reviewers + ACR retention.
+- **Later**: Key Vault/CSI secrets add-on, Postgres add-on, splitting into separate repos (DEC-037).
 - **Never (non-goals)**: Knative, external-dns, hard force-to-0 CronJob, per-commit previews —
   unless a new DEC supersedes.
 
