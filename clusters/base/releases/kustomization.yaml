@@ -1,0 +1,10 @@
+# In-cluster add-ons (F019, DEC-039): Flux HelmReleases for what bootstrap/a1–a4 installed, same
+# release names/namespaces/versions/values so Flux adopts them. Team overlays patch team values.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - sources.yaml
+  - traefik.yaml
+  - cert-manager.yaml
+  - keda.yaml
+  - keda-http.yaml

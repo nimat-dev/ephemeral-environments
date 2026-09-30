@@ -16,7 +16,7 @@ INTERCEPTOR_PORT=8080
 
 run helm repo add kedacore https://kedacore.github.io/charts --force-update
 run helm upgrade --install keda kedacore/keda -n keda --create-namespace \
-  --version "$KEDA_CHART_VERSION" --wait --timeout 5m
+  --version "$KEDA_CHART_VERSION" -f "$here/values/keda.yaml" --wait --timeout 5m
 run helm upgrade --install http-add-on kedacore/keda-add-ons-http -n keda \
   --version "$KEDA_HTTP_CHART_VERSION" -f "$here/values/keda-http.yaml" --wait --timeout 5m
 

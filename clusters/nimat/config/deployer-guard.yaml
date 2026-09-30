@@ -1,0 +1,52 @@
+# CI identity (gh-preview-deployer SP object id) bound to preview-deployer and confined to preview-* (DEC-024/031).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: preview-deployer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: preview-deployer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: b34bba52-17f6-4b85-9b1b-9724ae59236c
+---
+# The ClusterRole is cluster-wide; this confines the SP's writes to preview-* (F009). Matched
+# only for the SP, so operators/controllers are unaffected. Auth reviews stay allowed (can-i).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: preview-deployer-guard
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["*"]
+        apiVersions: ["*"]
+        operations: [CREATE, UPDATE, DELETE, CONNECT]
+        resources: ["*/*"]
+    excludeResourceRules:
+      - apiGroups: [authorization.k8s.io, authentication.k8s.io]
+        apiVersions: ["*"]
+        operations: [CREATE]
+        resources: ["*"]
+  matchConditions:
+    - name: ci-identity
+      expression: request.userInfo.username == 'b34bba52-17f6-4b85-9b1b-9724ae59236c'
+  validations:
+    - expression: >-
+        request.resource.group == '' && request.resource.resource == 'namespaces'
+        ? request.name.startsWith('preview-')
+        : request.namespace.startsWith('preview-')
+      messageExpression: >-
+        'preview-deployer-guard: CI identity may only write preview-* namespaces (' +
+        request.resource.resource + ' ' + request.namespace + '/' + request.name + ')'
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: preview-deployer-guard
+spec:
+  policyName: preview-deployer-guard
+  validationActions: [Deny]

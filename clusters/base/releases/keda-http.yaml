@@ -1,0 +1,49 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: http-add-on
+  namespace: flux-system
+spec:
+  releaseName: http-add-on
+  targetNamespace: keda
+  storageNamespace: keda # adopt the release a1-a4 installed (same name + storage ns)
+  install:
+    createNamespace: true
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: ["/spec/replicas"] # owned by HPAs (KEDA interceptor) / scaling, not the chart
+        target:
+          kind: Deployment
+  interval: 30m
+  timeout: 5m
+  dependsOn:
+    - name: keda
+  chart:
+    spec:
+      chart: keda-add-ons-http
+      version: "0.16.0"
+      sourceRef:
+        kind: HelmRepository
+        name: kedacore
+  # values: bootstrap/values/keda-http.yaml (kept identical by tests/flux.bats)
+  values:
+    operator:
+      resources:
+        requests:
+          cpu: 50m
+    scaler:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 50m
+    interceptor:
+      replicas:
+        min: 1
+        max: 3
+      resources:
+        requests:
+          cpu: 50m

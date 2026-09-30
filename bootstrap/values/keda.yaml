@@ -1,0 +1,15 @@
+# KEDA core sized for a single 2-vCPU node shared with Flux (F019, DEC-041/049): 50m requests each
+# (chart default 100m) — limits unchanged.
+resources:
+  operator:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+  metricServer:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+  webhooks:
+    requests:
+      cpu: 50m
+      memory: 100Mi

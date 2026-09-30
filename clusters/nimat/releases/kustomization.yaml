@@ -1,0 +1,15 @@
+# Team nimat (DEC-036): base add-ons + the cert-manager workload identity (client id of the
+# cert-manager-dns UAMI, OpenTofu output cert_manager_client_id).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/releases
+patches:
+  - target:
+      kind: HelmRelease
+      name: cert-manager
+    patch: |
+      - op: add
+        path: /spec/values/serviceAccount/annotations
+        value:
+          azure.workload.identity/client-id: "51134be3-ce07-4286-bca2-e945232b3410"

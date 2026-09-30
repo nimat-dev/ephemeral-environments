@@ -29,7 +29,7 @@ az account show --subscription "$AZ_SUBSCRIPTION_ID" -o none 2>/dev/null \
 az_s group show -n "$AZ_RESOURCE_GROUP" -o none 2>/dev/null \
   || { log error "resource group $AZ_RESOURCE_GROUP not found (never created by this script)"; exit 1; }
 
-for p in Microsoft.ContainerService Microsoft.ContainerRegistry Microsoft.Network Microsoft.Compute; do
+for p in Microsoft.ContainerService Microsoft.ContainerRegistry Microsoft.Network Microsoft.Compute Microsoft.KubernetesConfiguration; do
   state=$(az_s provider show -n "$p" --query registrationState -o tsv 2>/dev/null || echo Unknown)
   if [ "$state" = Registered ]; then log info "provider $p Registered"
   else log warn "provider $p is $state"; run az provider register -n "$p" --wait --subscription "$AZ_SUBSCRIPTION_ID"; fi
