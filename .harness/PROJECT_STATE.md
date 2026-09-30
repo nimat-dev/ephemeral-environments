@@ -4,18 +4,18 @@
 
 ## Where we are
 - **Phase**: Phase 05 — Multi-repo, reusable platform — IN PROGRESS (planned 2026-09-30). Phases 01–04 COMPLETE.
-- **Active feature**: F018 OpenTofu infra stack — IN PROGRESS. Last: F017 multiple project domains COMPLETE (2026-09-30). Phase 05 decisions DEC-036+.
-- **Overall progress**: 17 / 23 features COMPLETE (74%)
+- **Active feature**: F019 Flux add-ons — IN PROGRESS. Last: F018 OpenTofu infra stack COMPLETE (2026-09-30). Phase 05 decisions DEC-036+.
+- **Overall progress**: 18 / 23 features COMPLETE (78%)
 
 ## Last verified
 - **Date**: 2026-09-30
-- **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-30, F017)
-- **Full suite + check-architecture**: green — `bats tests/` 238/238; check-architecture clean (F017, 2026-09-30)
-- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags); F014 new pins: Deploy 36655482441, Purge 36655484550, Reap 36655486789, Destroy 36655606524 green; F015: Deploy 36706339119 (ns `preview-todo-feat-f015`, 200), Reap 36706523897 (foreign expired ns kept), Destroy 36706532056 (legacy) / 36706594874 (foreign refused) / 36706663297 (404) ; F016: Deploy 36708302080/36710182013 (2 components, path routing, per-component scale-to-zero), Destroy 36710425734 ; F017: smoke PASS on `shop.preview.nimat.dev` + `preview.nimat.dev` (`evidence/F006`–`F017`)
-- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`. PR #18 (F014, issue #17) merged to `main`. PR #19 (cluster paused) merged (45a50da). PR #20 (Phase 05 plan) merged (084f9b0). PR #21 (F015) merged (ee1a62b). PR #22 (F016) merged (2cdcf0a). PR #23 (F017) merged (09f100e). F018 on `feat/F018`.
+- **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-30, F018)
+- **Full suite + check-architecture**: green — `bats tests/` 248/248 + tofu/tflint/checkov; check-architecture clean (F018, 2026-09-30)
+- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags); F014 new pins: Deploy 36655482441, Purge 36655484550, Reap 36655486789, Destroy 36655606524 green; F015: Deploy 36706339119 (ns `preview-todo-feat-f015`, 200), Reap 36706523897 (foreign expired ns kept), Destroy 36706532056 (legacy) / 36706594874 (foreign refused) / 36706663297 (404) ; F016: Deploy 36708302080/36710182013 (2 components, path routing, per-component scale-to-zero), Destroy 36710425734 ; F017: smoke PASS on `shop.preview.nimat.dev` + `preview.nimat.dev` ; F018: OpenTofu adopted 7 resources, plan No changes; regression Deploy 36713711855 + Destroy 36714179601 (`evidence/F006`–`F018`)
+- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`. PR #18 (F014, issue #17) merged to `main`. PR #19 (cluster paused) merged (45a50da). PR #20 (Phase 05 plan) merged (084f9b0). PR #21 (F015) merged (ee1a62b). PR #22 (F016) merged (2cdcf0a). PR #23 (F017) merged (09f100e). F018 on `feat/F018`, PR pending.
 
 ## Next step
-F018 on `feat/F018` (steps in `CURRENT_TASK.md`). Phase 05 plan: `phases/PHASE-05-MULTI-REPO.md`. Mirrors `CURRENT_TASK.md`.
+F019 on `feat/F019` (steps in `CURRENT_TASK.md`). Phase 05 plan: `phases/PHASE-05-MULTI-REPO.md`. Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
@@ -28,6 +28,7 @@ See `BLOCKERS.md`. BLK-008 = teardown leaves Entra app + UAMI
 - GitHub env `preview` + 12 variables SET (A6, 2026-09-28). `gh` active account must be `nimat-dev` (admin); `nimatrazmjo` also logged in but not a collaborator.
 - CI SP has NO secrets access (DEC-026): `scripts/preview-ci.sh deploy` forces `HELM_DRIVER=configmap`.
 - Workflows are thin: each step = `scripts/preview-ci.sh <cmd>`, inputs via `env:` only (DEC-027).
+- Infra is OpenTofu (`platform/envs/nimat`, encrypted state in `nimattofustate` + key `nimat-tofu-kv/tofu-state`, DEC-048); bash provision kept (DEC-042).
 - Second test domain `shop.preview.nimat.dev` (child zone, a7, DEC-047); Traefik TLSStore serves both wildcards by SNI.
 - Apps declare components in `.preview.yaml` (F016); images `<ACR>/<APP_IMAGE_NAME>/<component>:<sha>`; this repo: web (todo) + api (examples/echo-api).
 - Namespaces are `preview-<app>-<branch>` + `preview.repo` ownership label (F015); repo var `PREVIEW_APP=todo`. Legacy `preview-<id>` still destroyable.

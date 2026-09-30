@@ -1,0 +1,8 @@
+  # module.team_cluster.azurerm_container_registry.this will be imported
+  # module.team_cluster.azurerm_dns_zone.this will be imported
+  # module.team_cluster.azurerm_federated_identity_credential.cert_manager will be imported
+  # module.team_cluster.azurerm_kubernetes_cluster.this will be imported
+  # module.team_cluster.azurerm_role_assignment.cert_manager_dns will be imported
+  # module.team_cluster.azurerm_role_assignment.kubelet_acr_pull will be imported
+  # module.team_cluster.azurerm_user_assigned_identity.cert_manager will be imported
+Plan: 7 to import, 0 to add, 0 to change, 0 to destroy.

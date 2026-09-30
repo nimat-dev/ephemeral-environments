@@ -33,14 +33,14 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] e2e: `shop.preview.nimat.dev` + `preview.nimat.dev` on one cluster, smoke PASS on both, served cert SAN matches each host.
 
 ## F018 — OpenTofu infra stack
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] `platform/` OpenTofu (latest release at start; DEC-038) module `team-cluster`: RG, AKS (1 node, OIDC + workload identity, Entra RBAC), ACR, identities; one instance per team (DEC-036).
-- [ ] Remote state in Azure Storage with locking + OpenTofu state encryption (key in Key Vault).
-- [ ] `tofu fmt/validate`, tflint, checkov in `init.sh` + CI; import or recreate current cluster documented.
-- [ ] Bash `provision.sh` kept until parity proven (DEC-042).
+**Status**: COMPLETE (2026-09-30) — contract `verification/contracts/F018.md`, evidence `evidence/F018/`, DEC-048
+- [x] `platform/` OpenTofu 1.12.6 module `team-cluster`: AKS (1 node, OIDC + workload identity, Entra RBAC), ACR + kubelet AcrPull, base DNS zone, cert-manager UAMI + federation + DNS role; RG data-only; one instance per team (`envs/nimat`).
+- [x] Remote state in Azure Storage (Entra auth, lease lock, versioning) + OpenTofu state encryption with a Key Vault RSA key (`bootstrap/a0-tofu-state.sh`); blob verified ciphertext-only.
+- [x] `tofu fmt/validate/test`, tflint, checkov (justified skips) in `init.sh`; live resources imported (7 imports, 0 changes; re-plan "No changes").
+- [x] Bash `provision.sh` kept until parity proven (DEC-042).
 
 ## F019 — Flux add-ons
-**Status**: NOT STARTED
+**Status**: IN PROGRESS (2026-09-30)
 - [ ] OpenTofu installs AKS `microsoft.flux` extension + flux configuration → `clusters/<team>/`.
 - [ ] `clusters/base/`: HelmRelease Traefik, cert-manager, KEDA, KEDA HTTP; ClusterIssuer; ClusterRole + VAP guard; ordering via `dependsOn`.
 - [ ] Fresh cluster reaches Ready with zero manual steps; manual drift reverted by Flux (evidence).

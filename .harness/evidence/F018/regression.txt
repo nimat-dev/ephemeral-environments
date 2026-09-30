@@ -1,0 +1,9 @@
+deploy 36713711855 exit 1
+destroy 36713882179 exit 0
+No changes. Your infrastructure matches the configuration.
+deploy 36713711855 attempt 1: job not acquired by a runner (GitHub infra, 5 attempts) — no step ran; re-run
+deploy 36713711855 attempt 2 exit 0
+[info] preview-ci: verify ok https://feat-f018.preview.nimat.dev/
+[info] preview-ci: verify ok https://feat-f018.preview.nimat.dev/api/health
+destroy 36714179601 exit 0
+curl -> 404
