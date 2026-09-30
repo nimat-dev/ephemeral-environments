@@ -22,6 +22,7 @@ jobs:
     environment: preview
     env:
       BRANCH: ${{ inputs.branch }}
+      PREVIEW_APP: ${{ vars.PREVIEW_APP }} # F015: same app slug as deploy
     steps:
       - uses: actions/checkout@v7.0.1
 

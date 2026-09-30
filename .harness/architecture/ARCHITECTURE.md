@@ -25,7 +25,7 @@ Wildcard, created once:
 
 Teardown:
   preview-destroy.yml (manual)  ─┐
-  preview-reap.yml (cron */30)  ─┴─► kubectl delete ns preview-<id>   (expires-at < now)
+  preview-reap.yml (cron */30)  ─┴─► kubectl delete ns preview-<app>-<id>   (expires-at < now; own repo only, F015)
 ```
 
 ## Repository shape (target)

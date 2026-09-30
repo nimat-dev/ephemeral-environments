@@ -63,6 +63,7 @@ jobs:
           IDLE_TIMEOUT: ${{ inputs.idle_timeout }}
           MAX_REPLICAS: ${{ inputs.max_replicas }}
           PREVIEW_DOMAIN: ${{ vars.PREVIEW_DOMAIN }}
+          PREVIEW_APP: ${{ vars.PREVIEW_APP }} # F015: ns preview-<app>-<branch>; empty -> repo name
           SRC_DIR: src
         run: ./scripts/preview-ci.sh plan
 
@@ -105,6 +106,7 @@ jobs:
           PREVIEW_ID: ${{ steps.id.outputs.preview_id }}
           SHORT_SHA: ${{ steps.id.outputs.short_sha }}
           EXPIRES_AT: ${{ steps.id.outputs.expires_at }}
+          APP: ${{ steps.id.outputs.app }}
         run: ./scripts/preview-ci.sh namespace
 
       - name: Deploy chart

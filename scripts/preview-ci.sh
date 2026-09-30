@@ -21,24 +21,34 @@ need() {
 out() { printf '%s\n' "$@" >>"${GITHUB_OUTPUT:-/dev/stdout}"; }
 
 # plan: validate dispatch inputs, derive identity. Env: BRANCH LIFETIME LIFETIME_CUSTOM
-# IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR (checkout of BRANCH).
+# IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR (checkout of BRANCH) GITHUB_REPOSITORY [PREVIEW_APP].
 cmd_plan() {
-  need BRANCH LIFETIME IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR
-  local sha plan
+  need BRANCH LIFETIME IDLE_TIMEOUT MAX_REPLICAS PREVIEW_DOMAIN SRC_DIR GITHUB_REPOSITORY
+  local sha app plan
+  app=$(preview_app "${PREVIEW_APP-}" "$GITHUB_REPOSITORY") || exit 1
   sha=$(git -C "$SRC_DIR" rev-parse --short HEAD) || { log error "cannot read HEAD of $SRC_DIR"; exit 1; }
-  plan=$(preview_plan "$BRANCH" "$LIFETIME" "${LIFETIME_CUSTOM-}" "$IDLE_TIMEOUT" "$MAX_REPLICAS" \
+  plan=$(preview_plan "$app" "$BRANCH" "$LIFETIME" "${LIFETIME_CUSTOM-}" "$IDLE_TIMEOUT" "$MAX_REPLICAS" \
     "$PREVIEW_DOMAIN" "$sha") || exit 1
   log info "plan $(printf '%s' "$plan" | tr '\n' ' ')"
   # shellcheck disable=SC2086 # one KEY=VALUE per line, no spaces by construction
   out $plan
 }
 
-# namespace: apply the Namespace with the reaper's label contract (workflow owns it, DEC-007).
-# Env: NAMESPACE PREVIEW_ID SHORT_SHA EXPIRES_AT BRANCH
+# namespace: apply the Namespace with the reaper's label contract (workflow owns it, DEC-007). An
+# existing namespace this repo doesn't own (preview_owns) is refused, never relabeled (F015).
+# Env: NAMESPACE PREVIEW_ID SHORT_SHA EXPIRES_AT BRANCH APP GITHUB_REPOSITORY
 cmd_namespace() {
-  need NAMESPACE PREVIEW_ID SHORT_SHA EXPIRES_AT BRANCH
-  log info "apply namespace $NAMESPACE expires-at=$EXPIRES_AT"
-  namespace_manifest "$NAMESPACE" "$PREVIEW_ID" "$SHORT_SHA" "$EXPIRES_AT" "$BRANCH" | kubectl apply -f -
+  need NAMESPACE PREVIEW_ID SHORT_SHA EXPIRES_AT BRANCH APP GITHUB_REPOSITORY
+  local repo json manifest
+  repo=$(preview_repo_label "$GITHUB_REPOSITORY") || exit 1
+  manifest=$(namespace_manifest "$NAMESPACE" "$PREVIEW_ID" "$SHORT_SHA" "$EXPIRES_AT" "$BRANCH" "$APP" "$GITHUB_REPOSITORY") || exit 1
+  json=$(kubectl get namespace "$NAMESPACE" --ignore-not-found -o json)
+  if [ -n "$json" ] && ! preview_owns "$repo" <<<"$json"; then
+    log error "namespace: refusing $NAMESPACE (owned by '$(jq -r '.metadata.labels["preview.repo"] // .metadata.labels["managed-by"] // "?"' <<<"$json")', not $repo)"
+    exit 1
+  fi
+  log info "apply namespace $NAMESPACE repo=$repo expires-at=$EXPIRES_AT"
+  kubectl apply -f - <<<"$manifest"
 }
 
 # deploy: helm upgrade --install. Strings go through --set-string so an id/sha like "1234e56" is
@@ -101,36 +111,50 @@ cmd_summary() {
   } >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 }
 
-# destroy: delete preview-<id> for BRANCH (same identity as deploy). Absent -> success; a namespace
-# of that name not labeled managed-by=preview-bot is refused, never deleted. Env: BRANCH
+# destroy: delete preview-<app>-<id> for BRANCH (same identity as deploy). Absent -> falls back to the
+# pre-F015 name preview-<id>, deleted only when preview-bot made it and it has no preview.repo label
+# (a labeled one is some repo's new-format namespace). Absent both -> success. A namespace of the new
+# name this repo doesn't own (preview_owns) is refused, never deleted.
+# Env: BRANCH GITHUB_REPOSITORY [PREVIEW_APP]
 cmd_destroy() {
-  need BRANCH
-  local id ns json owner
+  need BRANCH GITHUB_REPOSITORY
+  local id app repo ns legacy json note=""
   id=$(preview_id "$BRANCH") || exit 1
-  ns=$(preview_namespace "$id")
+  app=$(preview_app "${PREVIEW_APP-}" "$GITHUB_REPOSITORY") || exit 1
+  repo=$(preview_repo_label "$GITHUB_REPOSITORY") || exit 1
+  ns=$(preview_namespace "$app" "$id")
   json=$(kubectl get namespace "$ns" --ignore-not-found -o json)
   if [ -z "$json" ]; then
-    log info "destroy: $ns not found, nothing to do"
-    summary_line "Nothing to destroy: \`$ns\` does not exist."
-    return 0
-  fi
-  owner=$(jq -r '.metadata.labels["managed-by"] // ""' <<<"$json")
-  if [ "$owner" != preview-bot ]; then
-    log error "destroy: refusing $ns (managed-by='$owner', want preview-bot)"
+    legacy="preview-$id"
+    json=$(kubectl get namespace "$legacy" --ignore-not-found -o json)
+    if [ -n "$json" ] && jq -e '.metadata.labels as $l | $l["managed-by"] == "preview-bot" and ($l | has("preview.repo") | not)' \
+      >/dev/null <<<"$json"; then
+      ns=$legacy note=" (legacy pre-F015 name)"
+    else
+      log info "destroy: $ns not found, nothing to do"
+      summary_line "Nothing to destroy: \`$ns\` does not exist."
+      return 0
+    fi
+  elif ! preview_owns "$repo" <<<"$json"; then
+    log error "destroy: refusing $ns (managed-by='$(jq -r '.metadata.labels["managed-by"] // ""' <<<"$json")', repo='$(jq -r '.metadata.labels["preview.repo"] // ""' <<<"$json")'; want preview-bot + $repo)"
     exit 1
   fi
-  log info "destroy: deleting $ns"
+  log info "destroy: deleting $ns$note"
   kubectl delete namespace "$ns" --ignore-not-found --wait=false
-  summary_line "Destroyed \`$ns\` (branch \`$BRANCH\`)."
+  summary_line "Destroyed \`$ns\` (branch \`$BRANCH\`)$note."
 }
 
-# reap: delete every preview-bot namespace whose preview.expires-at < now. Nothing expired -> exit 0.
-# A failed delete doesn't stop the others; the run fails at the end. Env: [REAP_NOW] (epoch, tests)
+# reap: delete every preview-bot namespace of this repo (+ legacy unlabeled, F015) whose
+# preview.expires-at < now; other repos' previews are theirs to reap. Nothing expired -> exit 0.
+# A failed delete doesn't stop the others; the run fails at the end.
+# Env: GITHUB_REPOSITORY [REAP_NOW] (epoch, tests)
 cmd_reap() {
-  local now list expired ns failed=0 n=0
+  need GITHUB_REPOSITORY
+  local now repo list expired ns failed=0 n=0
   now="${REAP_NOW:-$(date -u +%s)}"
+  repo=$(preview_repo_label "$GITHUB_REPOSITORY") || exit 1
   list=$(kubectl get namespaces -l managed-by=preview-bot -o json)
-  expired=$(expired_namespaces "$now" <<<"$list")
+  expired=$(expired_namespaces "$now" "$repo" <<<"$list")
   if [ -z "$expired" ]; then
     log info "reap: nothing to reap (now=$now)"
     summary_line "Nothing to reap."

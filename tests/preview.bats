@@ -54,8 +54,62 @@ long41="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bcdef"   # char 40 is "-"
 }
 
 @test "namespace and host" {
-  [ "$(preview_namespace feat-x)" = preview-feat-x ]
+  [ "$(preview_namespace todo feat-x)" = preview-todo-feat-x ]
   [ "$(preview_host feat-x preview.example.com)" = feat-x.preview.example.com ]
+}
+
+# --- F015: app, repo label, repo-scoped namespace ---
+@test "preview_app: var wins, else repo name; sanitized, <= 20 chars" {
+  [ "$(preview_app todo nimat-dev/ephemeral-environments)" = todo ]
+  [ "$(preview_app '' nimat-dev/Shop_API.v2)" = shop-api-v2 ]
+  [ "$(preview_app '' nimat-dev/ephemeral-environments)" = ephemeral-environmen ]
+  [ "$(preview_app 'My App!!' o/r)" = my-app ]
+  [ "$(preview_app 'aaaaaaaaaaaaaaaaaaa-b' o/r)" = aaaaaaaaaaaaaaaaaaa ]   # cut at 20 lands on '-', trimmed
+  [ "$(preview_app '///' o/fallback)" = fallback ]                      # symbol-only var -> repo name
+}
+
+@test "preview_app: no usable app or repo -> error" {
+  run preview_app '' ''; [ "$status" -eq 1 ]
+  run preview_app '' 'owner/'; [ "$status" -eq 1 ]
+  run preview_app '///' 'o/***'; [ "$status" -eq 1 ]
+}
+
+@test "preview_repo_label: owner/repo slug, <= 63, label-safe" {
+  [ "$(preview_repo_label nimat-dev/ephemeral-environments)" = nimat-dev-ephemeral-environments ]
+  [ "$(preview_repo_label Org.Name/Repo_X)" = org-name-repo-x ]
+  l=$(preview_repo_label "$(printf 'o%.0s' {1..40})/$(printf 'r%.0s' {1..40})")
+  [ "${#l}" -le 63 ]; [[ "$l" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || false
+  run preview_repo_label ''; [ "$status" -eq 1 ]
+  run preview_repo_label 'noslash'; [ "$status" -eq 1 ]
+}
+
+@test "preview_namespace: > 63 chars -> 54-char prefix + 8-hex hash, stable and distinct" {
+  app=aaaaaaaaaaaaaaaaaaaa                                        # 20
+  id1=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb1                     # 40
+  id2=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2                     # same 54-char prefix
+  n1=$(preview_namespace "$app" "$id1"); n2=$(preview_namespace "$app" "$id2")
+  [ "${#n1}" -le 63 ]; [ "${#n2}" -le 63 ]
+  [[ "$n1" =~ ^preview-[a-z0-9-]+-[0-9a-f]{8}$ ]] || false
+  [ "$n1" != "$n2" ]
+  [ "$n1" = "$(preview_namespace "$app" "$id1")" ]
+  [ "$(preview_namespace todo "$id1")" = "preview-todo-$id1" ]    # 53 chars: no hash
+}
+
+@test "preview_namespace: hashed name never ends the prefix with '-'" {
+  n=$(preview_namespace aaaaaaaaaaaaaaaaaaaa "$(printf 'b%.0s' {1..24})-cccccccccccccccc")
+  [[ "$n" != *--* ]] || false
+  [ "${#n}" -le 63 ]
+}
+
+@test "preview_owns: managed + same repo, or legacy without repo label" {
+  own() { printf '{"metadata":{"name":"preview-x","labels":{%s}}}' "$1" | preview_owns o-r; }
+  own '"managed-by":"preview-bot","preview.repo":"o-r"'
+  own '"managed-by":"preview-bot"'
+  ! own '"managed-by":"preview-bot","preview.repo":"other-repo"'
+  ! own '"managed-by":"preview-bot","preview.repo":""'
+  ! own '"preview.repo":"o-r"'
+  ! own ''
+  run preview_owns '' </dev/null; [ "$status" -ne 0 ]
 }
 
 # --- durations ---
@@ -120,27 +174,36 @@ ns_json() {
 JSON
 }
 
+@test "expired_namespaces: only own repo (+ legacy unlabeled); other repos never listed" {
+  out=$(jq -n '{items:[
+    {metadata:{name:"preview-a-x",labels:{"managed-by":"preview-bot","preview.repo":"o-r","preview.expires-at":"1"}}},
+    {metadata:{name:"preview-b-x",labels:{"managed-by":"preview-bot","preview.repo":"o-other","preview.expires-at":"1"}}},
+    {metadata:{name:"preview-legacy",labels:{"managed-by":"preview-bot","preview.expires-at":"1"}}}]}' | expired_namespaces 500 o-r)
+  [ "$out" = "$(printf 'preview-a-x\npreview-legacy')" ]
+}
+
 @test "expired_namespaces: < now, missing/garbage label expired, foreign ns ignored" {
-  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; expired_namespaces 500" < <(ns_json)
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; expired_namespaces 500 o-r" < <(ns_json)
   [ "$status" -eq 0 ]
   [ "$output" = "$(printf 'preview-old\npreview-nolabel\npreview-garbage')" ]
 }
 
 @test "expired_namespaces: expires-at == now is not expired" {
-  out=$(ns_json | expired_namespaces 500)
+  out=$(ns_json | expired_namespaces 500 o-r)
   [[ "$out" != *preview-edge* ]] || false
-  out=$(ns_json | expired_namespaces 501)
+  out=$(ns_json | expired_namespaces 501 o-r)
   [[ "$out" == *preview-edge* ]] || false
 }
 
 @test "expired_namespaces: empty list -> no output" {
-  [ -z "$(echo '{"items":[]}' | expired_namespaces 500)" ]
+  [ -z "$(echo '{"items":[]}' | expired_namespaces 500 o-r)" ]
 }
 
 @test "expired_namespaces: malformed JSON and bad now fail" {
-  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; echo '{bad' | expired_namespaces 500"
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; echo '{bad' | expired_namespaces 500 o-r"
   [ "$status" -ne 0 ]
-  run expired_namespaces abc; [ "$status" -eq 1 ]
+  run expired_namespaces abc o-r; [ "$status" -eq 1 ]
+  run expired_namespaces 500 '' </dev/null; [ "$status" -eq 1 ]
 }
 
 @test "sourcing does not change caller shell options" {
@@ -163,21 +226,21 @@ JSON
 
 # --- preview_plan ---
 @test "preview_plan: happy path emits the full identity" {
-  out=$(preview_plan 'Feature/JIRA-1' 48h '' 30m 3 preview.example.com abc1234 1000)
-  [ "$out" = "$(printf '%s\n' preview_id=feature-jira-1 namespace=preview-feature-jira-1 \
+  out=$(preview_plan todo 'Feature/JIRA-1' 48h '' 30m 3 preview.example.com abc1234 1000)
+  [ "$out" = "$(printf '%s\n' app=todo preview_id=feature-jira-1 namespace=preview-todo-feature-jira-1 \
     host=feature-jira-1.preview.example.com short_sha=abc1234 idle=1800 max_replicas=3 \
     lifetime=48h expires_at=173800)" ]
 }
 
 @test "preview_plan: custom lifetime and never idle" {
-  out=$(preview_plan main custom 12h never 1 d.example abc1234 0)
+  out=$(preview_plan todo main custom 12h never 1 d.example abc1234 0)
   [[ "$out" == *"lifetime=12h"* ]] || false
   [[ "$out" == *"expires_at=43200"* ]] || false
   [[ "$out" == *"idle=31536000"* ]] || false
 }
 
 @test "preview_plan: every invalid input fails and prints nothing on stdout" {
-  bad() { run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; preview_plan \"\$@\" 2>/dev/null" _ "$@"
+  bad() { run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; preview_plan todo \"\$@\" 2>/dev/null" _ "$@"
           [ "$status" -eq 1 ] && [ -z "$output" ] || { echo "expected fail: $*"; return 1; }; }
   bad '///' 48h '' 30m 3 d.example abc1234 0      # empty id
   bad main custom '' 30m 3 d.example abc1234 0    # custom without value
@@ -188,15 +251,19 @@ JSON
   bad main 48h '' 30m 3 '' abc1234 0              # no domain
   bad main 48h '' 30m 3 d.example '' 0            # no sha
   bad main 48h '' 30m 3 d.example 'ab;rm' 0       # non-hex sha
+  run bash -c ". '$BATS_TEST_DIRNAME/../scripts/lib/preview.sh'; preview_plan '' main 48h '' 30m 3 d.example abc1234 0 2>/dev/null"
+  [ "$status" -eq 1 ] && [ -z "$output" ]                  # no app
 }
 
 # --- namespace_manifest ---
 @test "namespace_manifest: label contract + raw branch escaped into annotation" {
   br='Feat/"quoted" $(x) `y`'
-  m=$(namespace_manifest preview-feat-quoted feat-quoted abc1234 1700000000 "$br")
+  m=$(namespace_manifest preview-todo-feat-quoted feat-quoted abc1234 1700000000 "$br" todo Nimat-Dev/Repo_X)
   [ "$(jq -r .kind <<<"$m")" = Namespace ]
-  [ "$(jq -r .metadata.name <<<"$m")" = preview-feat-quoted ]
-  [ "$(jq -c .metadata.labels <<<"$m")" = '{"managed-by":"preview-bot","preview.branch":"feat-quoted","preview.commit":"abc1234","preview.expires-at":"1700000000"}' ]
+  [ "$(jq -r .metadata.name <<<"$m")" = preview-todo-feat-quoted ]
+  [ "$(jq -c .metadata.labels <<<"$m")" = '{"managed-by":"preview-bot","preview.branch":"feat-quoted","preview.commit":"abc1234","preview.expires-at":"1700000000","preview.app":"todo","preview.repo":"nimat-dev-repo-x"}' ]
+  [ "$(jq -r '.metadata.annotations["preview.repo-original"]' <<<"$m")" = Nimat-Dev/Repo_X ]
+  run namespace_manifest ns id abc1234 1 br todo ''; [ "$status" -ne 0 ]
   [ "$(jq -r '.metadata.annotations["preview.branch-original"]' <<<"$m")" = "$br" ]
 }
 

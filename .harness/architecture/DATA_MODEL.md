@@ -8,7 +8,9 @@ that deploy, destroy, and reap agree on. Defined in `scripts/lib/preview.sh` (pu
 |---|---|---|
 | `branch` | dispatch input (raw) | `Feature/JIRA-123_login` |
 | `preview_id` | lowercase; non-`[a-z0-9]` runs → `-`; trim `-`; cut 40; trim trailing `-` | `feature-jira-123-login` |
-| `namespace` | `preview-<preview_id>` | `preview-feature-jira-123-login` |
+| `app` | repo var `PREVIEW_APP` (else repo name), same slug rules, cut 20 (F015) | `todo` |
+| `repo` | `preview.repo` label: slug of `owner/repo`, cut 63 (F015) | `nimat-dev-ephemeral-environments` |
+| `namespace` | `preview-<app>-<preview_id>`; > 63 → first 54 chars + `-` + 8-hex cksum (F015) | `preview-todo-feature-jira-123-login` |
 | `host` | `<preview_id>.<PREVIEW_DOMAIN>` | `feature-jira-123-login.preview.nimat.dev` |
 | `short_sha` | `git rev-parse --short HEAD` of branch | `a1b2c3d` |
 | `image` | `<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>:<short_sha>` | |
@@ -22,8 +24,11 @@ labels:
   preview.branch: <preview_id>
   preview.commit: <short_sha>
   preview.expires-at: "<epoch seconds>"
+  preview.app: <app>                 # F015
+  preview.repo: <repo slug>          # F015 — ownership
 annotations:
   preview.branch-original: "<raw branch>"
+  preview.repo-original: "<owner/repo>"
 ```
 
 ## Invariants (enforced in the pure core, tested)
@@ -32,9 +37,11 @@ annotations:
 3. `lifetime=custom` with empty `lifetime_custom` → hard fail.
 4. `expires_at` is an integer epoch > now.
 5. Reaper deletes only `preview-*` namespaces with `managed-by=preview-bot` AND `expires-at < now`;
-   missing label → treated as `0` (expired) — per spec.
+   missing label → treated as `0` (expired) — per spec. It reaps only namespaces it owns (7).
+7. Ownership (F015): `managed-by=preview-bot` AND (`preview.repo` == own repo OR no `preview.repo` = legacy
+   pre-F015). Namespace apply, destroy and reap act only on owned namespaces; another repo's is refused.
 6. One preview per branch (redeploy rolls the same Deployment).
 
 ## Id prefixes
 - Features `F001…`, decisions `DEC-001…`, ADRs `ADR-0001…`, blockers `BLK-001…`.
-- Runtime: namespaces `preview-<preview_id>`; Helm release = `preview_id`.
+- Runtime: namespaces `preview-<app>-<preview_id>` (legacy pre-F015: `preview-<preview_id>`); Helm release = `preview_id`.
