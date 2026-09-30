@@ -1,13 +1,18 @@
+{{- range $i, $c := (include "preview.components" . | fromJson).items }}
+{{- if $i }}
+---
+{{- end }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "preview.fullname" . }}
+  name: {{ $c.fullname }}
   labels:
-    {{- include "preview.labels" . | nindent 4 }}
+    {{- include "preview.componentLabels" (dict "c" $c "root" $) | nindent 4 }}
 spec:
   selector:
-    app.kubernetes.io/name: {{ include "preview.fullname" . }}
+    app.kubernetes.io/name: {{ $c.fullname }}
   ports:
     - name: http
       port: 80
-      targetPort: {{ .Values.containerPort }}
+      targetPort: {{ $c.port }}
+{{- end }}

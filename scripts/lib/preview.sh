@@ -235,3 +235,63 @@ purge_tags() {
     | [ $tagged[] | select(.victim) | select((.digest // "") as $d | $d == "" or ($protected | index($d) | not)) ]
     | sort_by(.ts) | reverse | unique_by(.digest // .name) | sort_by(.ts) | reverse | .[].name'
 }
+
+# --- F016: app contract (.preview.yaml, converted to JSON by the caller) ---
+# Used when the app branch has no .preview.yaml: one component built from the repo root.
+# shellcheck disable=SC2034 # read by sourcing scripts (preview-ci.sh read_config)
+PREVIEW_DEFAULT_CONFIG='{"components":[{"name":"web"}]}'
+
+# preview_config < config.json -> normalized compact JSON {components:[{name,context,dockerfile,port,
+# probePath,route[,resources]}],addons:[]}. Unknown keys are errors (typos fail loudly, DEC-045); paths
+# stay inside the checkout; routes are unique after trailing-"/" normalization. jq error -> non-zero.
+preview_config() {
+  jq -c '
+    def err($m): error("preview config: " + $m);
+    def relpath: type == "string" and test("^[A-Za-z0-9._/-]+$") and (startswith("/") | not)
+      and (split("/") | index("..") | not);
+    def urlpath: type == "string" and test("^/[A-Za-z0-9._~/-]*$");
+    def qty: (type == "string" or type == "number") and (tostring | test("^[0-9]+(\\.[0-9]+)?(m|k|Ki|M|Mi|G|Gi)?$"));
+    def resources:
+      if type != "object" or ((keys - ["requests", "limits"]) | length) > 0 then false
+      else all(.[]; type == "object" and ((keys - ["cpu", "memory"]) | length) == 0 and all(.[]; qty)) end;
+    def component:
+      if type != "object" then err("component must be a mapping") else . end
+      | (keys - ["name", "context", "dockerfile", "port", "probePath", "route", "resources"]) as $x
+      | if ($x | length) > 0 then err("component \(.name // "?"): unknown key(s): \($x | join(", "))") else . end
+      | if (.name | type) != "string" or (.name | test("^[a-z][a-z0-9-]{0,14}$") | not) or (.name | endswith("-"))
+        then err("component name \(.name | tojson) must match [a-z][a-z0-9-]{0,14}, not ending in -") else . end
+      | .name as $n
+      | {name, context: (.context // "."), dockerfile: (.dockerfile // "Dockerfile"), port: (.port // 8080),
+         probePath: (.probePath // "/"), route: (.route // "/")} + (if has("resources") then {resources} else {} end)
+      | if (.context | relpath | not) then err("\($n): context \(.context | tojson) must be a relative path without ..") else . end
+      | if (.dockerfile | relpath | not) then err("\($n): dockerfile \(.dockerfile | tojson) must be a relative path without ..") else . end
+      | if (.port | type) != "number" or .port != (.port | floor) or .port < 1 or .port > 65535
+        then err("\($n): port \(.port | tojson) must be an integer 1..65535") else . end
+      | if (.route | urlpath | not) then err("\($n): route \(.route | tojson) must start with / (safe chars only)") else . end
+      | if (.probePath | urlpath | not) then err("\($n): probePath \(.probePath | tojson) must start with / (safe chars only)") else . end
+      | if has("resources") and (.resources | resources | not)
+        then err("\($n): resources must be {requests,limits: {cpu,memory: quantity}}") else . end
+      | .route |= (if . == "/" then . else sub("/+$"; "") end);
+    if type != "object" then err("must be a mapping") else . end
+    | (keys - ["components", "addons"]) as $x
+    | if ($x | length) > 0 then err("unknown key(s): \($x | join(", "))") else . end
+    | (.addons // []) as $a
+    | if ($a | type) != "array" then err("addons must be a list")
+      elif ($a | length) > 0 then err("unsupported addon(s): \($a | map(tostring) | join(", ")) (none available yet)") else . end
+    | if (.components | type) != "array" or (.components | length) == 0 then err("components must be a non-empty list")
+      elif (.components | length) > 4 then err("at most 4 components") else . end
+    | [.components[] | component] as $c
+    | if ($c | map(.name) | unique | length) != ($c | length) then err("duplicate component name") else . end
+    | if ($c | map(.route) | unique | length) != ($c | length) then err("duplicate route") else . end
+    | {components: $c, addons: []}'
+}
+
+# preview_values IMAGE_REPOSITORY TAG < normalized-config.json -> helm values JSON {components:[...]} with
+# image <IMAGE_REPOSITORY>/<component>:<TAG> per component (DEC-046).
+preview_values() {
+  [ -n "${1-}" ] || { _preview_err "image repository required"; return 1; }
+  case "${2-}" in ''|*[!0-9a-f]*) _preview_err "invalid tag '${2-}'"; return 1 ;; esac
+  jq -c --arg repo "$1" --arg tag "$2" '{components: [.components[]
+    | {name, image: {repository: "\($repo)/\(.name)", tag: $tag}, port, probePath, route}
+      + (if has("resources") then {resources} else {} end)]}'
+}

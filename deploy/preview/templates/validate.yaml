@@ -1,7 +1,15 @@
 {{- /*
-Fail the render when per-deploy values are missing. Additive to the spec's templates
-(DEC-018): without these, defaults render host "" and image ":" and still pass schema checks.
+Fail the render when per-deploy values are missing: without these, defaults render host "" and
+image ":" and still pass schema checks. Legacy (no components): top-level image; else each component.
 */ -}}
 {{- $_ := required "host is required (e.g. <id>.<PREVIEW_DOMAIN>)" .Values.host -}}
+{{- if .Values.components -}}
+{{- range .Values.components -}}
+{{- $_ := required "components[].name is required" .name -}}
+{{- $_ := required (printf "components[%s].image.repository is required" .name) (dig "image" "repository" "" .) -}}
+{{- $_ := required (printf "components[%s].image.tag is required" .name) (dig "image" "tag" "" .) -}}
+{{- end -}}
+{{- else -}}
 {{- $_ := required "image.repository is required (<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>)" .Values.image.repository -}}
 {{- $_ := required "image.tag is required (short git sha)" .Values.image.tag -}}
+{{- end -}}

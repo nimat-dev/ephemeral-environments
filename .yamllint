@@ -2,6 +2,7 @@ extends: default
 
 ignore: |
   deploy/preview/templates/
+  tests/fixtures/legacy-render.yaml   # generated helm output (golden, F016)
   node_modules/
   **/node_modules/
   **/pnpm-lock.yaml

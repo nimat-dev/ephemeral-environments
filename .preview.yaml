@@ -1,0 +1,11 @@
+# Preview app contract (F016, `scripts/lib/preview.sh` → preview_config). One entry per workload,
+# all served on https://<branch>.<PREVIEW_DOMAIN>, routed by longest path prefix.
+components:
+  - name: web
+    context: todo            # Vite + React SPA (nginx-unprivileged :8080)
+    route: /
+  - name: api
+    context: examples/echo-api
+    route: /api
+    probePath: /api/health
+addons: []

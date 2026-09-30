@@ -101,7 +101,7 @@ else log info "skip helm (no chart yet — F003)"; fi
 
 bats_files=(tests/*.bats)
 if [ ${#bats_files[@]} -gt 0 ]; then
-  need bats bats && step "bats (full suite)" bats tests/
+  need bats bats && need yq yq && step "bats (full suite)" bats tests/
 else log info "skip bats (no tests)"; fi
 
 step check-architecture ./scripts/check-architecture.sh

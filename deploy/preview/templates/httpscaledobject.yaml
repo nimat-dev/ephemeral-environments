@@ -1,19 +1,29 @@
+{{- range $i, $c := (include "preview.components" . | fromJson).items }}
+{{- if $i }}
+---
+{{- end }}
 apiVersion: http.keda.sh/v1alpha1
 kind: HTTPScaledObject
 metadata:
-  name: {{ include "preview.fullname" . }}
+  name: {{ $c.fullname }}
   labels:
-    {{- include "preview.labels" . | nindent 4 }}
+    {{- include "preview.componentLabels" (dict "c" $c "root" $) | nindent 4 }}
 spec:
   hosts:
-    - {{ .Values.host | quote }}
+    - {{ $.Values.host | quote }}
+  {{- if $c.byPath }}
+  # The interceptor routes host + longest path prefix to this component (DEC-044).
+  pathPrefixes:
+    - {{ $c.route | quote }}
+  {{- end }}
   scaleTargetRef:
-    name: {{ include "preview.fullname" . }}
+    name: {{ $c.fullname }}
     kind: Deployment
     apiVersion: apps/v1
-    service: {{ include "preview.fullname" . }}
+    service: {{ $c.fullname }}
     port: 80
   replicas:
-    min: {{ .Values.replicas.min }}
-    max: {{ .Values.replicas.max }}
-  scaledownPeriod: {{ .Values.idleTimeoutSeconds }}
+    min: {{ $.Values.replicas.min }}
+    max: {{ $.Values.replicas.max }}
+  scaledownPeriod: {{ $.Values.idleTimeoutSeconds }}
+{{- end }}
