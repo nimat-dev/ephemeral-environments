@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 22 / 23 COMPLETE (96%) — Phases 01–04 COMPLETE, Phase 05 IN PROGRESS
+**Progress**: 23 / 23 COMPLETE (100%) — Phases 01–05 COMPLETE (2026-10-01)
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -30,7 +30,7 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 ## Phase 04 — Maintenance — COMPLETE (2026-09-29)
 - [x] **F014** — Pin GitHub Actions to latest full release tags (Node 24; issue #17, DEC-035) — `COMPLETE`
 
-## Phase 05 — Multi-repo, reusable platform — IN PROGRESS (2026-09-30)
+## Phase 05 — Multi-repo, reusable platform — COMPLETE (2026-10-01)
 - [x] **F015** — Repo-scoped preview identity: ns `preview-<app>-<branch>`, `preview.repo` label, destroy/reap/purge own-repo only — `COMPLETE`
 - [x] **F016** — `.preview.yaml` app contract with `components[]` + path routing; chart renders N components — `COMPLETE`
 - [x] **F017** — Multiple project domains per cluster (Azure DNS zone each, wildcard cert, TLSStore) — `COMPLETE`
@@ -39,4 +39,4 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F020** — OpenTofu `repo-onboarding` module (per-repo SP, OIDC, GitHub vars, DNS) — `COMPLETE`
 - [x] **F021** — Kit extraction: composite action + reusable workflows + OCI chart, semver releases — `COMPLETE`
 - [x] **F022** — Agent-agnostic harness (AGENTS.md canonical, Copilot prompts, pre-commit + CI gate, Copier) — `COMPLETE`
-- [ ] **F023** — Pilot second repo (same branch, different domain, isolated destroy/reap) — `IN PROGRESS`
+- [x] **F023** — Pilot second repo (same branch, different domain, isolated destroy/reap) — `COMPLETE`

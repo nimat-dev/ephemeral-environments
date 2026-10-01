@@ -1,0 +1,198 @@
+=== Curl shop endpoint: https://feat-pilot.shop.preview.nimat.dev
+* Host feat-pilot.shop.preview.nimat.dev:443 was resolved.
+* IPv6: (none)
+* IPv4: 74.151.139.236
+*   Trying 74.151.139.236:443...
+* Connected to feat-pilot.shop.preview.nimat.dev (74.151.139.236) port 443
+* ALPN: curl offers h2,http/1.1
+* (304) (OUT), TLS handshake, Client hello (1):
+} [338 bytes data]
+*  CAfile: /etc/ssl/cert.pem
+*  CApath: none
+* (304) (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* (304) (IN), TLS handshake, Unknown (8):
+{ [19 bytes data]
+* (304) (IN), TLS handshake, Certificate (11):
+{ [4091 bytes data]
+* (304) (IN), TLS handshake, CERT verify (15):
+{ [264 bytes data]
+* (304) (IN), TLS handshake, Finished (20):
+{ [36 bytes data]
+* (304) (OUT), TLS handshake, Finished (20):
+} [36 bytes data]
+* SSL connection using TLSv1.3 / AEAD-CHACHA20-POLY1305-SHA256 / [blank] / UNDEF
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=*.shop.preview.nimat.dev
+*  start date: Sep 30 10:52:47 2026 GMT
+*  expire date: Dec 29 10:52:46 2026 GMT
+*  subjectAltName: host "feat-pilot.shop.preview.nimat.dev" matched cert's "*.shop.preview.nimat.dev"
+*  issuer: C=US; O=Let's Encrypt; CN=YR1
+*  SSL certificate verify ok.
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://feat-pilot.shop.preview.nimat.dev/
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: feat-pilot.shop.preview.nimat.dev]
+* [HTTP/2] [1] [:path: /]
+* [HTTP/2] [1] [user-agent: curl/8.7.1]
+* [HTTP/2] [1] [accept: */*]
+> GET / HTTP/2
+> Host: feat-pilot.shop.preview.nimat.dev
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/2 200 
+< accept-ranges: bytes
+< content-type: text/html
+< date: Thu, 01 Oct 2026 11:31:50 GMT
+< etag: "6abe4443-ab"
+< last-modified: Thu, 01 Oct 2026 11:30:11 GMT
+< server: nginx/1.27.5
+< x-keda-http-cold-start: false
+< content-length: 171
+< 
+{ [171 bytes data]
+* Connection #0 to host feat-pilot.shop.preview.nimat.dev left intact
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Shop Preview</title>
+</head>
+<body>
+  <h1>Shop Preview Environment</h1>
+  <p>App: shop</p>
+</body>
+</html>
+=== Curl todo endpoint: https://feat-pilot.preview.nimat.dev
+* Host feat-pilot.preview.nimat.dev:443 was resolved.
+* IPv6: (none)
+* IPv4: 74.151.139.236
+*   Trying 74.151.139.236:443...
+* Connected to feat-pilot.preview.nimat.dev (74.151.139.236) port 443
+* ALPN: curl offers h2,http/1.1
+* (304) (OUT), TLS handshake, Client hello (1):
+} [333 bytes data]
+*  CAfile: /etc/ssl/cert.pem
+*  CApath: none
+* (304) (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* (304) (IN), TLS handshake, Unknown (8):
+{ [19 bytes data]
+* (304) (IN), TLS handshake, Certificate (11):
+{ [4081 bytes data]
+* (304) (IN), TLS handshake, CERT verify (15):
+{ [264 bytes data]
+* (304) (IN), TLS handshake, Finished (20):
+{ [36 bytes data]
+* (304) (OUT), TLS handshake, Finished (20):
+} [36 bytes data]
+* SSL connection using TLSv1.3 / AEAD-CHACHA20-POLY1305-SHA256 / [blank] / UNDEF
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=*.preview.nimat.dev
+*  start date: Sep 28 18:51:11 2026 GMT
+*  expire date: Dec 27 18:51:10 2026 GMT
+*  subjectAltName: host "feat-pilot.preview.nimat.dev" matched cert's "*.preview.nimat.dev"
+*  issuer: C=US; O=Let's Encrypt; CN=YR2
+*  SSL certificate verify ok.
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://feat-pilot.preview.nimat.dev/
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: feat-pilot.preview.nimat.dev]
+* [HTTP/2] [1] [:path: /]
+* [HTTP/2] [1] [user-agent: curl/8.7.1]
+* [HTTP/2] [1] [accept: */*]
+> GET / HTTP/2
+> Host: feat-pilot.preview.nimat.dev
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/2 200 
+< accept-ranges: bytes
+< cache-control: no-cache
+< content-type: text/html
+< date: Thu, 01 Oct 2026 11:31:51 GMT
+< etag: "6abe441f-1c6"
+< last-modified: Thu, 01 Oct 2026 11:29:35 GMT
+< server: nginx/1.27.5
+< x-keda-http-cold-start: false
+< content-length: 454
+< 
+{ [454 bytes data]
+* Connection #0 to host feat-pilot.preview.nimat.dev left intact
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>todo</title>
+    <script type="module" crossorigin src="/assets/index-C9S9Cn0y.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D64VDMd1.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+=== Curl todo api endpoint: https://feat-pilot.preview.nimat.dev/api/health
+* Host feat-pilot.preview.nimat.dev:443 was resolved.
+* IPv6: (none)
+* IPv4: 74.151.139.236
+*   Trying 74.151.139.236:443...
+* Connected to feat-pilot.preview.nimat.dev (74.151.139.236) port 443
+* ALPN: curl offers h2,http/1.1
+* (304) (OUT), TLS handshake, Client hello (1):
+} [333 bytes data]
+*  CAfile: /etc/ssl/cert.pem
+*  CApath: none
+* (304) (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* (304) (IN), TLS handshake, Unknown (8):
+{ [19 bytes data]
+* (304) (IN), TLS handshake, Certificate (11):
+{ [4081 bytes data]
+* (304) (IN), TLS handshake, CERT verify (15):
+{ [264 bytes data]
+* (304) (IN), TLS handshake, Finished (20):
+{ [36 bytes data]
+* (304) (OUT), TLS handshake, Finished (20):
+} [36 bytes data]
+* SSL connection using TLSv1.3 / AEAD-CHACHA20-POLY1305-SHA256 / [blank] / UNDEF
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=*.preview.nimat.dev
+*  start date: Sep 28 18:51:11 2026 GMT
+*  expire date: Dec 27 18:51:10 2026 GMT
+*  subjectAltName: host "feat-pilot.preview.nimat.dev" matched cert's "*.preview.nimat.dev"
+*  issuer: C=US; O=Let's Encrypt; CN=YR2
+*  SSL certificate verify ok.
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://feat-pilot.preview.nimat.dev/api/health
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: feat-pilot.preview.nimat.dev]
+* [HTTP/2] [1] [:path: /api/health]
+* [HTTP/2] [1] [user-agent: curl/8.7.1]
+* [HTTP/2] [1] [accept: */*]
+> GET /api/health HTTP/2
+> Host: feat-pilot.preview.nimat.dev
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/2 200 
+< content-type: application/json
+< date: Thu, 01 Oct 2026 11:31:51 GMT
+< server: nginx/1.27.5
+< x-keda-http-cold-start: false
+< content-length: 33
+< 
+{ [33 bytes data]
+* Connection #0 to host feat-pilot.preview.nimat.dev left intact
+{"component":"api","status":"ok"}

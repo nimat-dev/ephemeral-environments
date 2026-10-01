@@ -1,0 +1,7 @@
+=== Namespaces with preview.repo label:
+NAME                      STATUS   AGE   LABELS
+preview-todo-feat-pilot   Active   67m   kubernetes.io/metadata.name=preview-todo-feat-pilot,managed-by=preview-bot,preview.app=todo,preview.branch=feat-pilot,preview.commit=439bd8c,preview.expires-at=1791026927,preview.repo=nimat-dev-ephemeral-environments
+=== Curl shop endpoint (expect 404):
+404
+=== Curl todo endpoint (expect 200):
+200

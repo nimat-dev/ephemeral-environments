@@ -12,6 +12,16 @@ locals {
         gh-preview-env-immutable = "repo:nimat-dev@183449925/ephemeral-environments@1392951147:environment:preview"
       }
     }
+    shop = {
+      repository     = "nimat-dev/shop"
+      display_name   = "gh-preview-shop"
+      image_name     = "shop"
+      preview_domain = "shop.preview.nimat.dev"
+      federated_subjects = {
+        gh-preview-env           = "repo:nimat-dev/shop:environment:preview"
+        gh-preview-env-immutable = "repo:nimat-dev@183449925/shop@1399826709:environment:preview"
+      }
+    }
   }
 }
 

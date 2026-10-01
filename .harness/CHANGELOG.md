@@ -18,6 +18,24 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-10-01 — F023 Pilot second repo — COMPLETE
+Branch/commit: feat/F023   Contract: `verification/contracts/F023.md`
+Evidence (`evidence/F023/`):
+  - repo onboarding: `nimat-dev/shop` onboarded via OpenTofu `repo-onboarding` module in `platform/envs/nimat/repos.tf`
+    (23 resources added, Entra app/SP, federated credentials with immutable subject, Azure roles, GitHub preview env + 13 variables)
+  - k8s guard: generated `clusters/nimat/config/repos/shop.yaml` applied server-side; live probes as shop SP verify write isolation
+    (namespace `preview-shop-probe` allowed; `preview-todo-probe`, `preview-probe`, `kube-system`, `default` denied by VAP; secrets denied by RBAC) (`guard-probes.txt`)
+  - kit consumption: `nimat-dev/shop` configured with `.preview.yaml` and kit workflows (`@v1.1.0`), pushed to `main` and `feat/pilot`
+  - concurrent multi-tenant deployment: both apps deployed simultaneously on identical branch `feat/pilot` (shop run 36855731738, todo run 36855603644);
+    namespaces `preview-shop-feat-pilot` and `preview-todo-feat-pilot` active concurrently
+  - routing & TLS proof: `https://feat-pilot.shop.preview.nimat.dev` (HTTP 200, valid `*.shop.preview.nimat.dev` cert) and
+    `https://feat-pilot.preview.nimat.dev` (HTTP 200, valid `*.preview.nimat.dev` cert) served simultaneously via Traefik SNI (`live-endpoints.txt`)
+  - isolated destroy: dispatch destroy on `shop` removes `preview-shop-feat-pilot` (endpoint -> 404) while `preview-todo-feat-pilot`
+    remains running and responsive (HTTP 200) (`isolation-proof.txt`); subsequent destroy cleans up `todo` preview
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 294/294, OpenTofu fmt/validate/test, tflint, checkov, check-architecture clean (`init.txt`)
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0  (PASS)
+Notes: Phase 05 and full project roadmap (23/23 features, 100%) are now COMPLETE!
+
 ## 2026-10-01 — F022 Agent-agnostic harness — COMPLETE
 Branch/commit: feat/F022 @ 15ff28c   PR: #28   CI: green (run 36786821360)
 Contract: `verification/contracts/F022.md`   DEC-043, DEC-052
