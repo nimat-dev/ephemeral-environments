@@ -1,0 +1,19 @@
+dispatch #1 preview-destroy.yml -f branch=e2e/regression
+run: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36651374248 conclusion=success
+##[group]Run ./scripts/preview-ci.sh destroy
+^[[36;1m./scripts/preview-ci.sh destroy^[[0m
+[info] preview-ci: destroy: deleting preview-e2e-regression
+ns: NAME                     STATUS        AGE
+preview-e2e-regression   Terminating   17m
+curl: 000
+dispatch #2 preview-destroy.yml -f branch=e2e/regression
+run: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36701118214 conclusion=failure
+##[group]Run ./scripts/preview-ci.sh destroy
+^[[36;1m./scripts/preview-ci.sh destroy^[[0m
+ns: E0930 06:14:17.684098   73784 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io: no such host"
+E0930 06:14:17.685330   73784 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io: no such host"
+E0930 06:14:17.686180   73784 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io: no such host"
+E0930 06:14:17.687008   73784 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io: no such host"
+E0930 06:14:17.687842   73784 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io: no such host"
+Unable to connect to the server: dial tcp: lookup aks-previe-nimatresourceg-1325f7-h121gxrx.hcp.eastus.azmk8s.io: no such host
+curl: 000

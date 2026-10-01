@@ -46,3 +46,15 @@ Verify after fixes: `./scripts/init.sh` BASELINE GREEN, bats 288/288, 0 skipped.
 | 9 | Template `--check` missed orphans / missing scaffolding | `--check` diffs the template tree vs generic+claude+handwritten+.gitkeep sets (non-jinja); test on a repo copy |
 
 Verify after fixes: `./scripts/init.sh` BASELINE GREEN, bats 294/294, shellcheck clean.
+
+## Round 4 (2026-10-01, final pass on main...feat/F022) — CLEAN (0 findings)
+- Full diff inspected against contract, DEC-052, and evaluator rubric:
+  - Canonical root AGENTS.md, CLAUDE.md import, Copilot pointer in sync
+  - Agent command generation and drift check clean
+  - harness-check.sh and pre-commit hook verified
+  - Copier template tree and drift check clean
+  - check-architecture configuration clean
+- Verification: `./scripts/init.sh` BASELINE GREEN (294/294 bats tests, tofu validate/test 10/10, tflint, checkov, check-architecture clean).
+- GitHub Actions CI `harness-check` green on PR #28.
+- Verdict: PASS / CLEAN. Ready for merge and v1.1.0 release.
+

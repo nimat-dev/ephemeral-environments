@@ -1,0 +1,9 @@
+$ ./scripts/smoke.sh --image nimatpreviewacr.azurecr.io/todo --tag d069825 --idle 120
+[info] smoke: deploy nimatpreviewacr.azurecr.io/todo:d069825 as smoke.preview.nimat.dev (idle 120s)
+[info] smoke: scaled to 0 after 0s idle
+CP1 PASS valid TLS for smoke.preview.nimat.dev
+CP2 PASS cold start 0→1 ready in 8.350943s, HTTP 200
+CP3 PASS back to 0 after 129s
+[info] smoke: smoke PASSED
+[info] smoke: cleanup: deleting namespace preview-smoke
+exit=0

@@ -6,7 +6,7 @@ for **scope**. Statuses: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVI
 
 Derived from `preview-environments-implementation.md` Part E (build order).
 
-**Progress**: 21 / 23 COMPLETE (91%) — Phases 01–04 COMPLETE, Phase 05 IN PROGRESS
+**Progress**: 22 / 23 COMPLETE (96%) — Phases 01–04 COMPLETE, Phase 05 IN PROGRESS
 
 ## Phase 01 — Foundation — COMPLETE (2026-09-28)
 - [x] **F001** — Repo tooling: `scripts/init.sh`, `scripts/check-architecture.sh`, lint configs (actionlint, shellcheck, yamllint, kubeconform) — `COMPLETE`
@@ -38,5 +38,5 @@ Derived from `preview-environments-implementation.md` Part E (build order).
 - [x] **F019** — Flux (AKS extension) for in-cluster add-ons, `clusters/base` + `clusters/<team>` — `COMPLETE`
 - [x] **F020** — OpenTofu `repo-onboarding` module (per-repo SP, OIDC, GitHub vars, DNS) — `COMPLETE`
 - [x] **F021** — Kit extraction: composite action + reusable workflows + OCI chart, semver releases — `COMPLETE`
-- [ ] **F022** — Agent-agnostic harness (AGENTS.md canonical, Copilot prompts, pre-commit + CI gate, Copier) — `IN PROGRESS`
-- [ ] **F023** — Pilot second repo (same branch, different domain, isolated destroy/reap) — `NOT STARTED`
+- [x] **F022** — Agent-agnostic harness (AGENTS.md canonical, Copilot prompts, pre-commit + CI gate, Copier) — `COMPLETE`
+- [ ] **F023** — Pilot second repo (same branch, different domain, isolated destroy/reap) — `IN PROGRESS`

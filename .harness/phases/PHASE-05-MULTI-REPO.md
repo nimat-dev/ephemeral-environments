@@ -61,11 +61,11 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] `.preview.yaml` `defaults` (lifetime, idle, maxReplicas) fill empty inputs.
 
 ## F022 — Agent-agnostic harness
-**Status**: IN PROGRESS (2026-09-30)
-- [ ] Root `AGENTS.md` canonical; `CLAUDE.md` = `@AGENTS.md`; `.github/copilot-instructions.md` pointer (DEC-043).
-- [ ] `.harness/commands/*.md` single source, mirrored to `.claude/commands/` + `.github/prompts/*.prompt.md`.
-- [ ] Enforcement in git + CI: pre-commit (roadmap gate, state-updated check) + required `harness-check` status.
-- [ ] Copier template of generic harness; generic vs project files split; check-architecture rules from config.
+**Status**: COMPLETE (2026-10-01) — contract `verification/contracts/F022.md`, evidence `evidence/F022/`, DEC-052
+- [x] Root `AGENTS.md` canonical; `CLAUDE.md` = `@AGENTS.md`; `.github/copilot-instructions.md` pointer (DEC-043, DEC-052).
+- [x] `.harness/commands/*.md` single source, mirrored to `.claude/commands/` + `.github/prompts/*.prompt.md`.
+- [x] Enforcement in git + CI: pre-commit (roadmap gate, state-updated check) + required `harness-check` status on `main`.
+- [x] Copier template of generic harness; generic vs project files split; check-architecture rules from config.
 
 ## F023 — Pilot second repo
 **Status**: NOT STARTED

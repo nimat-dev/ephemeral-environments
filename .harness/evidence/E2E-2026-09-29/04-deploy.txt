@@ -1,0 +1,14 @@
+dispatch preview-deploy.yml -f branch=e2e/regression -f lifetime=24h -f idle_timeout=15m
+run: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36649953812 conclusion=success
+$ curl https://e2e-regression.preview.nimat.dev
+HTTP 200 0.311126s
+$ kubectl -n preview-e2e-regression get deploy,httpscaledobject,ns labels
+NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+e2e-regression   1/1     1            1           28s
+NAME                     STATUS   AGE   LABELS
+preview-e2e-regression   Active   36s   kubernetes.io/metadata.name=preview-e2e-regression,managed-by=preview-bot,preview.branch=e2e-regression,preview.commit=51c4e2a,preview.expires-at=1790814118
+Wed Sep 30 00:23:15 UTC 2026
+## idle wait: replicas=0 at 2026-09-30T00:38:26Z (polled 839s)
+$ curl (cold start)
+HTTP 200 7.894878s
+replicas after wake: 1

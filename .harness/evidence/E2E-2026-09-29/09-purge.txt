@@ -1,0 +1,6 @@
+dispatch preview-acr-purge.yml -f dry_run=true
+run: https://github.com/nimat-dev/ephemeral-environments/actions/runs/36650185814 conclusion=success
+env: PURGE_DRY_RUN=true PURGE_MAX_AGE=7d PURGE_KEEP=3
+[info] preview-ci: purge: in use [51c4e2a], keep newest 3, older than 7d
+[info] preview-ci: purge: nothing to purge
+=> 0 deleted; in-use tag of live preview-e2e-regression protected. PASS

@@ -18,6 +18,23 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-10-01 — F022 Agent-agnostic harness — COMPLETE
+Branch/commit: feat/F022 @ 15ff28c   PR: #28   CI: green (run 36786821360)
+Contract: `verification/contracts/F022.md`   DEC-043, DEC-052
+Evidence (`evidence/F022/`):
+  - entry files: root `AGENTS.md` canonical; `CLAUDE.md` imports it; `.github/copilot-instructions.md` points to it
+  - agent commands: `.harness/commands/*.md` single source → `scripts/sync-agent-commands.sh` renders `.claude/commands/`
+    (when `.claude/` exists) and `.github/prompts/` with YAML front matter; drift-tested
+  - enforcement: `scripts/harness-check.sh` handles `--staged`, `--range`, `--files`, `--roadmap-only`, `--current`;
+    pre-commit hook in `.githooks/pre-commit`; CI workflow `harness-check.yml` with read-only token, required status check on `main`
+  - Copier template: root `copier.yml` points to `templates/harness/template`; `scripts/build-harness-template.sh` syncs generic
+    files and tests against drift/missing/orphan files; answers file supports `copier update`; renders clean with/without Claude hooks
+  - full suite: `./scripts/init.sh` → BASELINE GREEN, bats 294/294 (harness.bats 18/18), tofu test 10/10, tflint, checkov, check-architecture clean
+  - pre-commit hook e2e: code change without `PROJECT_STATE.md` rejected; with `PROJECT_STATE.md` accepted (`evidence/F022/hook-e2e.txt`)
+  - PR review: 4 rounds completed (`reviews/F022-review.md`), 29 findings fixed in rounds 1–3, round 4 clean
+Evaluator: acceptance=5 correctness=5 boundaries=5 modularity=5 evidence=5 => avg 5.0  (PASS)
+Notes: First release carrying the Copier template will be kit v1.1.0.
+
 ## 2026-09-30 — F021 Kit extraction + releases — COMPLETE
 Branch/commit: feat/F021 @ 21f993b   Contract: `verification/contracts/F021.md`   DEC-051
 Evidence (`evidence/F021/`):

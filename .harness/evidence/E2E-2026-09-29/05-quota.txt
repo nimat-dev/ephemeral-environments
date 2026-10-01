@@ -1,0 +1,14 @@
+$ ./scripts/quota-check.sh preview-e2e-regression
+[info] quota-check: quota preview-e2e-regression: {"limits.cpu":"2","limits.memory":"4Gi","pods":"6","requests.cpu":"2","requests.memory":"4Gi"} used {"limits.cpu":"500m","limits.memory":"512Mi","pods":"1","requests.cpu":"100m","requests.memory":"128Mi"}
+[info] quota-check: CP0 PASS small pod fits
+[info] quota-check: CP1 PASS cpu over limits.cpu: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-cpu" is forbidden: exceeded quota: preview-quota, requested: limits.cpu=1k, used: limits.cpu=500m, limited: limits.cpu=2
+[info] quota-check: CP2 PASS memory over limits.memory: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-mem" is forbidden: exceeded quota: preview-quota, requested: limits.memory=1Ti, used: limits.memory=512Mi, limited: limits
+[info] quota-check: CP3 PASS pod without resources: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-none" is forbidden: failed quota: preview-quota: must specify limits.cpu for: c; limits.memory for: c; requests.cpu for: c
+[info] quota-check: CP4 filling pods: used 1 / hard 6
+[info] quota-check: CP4 PASS pod beyond hard.pods=6: Error from server (Forbidden): error when creating "STDIN": pods "quota-probe-pods" is forbidden: exceeded quota: preview-quota, requested: pods=1, used: pods=6, limited: pods=6
+[info] quota-check: ALL PASS: preview-quota enforced in preview-e2e-regression
+[info] quota-check: cleanup: deleting fill pods in preview-e2e-regression
+exit=0
+$ kubectl -n preview-e2e-regression get pods
+NAME                              READY   STATUS    RESTARTS   AGE
+e2e-regression-6fcfd5b7d5-wk274   1/1     Running   0          54s

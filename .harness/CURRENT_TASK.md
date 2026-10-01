@@ -1,15 +1,13 @@
 # CURRENT TASK
 
 **Feature**: F022 — Agent-agnostic harness (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
-**Status**: IN PROGRESS (2026-09-30). Last: F021 COMPLETE.
+**Status**: COMPLETE (2026-10-01). Next active: F023.
 
 ## Exact next step
-Done: kit v1.0.0 released (F021); all F022 pieces built; local verify GREEN (bats 281/281, Copier render, hook e2e — `evidence/F022/`).
-1. DONE: PR #28, harness-check CI green, `main` requires `harness-check`; review round 1 fixed (`reviews/F022-review.md`).
-2. Rounds 1–3 fixed (29 findings, bats 294/294). CI on the round-3 push; review round 4 (last of max 4).
-3. Clean → CHANGELOG COMPLETE entry + evaluator score; ROADMAP/phase/contract COMPLETE; merge; `scripts/kit-release.sh prepare 1.1.0`
-   → merge → tag v1.1.0 (first release with the Copier template; v1.0.0 predates it).
-4. Then F023 (pilot second repo).
+Done: All F022 pieces built, local verify GREEN (bats 294/294, Copier render, hook e2e), PR #28 open with CI green, review rounds 1–4 complete (29 findings fixed in rounds 1–3, round 4 clean), CHANGELOG / ROADMAP / phase / contract marked COMPLETE.
+1. Merge PR #28 (`gh pr merge 28 --squash`).
+2. Release kit v1.1.0 (`scripts/kit-release.sh prepare 1.1.0` -> commit -> merge -> tag v1.1.0; first release carrying the Copier template).
+3. Start F023: Pilot second repo (write sprint contract in `verification/contracts/F023.md`, onboard second repo via F020, configure kit via F021, and prove isolation).
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. (done: BLK-008 resolved by F020)
