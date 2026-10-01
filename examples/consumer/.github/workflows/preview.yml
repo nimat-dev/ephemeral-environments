@@ -11,11 +11,11 @@ permissions:
 jobs:
   deploy:
     if: inputs.action == 'deploy'
-    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-deploy.yml@v1.0.0
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-deploy.yml@v1.1.0
     with:
       branch: ${{ inputs.branch }}
   destroy:
     if: inputs.action == 'destroy'
-    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-destroy.yml@v1.0.0
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-destroy.yml@v1.1.0
     with:
       branch: ${{ inputs.branch }}

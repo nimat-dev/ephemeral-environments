@@ -10,7 +10,7 @@ permissions:
   contents: read
 jobs:
   reap:
-    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-reap.yml@v1.0.0
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-reap.yml@v1.1.0
   purge:
     if: github.event.schedule == '17 3 * * *'
-    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-purge.yml@v1.0.0
+    uses: nimat-dev/ephemeral-environments/.github/workflows/kit-purge.yml@v1.1.0

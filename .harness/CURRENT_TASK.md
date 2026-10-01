@@ -1,13 +1,15 @@
 # CURRENT TASK
 
-**Feature**: F022 — Agent-agnostic harness (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
-**Status**: COMPLETE (2026-10-01). Next active: F023.
+**Feature**: F023 — Pilot second repo (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
+**Status**: IN PROGRESS (2026-10-01). Last: F022 COMPLETE (2026-10-01).
 
 ## Exact next step
-Done: All F022 pieces built, local verify GREEN (bats 294/294, Copier render, hook e2e), PR #28 open with CI green, review rounds 1–4 complete (29 findings fixed in rounds 1–3, round 4 clean), CHANGELOG / ROADMAP / phase / contract marked COMPLETE.
-1. Merge PR #28 (`gh pr merge 28 --squash`).
-2. Release kit v1.1.0 (`scripts/kit-release.sh prepare 1.1.0` -> commit -> merge -> tag v1.1.0; first release carrying the Copier template).
-3. Start F023: Pilot second repo (write sprint contract in `verification/contracts/F023.md`, onboard second repo via F020, configure kit via F021, and prove isolation).
+Done: F022 PR #28 merged to `main`, kit v1.1.0 prepared and tagged.
+1. Write sprint contract for F023 in `.harness/verification/contracts/F023.md`.
+2. Onboard second repo via OpenTofu `repo-onboarding` module (`platform/envs/nimat/repos.tf`, `clusters/nimat/config/repos/`).
+3. Setup second repo to consume the kit (v1.1.0), with its own domain (`shop.preview.nimat.dev`).
+4. Prove two previews on the same branch run simultaneously without cross-repo interference, with independent destroy/reap.
+5. Record evidence and PR review loop.
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. (done: BLK-008 resolved by F020)

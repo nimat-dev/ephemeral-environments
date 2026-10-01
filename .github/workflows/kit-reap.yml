@@ -11,7 +11,7 @@ on:
       kit_ref:
         description: Kit version to run (release tag; bumped by scripts/kit-release.sh).
         required: false
-        default: v1.0.0
+        default: v1.1.0
         type: string
 permissions:
   id-token: write
