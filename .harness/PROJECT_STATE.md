@@ -4,19 +4,22 @@
 
 ## Where we are
 - **Phase**: Phase 05 — Multi-repo, reusable platform — IN PROGRESS (planned 2026-09-30). Phases 01–04 COMPLETE.
-- **Active feature**: F022 agent-agnostic harness — IN PROGRESS. Last: F021 kit extraction + releases COMPLETE (2026-09-30). Phase 05 decisions DEC-036+.
-- **Overall progress**: 21 / 23 features COMPLETE (91%)
+- **Active feature**: F023 pilot second repo — IN PROGRESS. Last: F022 agent-agnostic harness COMPLETE (2026-10-01). Phase 05 decisions DEC-036+.
+- **Overall progress**: 22 / 23 features COMPLETE (96%)
 
 ## Last verified
-- **Date**: 2026-09-30
-- **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-09-30, F021)
-- **Full suite + check-architecture**: green — `bats tests/` 269/269 + tofu test 10/10 + tflint/checkov; check-architecture clean (F021, 2026-09-30)
-- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags); F014 new pins: Deploy 36655482441, Purge 36655484550, Reap 36655486789, Destroy 36655606524 green; F015: Deploy 36706339119 (ns `preview-todo-feat-f015`, 200), Reap 36706523897 (foreign expired ns kept), Destroy 36706532056 (legacy) / 36706594874 (foreign refused) / 36706663297 (404) ; F016: Deploy 36708302080/36710182013 (2 components, path routing, per-component scale-to-zero), Destroy 36710425734 ; F017: smoke PASS on `shop.preview.nimat.dev` + `preview.nimat.dev` ; F018: OpenTofu adopted 7 resources, plan No changes; regression Deploy 36713711855 + Destroy 36714179601 ; F019: Flux adopted add-ons, drift reverted, reinstall from scratch, smoke + Deploy 36720360228/Destroy 36720632838 ; F020: per-repo guard probes, Deploy 36722280404 + Destroy 36722549593 ; F021 dogfood via kit: Deploy 36724289952, Destroy 36724554226, Reap 36724558780, Purge 36724563167 (`evidence/F006`–`F021`)
-- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`. PR #18 (F014, issue #17) merged to `main`. PR #19 (cluster paused) merged (45a50da). PR #20 (Phase 05 plan) merged (084f9b0). PR #21 (F015) merged (ee1a62b). PR #22 (F016) merged (2cdcf0a). PR #23 (F017) merged (09f100e). PR #24 (F018) merged (09c2c5c). PR #25 (F019) merged (cdaaeac), Flux on main. PR #26 (F020) merged (dbfd648); Flux pruned the global guard (only `*-todo` left).
-  F021 on `feat/F021` (21f993b), PR pending.
+- **Date**: 2026-10-01
+- **init**: green — `./scripts/init.sh` BASELINE GREEN (2026-10-01, F022 local)
+- **Full suite + check-architecture**: green — `bats tests/` 294/294 (F022) + tofu test 10/10 + tflint/checkov; check-architecture clean (F022, 2026-10-01)
+- **E2E**: smoke 3/3; GitHub runs: Deploy 36522067800/36568611973 green + wake 200 after scale-to-0; Reap 36522361188 + scheduled 36558226159 green; Destroy 36568750009 green, URL 404; under F009 guard: Deploy 36637186203 + Destroy 36637334313 green; purge dispatch 36646924565 (SP deleted 2 stale tags); F014 new pins: Deploy 36655482441, Purge 36655484550, Reap 36655486789, Destroy 36655606524 green; F015: Deploy 36706339119 (ns `preview-todo-feat-f015`, 200), Reap 36706523897 (foreign expired ns kept), Destroy 36706532056 (legacy) / 36706594874 (foreign refused) / 36706663297 (404) ; F016: Deploy 36708302080/36710182013 (2 components, path routing, per-component scale-to-zero), Destroy 36710425734 ; F017: smoke PASS on `shop.preview.nimat.dev` + `preview.nimat.dev` ; F018: OpenTofu adopted 7 resources, plan No changes; regression Deploy 36713711855 + Destroy 36714179601 ; F019: Flux adopted add-ons, drift reverted, reinstall from scratch, smoke + Deploy 36720360228/Destroy 36720632838 ; F020: per-repo guard probes, Deploy 36722280404 + Destroy 36722549593 ; F021 dogfood via kit: Deploy 36724289952, Destroy 36724554226, Reap 36724558780, Purge 36724563167 (`evidence/F006`–`F021`); F022: pre-commit hook e2e + harness-check CI green (run 36786821360)
+- **Git**: PRs #8–#12 merged to `main` (ec256f8; #12 = a5 immutable OIDC subject DEC-030 + review fixes + Phase 02 tracking). PRs #13 (F009) + #14 (F010) merged (bb5468f). PR #15 (F011) merged (733daba); completion tracking on `chore/project-complete`. PR #18 (F014, issue #17) merged to `main`. PR #19 (cluster paused) merged (45a50da). PR #20 (Phase 05 plan) merged (084f9b0). PR #21 (F015) merged (ee1a62b). PR #22 (F016) merged (2cdcf0a). PR #23 (F017) merged (09f100e). PR #24 (F018) merged (09c2c5c). PR #25 (F019) merged (cdaaeac), Flux on main. PR #26 (F020) merged (dbfd648); Flux pruned the global guard (only `*-todo` left). PR #27 (F021) merged (9c68fe0); kit v1.0.0 released (run 36724767086).
+  F022 PR #28 reviewed clean (4 rounds, 29 findings fixed, round 4 clean).
 
 ## Next step
-Merge F021 PR, tag v1.0.0 (Kit - Release), then F022 on `feat/F022` (steps in `CURRENT_TASK.md`). Mirrors `CURRENT_TASK.md`.
+1. Merge PR #28 (F022) into `main`.
+2. Release kit v1.1.0 (`scripts/kit-release.sh prepare 1.1.0` -> merge -> tag v1.1.0; first release with the Copier template).
+3. Start F023: Pilot second repo (write sprint contract, onboard repo, wire kit, verify isolated lifecycle).
+Mirrors `CURRENT_TASK.md`.
 
 ## Open blockers
 See `BLOCKERS.md`. BLK-008 resolved (F020). BLK-003/BLK-006 resolved.

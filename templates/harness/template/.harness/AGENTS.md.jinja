@@ -1,0 +1,63 @@
+# AGENTS.md — Operating Contract
+
+You are a coding agent building this project. This file overrides your defaults. Read it
+fully. If a request conflicts with this contract, follow the contract and say so.
+
+## What this project is
+{{ project_description }} See `product/PRODUCT.md` (vision) and `architecture/ARCHITECTURE.md` (shape) once written.
+Build the product the requirement describes — never a shortcut that fakes the acceptance.
+
+## Read this order, every session (before touching code)
+1. `PROJECT_STATE.md` — MASTER FILE. Where the project is right now.
+2. `CURRENT_TASK.md` — the one feature to work on and its exact next step.
+3. `ROADMAP.md` — all features across the phases, with status.
+4. The active phase file under `phases/` — acceptance criteria for the current feature.
+5. `DECISIONS.md` + `BLOCKERS.md` — what's decided, what's stuck.
+6. **Then inspect the actual code.** The codebase is the source of truth for what EXISTS;
+   the tracking files are the source of truth for intended state + history. If they
+   disagree: inspect, correct the tracking files, and note the discrepancy in `CHANGELOG.md`.
+
+## The ten rules
+1. **Tracking before memory.** Never rely on conversation history. The `.harness/` tracking files are the state of
+   the project. Read them first; update them before you stop.
+2. **One feature at a time.** Work only the single feature that is `IN PROGRESS`. Do not start the next until the
+   current one is verified.
+3. **No victory without evidence.** A feature is `COMPLETE` only when every acceptance criterion in its phase file is
+   met AND verification is recorded in `CHANGELOG.md` (happy path + edge cases + error paths + full suite green + e2e
+   for user-facing flows, `verification/acceptance-evidence.md`).
+4. **Respect layer boundaries** (`rules/layer-boundaries.md`). A violation blocks "done".
+5. **Stay in scope + phase** (`rules/scope-guard.md`). Phases are gated in ROADMAP order.
+6. **Modular and expandable.** New types register against interfaces; they do not edit the core.
+7. **Separate maker from checker.** Score honestly against `verification/evaluator-rubric.md`.
+8. **Persist state every session** (Session-completion protocol below).
+9. **Small, reversible steps.** Commit per feature on `feat/<FID>` (`docs/<slug>`/`chore/<slug>` for harness-only
+   work). After a feature passes: push, open/reuse a PR, review it, fix findings until clean (`loops/pr-review-loop.md`).
+10. **Observability is not optional.** Structured logs at startup, boundaries, and errors.
+
+## Statuses (use ONLY these)
+`NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IN REVIEW` · `COMPLETE` · `DEPRECATED`.
+
+## Definition of done (per feature)
+Every acceptance criterion met; applicable edge/error cases tested; FULL suite green; e2e for user-facing flows;
+evidence in `CHANGELOG.md`; no boundary violation; evaluator score ≥ threshold; ROADMAP + phase file `COMPLETE`;
+PROJECT_STATE + CURRENT_TASK updated; PR reviewed clean. Abnormal state → `loops/failure-modes.md`.
+
+## Session-completion protocol (do all of this before you stop)
+1. Determine exactly what was implemented and run the appropriate tests.
+2. Update the feature status (phase file) and phase status.
+3. Update `ROADMAP.md` (checkbox + counts) and `CURRENT_TASK.md`.
+4. Update `PROJECT_STATE.md` (current phase/feature, progress, last verified, git commit).
+5. Add a `CHANGELOG.md` entry (feature ID + evidence).
+6. If the feature just went `COMPLETE`: push, open/reuse its PR, review, fix findings until clean.
+7. Update `BLOCKERS.md` and `DECISIONS.md` if anything changed.
+8. Record git branch/commit (or `Working tree: DIRTY`) in `PROJECT_STATE.md`.
+9. Clearly set the next task in `CURRENT_TASK.md`.
+`scripts/harness-check.sh` (pre-commit + CI) enforces the roadmap gate and the PROJECT_STATE rule for every agent.
+
+## Hard stops (ask a human)
+- A change would delete user data or break a public API contract.
+- Scope/acceptance is ambiguous and the files don't resolve it.
+- Maker-checker has failed the same feature for the max rounds (`loops/loop-state.md`).
+
+## Tech stack
+TODO: languages, frameworks, infrastructure, test tools, linters.

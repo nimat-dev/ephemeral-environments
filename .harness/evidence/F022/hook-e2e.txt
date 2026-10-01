@@ -1,0 +1,6 @@
+Pre-commit hook e2e (2026-09-30): scratch copy of the working tree, git init, core.hooksPath=.githooks
+1) edit todo/README.md only, commit -> REJECTED (exit 1)
+   [error] harness-check: files outside .harness/ changed without .harness/PROJECT_STATE.md (Session-completion protocol, AGENTS.md):
+     - todo/README.md
+   [error] harness-check: failed
+2) same + .harness/PROJECT_STATE.md, commit -> ACCEPTED (harness-check: ok)

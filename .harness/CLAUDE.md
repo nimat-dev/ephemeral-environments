@@ -48,6 +48,7 @@ Toolchain: helm, kubectl, az, actionlint, shellcheck, yamllint, kubeconform, bat
 | E2E | `./scripts/smoke.sh` (real cluster, Part C); Phase 02+: dispatch `Deploy Preview` on a test branch |
 | Build | `helm template t ./deploy/preview -f tests/fixtures/values.yaml` |
 | Verify baseline | `./scripts/init.sh` (roadmap gate + lint + template + kubeconform + bats + check-architecture); `--roadmap-only` for just the gate |
+| Harness gate | `./scripts/harness-check.sh [--staged \| --range B...H \| --files \| --roadmap-only \| --current]` (pre-commit, CI, init, Stop hook; `scripts/SCRIPTS.md`) |
 | Check boundaries | `./scripts/check-architecture.sh [--root DIR]` |
 | Progress % | see `scripts/SCRIPTS.md` → progress-counter |
 

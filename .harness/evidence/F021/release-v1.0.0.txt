@@ -1,0 +1,11 @@
+Kit - Release run 36724767086: success
+  [info] kit-release: v1.0.0 consistent (VERSION, kit_ref defaults, chart, example)
+  Pushed: nimatpreviewacr.azurecr.io/helm/preview:1.0.0
+  Digest: sha256:97cc271a637a62605d950d0d60c41a2b96c6e3f6c44536fd0e987b8ca5718b28
+  [info] kit-release: pushed chart preview-1.0.0.tgz to oci://nimatpreviewacr.azurecr.io/helm
+--- gh release view v1.0.0
+v1.0.0 Preview kit v1.0.0 draft=false https://github.com/nimat-dev/ephemeral-environments/releases/tag/v1.0.0
+--- helm show chart (OCI)
+description: Ephemeral per-branch preview environment
+name: preview
+version: 1.0.0

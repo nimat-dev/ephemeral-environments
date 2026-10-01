@@ -1,0 +1,27 @@
+$ az aks show
+{
+  "k8s": "1.35.8",
+  "power": "Running",
+  "prov": "Succeeded"
+}
+$ kubectl get svc -A (LoadBalancer)
+traefik        traefik                                                LoadBalancer   10.0.67.161    74.151.139.236   80:30103/TCP,443:30750/TCP   28h
+$ kubectl get certificate -A
+NAMESPACE   NAME               READY   SECRET                 AGE
+traefik     wildcard-preview   True    wildcard-preview-tls   28h
+$ kubectl get pods -n keda
+NAME                                                    READY   STATUS    RESTARTS      AGE
+keda-add-ons-http-controller-manager-5c94d9b467-tkxb6   1/1     Running   0             28h
+keda-add-ons-http-external-scaler-86bddb5b68-n8dsc      1/1     Running   0             28h
+keda-add-ons-http-interceptor-7c74df8d78-928t4          1/1     Running   0             28h
+keda-admission-webhooks-78fb47bd97-sd426                1/1     Running   0             28h
+keda-operator-5bb8bd6bc5-r82zk                          1/1     Running   1 (28h ago)   28h
+keda-operator-metrics-apiserver-6f9bb597fc-s9npb        1/1     Running   0             28h
+$ kubectl get ns | grep preview-
+(none)
+$ ./bootstrap/a5-github-oidc.sh --apply -> SKIPPED (denied by auto-mode classifier; operator to run)
+$ kubectl get validatingadmissionpolicy,validatingadmissionpolicybinding (read-only)
+NAME                                                                                                  VALIDATIONS   PARAMKIND   AGE
+validatingadmissionpolicy.admissionregistration.k8s.io/preview-deployer-guard                         1             <unset>     136m
+NAME                                                                                                                 POLICYNAME                                     PARAMREF   AGE
+validatingadmissionpolicybinding.admissionregistration.k8s.io/preview-deployer-guard                                 preview-deployer-guard                         <unset>    136m

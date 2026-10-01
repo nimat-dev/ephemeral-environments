@@ -1,0 +1,10 @@
+# CLAUDE.md
+
+The canonical, agent-agnostic instructions are in AGENTS.md — read them first:
+
+@AGENTS.md
+@.harness/CLAUDE.md
+@.harness/AGENTS.md
+
+Claude Code session hooks live in `.claude/settings.json` (`.claude/hooks/`); the enforcing gate is
+`scripts/harness-check.sh` (pre-commit + CI), which applies to every agent.

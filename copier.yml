@@ -1,0 +1,30 @@
+# Copier template: the agent-agnostic project harness (F022, DEC-052).
+# Lives at the repo root because Copier only reads copier.yml there; the template itself is templates/harness/template.
+#   copier copy gh:nimat-dev/ephemeral-environments . --data project_name=my-app [--vcs-ref vX.Y.Z]
+#   copier update            # pull later harness improvements (uses .harness/.copier-answers.yml)
+# Versions: the template shares this repo's release tags with the kit (one version line, DEC-052). Copier picks
+# the latest tag; v1.0.0 predates the template, so pass `--vcs-ref main` until v1.1.0 (first release with it).
+# Generic files under the template are copied from this repo by scripts/build-harness-template.sh (tested for drift).
+_subdirectory: templates/harness/template
+_min_copier_version: "9.0.0"
+_answers_file: .harness/.copier-answers.yml
+
+project_name:
+  type: str
+  help: Project name (used in titles)
+  validator: "{% if not project_name %}required{% endif %}"
+
+project_description:
+  type: str
+  help: One sentence — what this project builds
+  default: "TODO: describe the product in one sentence"
+
+first_feature:
+  type: str
+  help: The first feature (F001) — set IN PROGRESS so the roadmap gate passes
+  default: "Repo tooling: baseline lint + test commands"
+
+claude_hooks:
+  type: bool
+  help: Also install Claude Code session hooks (.claude/)? The git + CI gate works for every agent either way.
+  default: true

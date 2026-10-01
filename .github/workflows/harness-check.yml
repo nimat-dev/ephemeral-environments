@@ -1,0 +1,24 @@
+name: harness-check
+# Required status check: the harness rules hold for every PR regardless of which agent wrote it.
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  harness-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Roadmap gate, state rule, agent command mirrors
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: ./scripts/harness-check.sh --range "$BASE_SHA...$HEAD_SHA"

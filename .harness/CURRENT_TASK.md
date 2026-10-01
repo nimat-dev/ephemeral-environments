@@ -1,14 +1,13 @@
 # CURRENT TASK
 
 **Feature**: F022 — Agent-agnostic harness (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
-**Status**: IN PROGRESS (2026-09-30). Last: F021 COMPLETE.
+**Status**: COMPLETE (2026-10-01). Next active: F023.
 
 ## Exact next step
-0. After the F021 PR merges: `git tag v1.0.0 <merge sha> && git push origin v1.0.0` → Kit - Release green; record chart + release.
-1. Branch `feat/F022`; contract `verification/contracts/F022.md`.
-2. Root `AGENTS.md` canonical (CLAUDE.md → `@AGENTS.md`, `.github/copilot-instructions.md` pointer); `.harness/commands/*.md`
-   mirrored to `.claude/commands/` + `.github/prompts/*.prompt.md`; pre-commit (roadmap gate + state-updated check) + CI `harness-check`;
-   Copier template of the generic harness; check-architecture rules from config.
+Done: All F022 pieces built, local verify GREEN (bats 294/294, Copier render, hook e2e), PR #28 open with CI green, review rounds 1–4 complete (29 findings fixed in rounds 1–3, round 4 clean), CHANGELOG / ROADMAP / phase / contract marked COMPLETE.
+1. Merge PR #28 (`gh pr merge 28 --squash`).
+2. Release kit v1.1.0 (`scripts/kit-release.sh prepare 1.1.0` -> commit -> merge -> tag v1.1.0; first release carrying the Copier template).
+3. Start F023: Pilot second repo (write sprint contract in `verification/contracts/F023.md`, onboard second repo via F020, configure kit via F021, and prove isolation).
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. (done: BLK-008 resolved by F020)
