@@ -1,0 +1,12 @@
+=== Probe 1: create namespace preview-shop-probe (expected ALLOWED)
+namespace/preview-shop-probe created (server dry run)
+=== Probe 2: create namespace preview-todo-probe (expected DENIED)
+The namespaces "preview-todo-probe" is invalid: : ValidatingAdmissionPolicy 'preview-deployer-guard-shop' with binding 'preview-deployer-guard-shop' denied request: preview-deployer-guard-shop: CI identity of nimat-dev/shop may only write preview-shop-* namespaces (namespaces preview-todo-probe/preview-todo-probe)
+=== Probe 3: create namespace preview-probe (expected DENIED)
+The namespaces "preview-probe" is invalid: : ValidatingAdmissionPolicy 'preview-deployer-guard-shop' with binding 'preview-deployer-guard-shop' denied request: preview-deployer-guard-shop: CI identity of nimat-dev/shop may only write preview-shop-* namespaces (namespaces preview-probe/preview-probe)
+=== Probe 4: create configmap in kube-system (expected DENIED)
+error: failed to create configmap: configmaps "x" is forbidden: ValidatingAdmissionPolicy 'preview-deployer-guard-shop' with binding 'preview-deployer-guard-shop' denied request: preview-deployer-guard-shop: CI identity of nimat-dev/shop may only write preview-shop-* namespaces (configmaps kube-system/x)
+=== Probe 5: create configmap in default (expected DENIED)
+error: failed to create configmap: configmaps "x" is forbidden: ValidatingAdmissionPolicy 'preview-deployer-guard-shop' with binding 'preview-deployer-guard-shop' denied request: preview-deployer-guard-shop: CI identity of nimat-dev/shop may only write preview-shop-* namespaces (configmaps default/x)
+=== Probe 6: create secret in preview-shop-probe (expected DENIED by RBAC)
+error: failed to create secret secrets is forbidden: User "56b700b7-3884-45b8-ad48-4b13b56dbfae" cannot create resource "secrets" in API group "" in the namespace "preview-shop-probe": Azure does not have opinion for this non AAD user. If you are an AAD user, please set Extra:oid parameter for impersonated user in the kubeconfig

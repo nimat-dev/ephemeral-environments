@@ -1,15 +1,12 @@
 # CURRENT TASK
 
 **Feature**: F023 — Pilot second repo (Phase 05, `phases/PHASE-05-MULTI-REPO.md`)
-**Status**: IN PROGRESS (2026-10-01). Last: F022 COMPLETE (2026-10-01).
+**Status**: COMPLETE (2026-10-01). Full Roadmap COMPLETE (23/23, 100%).
 
 ## Exact next step
-Done: F022 PR #28 merged to `main`, kit v1.1.0 prepared and tagged.
-1. Write sprint contract for F023 in `.harness/verification/contracts/F023.md`.
-2. Onboard second repo via OpenTofu `repo-onboarding` module (`platform/envs/nimat/repos.tf`, `clusters/nimat/config/repos/`).
-3. Setup second repo to consume the kit (v1.1.0), with its own domain (`shop.preview.nimat.dev`).
-4. Prove two previews on the same branch run simultaneously without cross-repo interference, with independent destroy/reap.
-5. Record evidence and PR review loop.
+Done: `nimat-dev/shop` onboarded, live multi-tenant deployments verified simultaneously on `feat/pilot`, isolated destroy verified, full `./scripts/init.sh` BASELINE GREEN (294/294 tests).
+1. Open PR for `feat/F023` to `main`, ensure `harness-check` CI passes, review clean, and merge.
+2. Pause test cluster when done: `az aks stop -g nimatresourceg -n aks-preview`.
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. (done: BLK-008 resolved by F020)

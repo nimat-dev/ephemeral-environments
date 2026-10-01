@@ -1,4 +1,4 @@
-# Phase 05 — Multi-repo, reusable platform — IN PROGRESS (2026-09-30)
+# Phase 05 — Multi-repo, reusable platform — COMPLETE (2026-10-01)
 
 Goal: any repo of the team can get branch previews on the team's cluster under its own domain,
 by consuming a versioned kit, with platform + onboarding in OpenTofu and in-cluster add-ons in
@@ -68,9 +68,9 @@ Target layout (still one repo, DEC-037): `kit/` (action, reusable workflows, cha
 - [x] Copier template of generic harness; generic vs project files split; check-architecture rules from config.
 
 ## F023 — Pilot second repo
-**Status**: NOT STARTED
-- [ ] Second repo onboarded via F020, uses kit via F021, own domain via F017.
-- [ ] Same branch name in both repos → both previews live, correct certs; each repo's destroy/reap touches only its own.
+**Status**: COMPLETE (2026-10-01) — contract `verification/contracts/F023.md`, evidence `evidence/F023/`
+- [x] Second repo onboarded via F020, uses kit via F021, own domain via F017.
+- [x] Same branch name in both repos → both previews live, correct certs; each repo's destroy/reap touches only its own.
 
 ## Later (not in this phase)
 Key Vault + CSI secrets add-on; Postgres add-on (container per preview → managed server with db-per-preview); split into separate repos (DEC-037).

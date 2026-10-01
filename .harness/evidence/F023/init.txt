@@ -1,0 +1,380 @@
+[info] init: start root=/Users/nimatullahrazmjo/workstation/ephemeral-environments
+[info] init: ▶ roadmap: one IN PROGRESS (or all COMPLETE)
+[info] harness-check: roadmap ok (1 IN PROGRESS, 22/23 done)
+[info] init: ✔ roadmap: one IN PROGRESS (or all COMPLETE)
+[warn] init: working tree is dirty (see .harness/loops/failure-modes.md)
+[info] init: ▶ yamllint
+./tests/fixtures/legacy-render.yaml
+  130:7     warning  comment not indented like content  (comments-indentation)
+
+[info] init: ✔ yamllint
+[info] init: ▶ shellcheck
+[info] init: ✔ shellcheck
+[info] init: ▶ actionlint
+[info] init: ✔ actionlint
+[info] init: ▶ helm lint
+engine.go:214: [INFO] Missing required value: host is required (e.g. <id>.<PREVIEW_DOMAIN>)
+engine.go:214: [INFO] Missing required value: image.repository is required (<ACR_LOGIN_SERVER>/<APP_IMAGE_NAME>)
+engine.go:214: [INFO] Missing required value: image.tag is required (short git sha)
+==> Linting ./deploy/preview
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+[info] init: ✔ helm lint
+[info] init: ▶ helm template | kubeconform
+Summary: 6 resources found parsing stdin - Valid: 5, Invalid: 0, Errors: 0, Skipped: 1
+[info] init: ✔ helm template | kubeconform
+[info] init: ▶ bats (full suite)
+bootstrap.bats
+   dry-run: plans all three creates, runs no mutating az call  1/294 ✓ dry-run: plans all three creates, runs no mutating az call
+   apply: executes creates and fetches credentials  2/294 ✓ apply: executes creates and fetches credentials
+   idempotent: everything exists -> nothing created, NS printed  3/294 ✓ idempotent: everything exists -> nothing created, NS printed
+   re-run with AKS present skips quota check (node already uses quota)  4/294 ✓ re-run with AKS present skips quota check (node already uses quota)
+   partial failure then retry: existing ACR skipped, AKS retried  5/294 ✓ partial failure then retry: existing ACR skipped, AKS retried
+   existing AKS without OIDC/workload identity -> update planned  6/294 ✓ existing AKS without OIDC/workload identity -> update planned
+   unregistered provider -> register planned (dry-run), executed (a...  7/294 ✓ unregistered provider -> register planned (dry-run), executed (apply)
+   preflight: inaccessible subscription fails before any mutation  8/294 ✓ preflight: inaccessible subscription fails before any mutation
+   preflight: missing resource group fails  9/294 ✓ preflight: missing resource group fails
+   preflight: quota below vcpus x (nodes+1) fails 10/294 ✓ preflight: quota below vcpus x (nodes+1) fails
+   preflight: quota exactly enough passes 11/294 ✓ preflight: quota exactly enough passes
+   preflight: restricted or missing VM size fails 12/294 ✓ preflight: restricted or missing VM size fails
+   config validation: each invalid value exits 2 13/294 ✓ config validation: each invalid value exits 2
+   unknown argument exits 2 14/294 ✓ unknown argument exits 2
+   teardown without --yes deletes nothing 15/294 ✓ teardown without --yes deletes nothing
+   teardown --yes deletes AKS, ACR, zone but never the resource group 16/294 ✓ teardown --yes deletes AKS, ACR, zone but never the resource group
+   teardown with nothing present skips all 17/294 ✓ teardown with nothing present skips all
+chart.bats
+   legacy (no components) render is byte-identical to the pre-F016 ... 18/294 ✓ legacy (no components) render is byte-identical to the pre-F016 chart (golden, DEC-044)
+   helm lint passes 19/294 ✓ helm lint passes
+   fixture render passes kubeconform strict 20/294 ✓ fixture render passes kubeconform strict
+   no Namespace rendered 21/294 ✓ no Namespace rendered
+   Deployment has no replicas field; image is repo:tag 22/294 ✓ Deployment has no replicas field; image is repo:tag
+   Ingress routes host to interceptor and preserves Host 23/294 ✓ Ingress routes host to interceptor and preserves Host
+   Ingress has no secretName (nginx default wildcard cert) 24/294 ✓ Ingress has no secretName (nginx default wildcard cert)
+   HTTPScaledObject: host, idle timeout, replica bounds 25/294 ✓ HTTPScaledObject: host, idle timeout, replica bounds
+   never idle timeout renders as integer 26/294 ✓ never idle timeout renders as integer
+   overrides: interceptor fqdn/port and max replicas 27/294 ✓ overrides: interceptor fqdn/port and max replicas
+   ResourceQuota from values 28/294 ✓ ResourceQuota from values
+   name exactly 50 kept 29/294 ✓ name exactly 50 kept
+   name > 50 truncated, trailing '-' trimmed 30/294 ✓ name > 50 truncated, trailing '-' trimmed
+   missing host fails render 31/294 ✓ missing host fails render
+   missing image.repository fails render 32/294 ✓ missing image.repository fails render
+   missing image.tag fails render 33/294 ✓ missing image.tag fails render
+   components: one Deployment/Service/HSO per component + one Ingre... 34/294 ✓ components: one Deployment/Service/HSO per component + one Ingress, kubeconform strict
+   components: image, port, probe, selector per component; resource... 35/294 ✓ components: image, port, probe, selector per component; resources merged over defaults
+   components: HSO routes host + path prefix; legacy HSO has no pat... 36/294 ✓ components: HSO routes host + path prefix; legacy HSO has no pathPrefixes
+   components: ingress keeps a single / path to the interceptor 37/294 ✓ components: ingress keeps a single / path to the interceptor
+   components: missing component image fails render; long release n... 38/294 ✓ components: missing component image fails render; long release name keeps names <= 63
+check-architecture.bats
+   empty tree is clean 39/294 ✓ empty tree is clean
+   compliant tree is clean (comments and near-misses ignored) 40/294 ✓ compliant tree is clean (comments and near-misses ignored)
+   rule 1: adapter call in scripts/lib 41/294 ✓ rule 1: adapter call in scripts/lib
+   rule 1: adapter call inside command substitution 42/294 ✓ rule 1: adapter call inside command substitution
+   rule 2: inline sanitizer in workflow 43/294 ✓ rule 2: inline sanitizer in workflow
+   rule 3: client-secret in workflow 44/294 ✓ rule 3: client-secret in workflow
+   rule 3: non-GITHUB_TOKEN secret in workflow 45/294 ✓ rule 3: non-GITHUB_TOKEN secret in workflow
+   rule 3: secret whose name starts with GITHUB_TOKEN 46/294 ✓ rule 3: secret whose name starts with GITHUB_TOKEN
+   rule 3: bracket-notation secret 47/294 ✓ rule 3: bracket-notation secret
+   rule 3: GITHUB_TOKEN next to another expression stays clean 48/294 ✓ rule 3: GITHUB_TOKEN next to another expression stays clean
+   rule 4: Namespace in chart 49/294 ✓ rule 4: Namespace in chart
+   rule 5: replicas in Deployment 50/294 ✓ rule 5: replicas in Deployment
+   rule 6: hard-coded domain in workflow (pattern from .harness/rul... 51/294 ✓ rule 6: hard-coded domain in workflow (pattern from .harness/rules/architecture.conf)
+   rule 6: another project's domain comes from its own config; gene... 52/294 ✓ rule 6: another project's domain comes from its own config; generic default still catches ACR/cluster DNS (config extends, never replaces)
+   rule 7: missing top-level permissions 53/294 ✓ rule 7: missing top-level permissions
+   rule 7: extra permission 54/294 ✓ rule 7: extra permission
+   rule 7: job-level permissions override 55/294 ✓ rule 7: job-level permissions override
+   rule 8: workflow references bootstrap/ 56/294 ✓ rule 8: workflow references bootstrap/
+   rule 9: secretName in Ingress 57/294 ✓ rule 9: secretName in Ingress
+   multiple violations are all reported 58/294 ✓ multiple violations are all reported
+   --root on missing dir exits 2 59/294 ✓ --root on missing dir exits 2
+   unknown argument exits 2 60/294 ✓ unknown argument exits 2
+cluster-bootstrap.bats
+   A1 dry-run: plans pinned traefik install, calls no helm 61/294 ✓ A1 dry-run: plans pinned traefik install, calls no helm
+   A1 apply: installs and prints LB IP 62/294 ✓ A1 apply: installs and prints LB IP
+   A1 apply: no LB IP within timeout fails 63/294 ✓ A1 apply: no LB IP within timeout fails
+   wrong kube context refuses before any helm call 64/294 ✓ wrong kube context refuses before any helm call
+   A4 dry-run: plans keda + http add-on at pinned versions 65/294 ✓ A4 dry-run: plans keda + http add-on at pinned versions
+   A4 apply: verifies interceptor proxy service and port 66/294 ✓ A4 apply: verifies interceptor proxy service and port
+   A4 apply: interceptor missing or on another port fails 67/294 ✓ A4 apply: interceptor missing or on another port fails
+   helm failure mid-way exits non-zero; re-run converges 68/294 ✓ helm failure mid-way exits non-zero; re-run converges
+   missing versions file exits 2 69/294 ✓ missing versions file exits 2
+   unknown argument exits 2 70/294 ✓ unknown argument exits 2
+   A2: no record -> add wildcard to LB IP 71/294 ✓ A2: no record -> add wildcard to LB IP
+   A2: record already correct -> skip 72/294 ✓ A2: record already correct -> skip
+   A2: stale IP -> removed, new added 73/294 ✓ A2: stale IP -> removed, new added
+   A2: no LB IP fails before touching DNS 74/294 ✓ A2: no LB IP fails before touching DNS
+   A2 dry-run: no DNS mutation 75/294 ✓ A2 dry-run: no DNS mutation
+   A3 dry-run: plans install, identity, role, federation, manifests... 76/294 ✓ A3 dry-run: plans install, identity, role, federation, manifests; mutates nothing
+   A3 apply: manifests use MI client id, zone, no ACME email; waits... 77/294 ✓ A3 apply: manifests use MI client id, zone, no ACME email; waits for cert
+   A3 idempotent: identity, role, federation present -> none recreated 78/294 ✓ A3 idempotent: identity, role, federation present -> none recreated
+   A3: certificate never Ready -> fails 79/294 ✓ A3: certificate never Ready -> fails
+   A5 dry-run: plans AAD/RBAC, identity, roles, k8s RBAC; mutates n... 80/294 ✓ A5 dry-run: plans AAD/RBAC, identity, roles, k8s RBAC; mutates nothing
+   A5: immutable OIDC subject prefix -> second federated credential... 81/294 ✓ A5: immutable OIDC subject prefix -> second federated credential; legacy -> none
+   A5: OIDC prefix lookup fails -> --apply exits 1, dry-run warns 82/294 ✓ A5: OIDC prefix lookup fails -> --apply exits 1, dry-run warns
+   A5: federated credential subject drift -> update, not skip 83/294 ✓ A5: federated credential subject drift -> update, not skip
+   A5: renders preview-deployer-guard VAP keyed on the SP object id... 84/294 ✓ A5: renders preview-deployer-guard VAP keyed on the SP object id (F009)
+   A5 apply: guard effective -> probes as SP pass (preview-* allowe... 85/294 ✓ A5 apply: guard effective -> probes as SP pass (preview-* allowed; kube-system, default, foo denied)
+   A5 apply: probe namespace already exists -> still allowed, guard... 86/294 ✓ A5 apply: probe namespace already exists -> still allowed, guard verified
+   A5 apply: guard not effective (permissive) -> exit 1 after retries 87/294 ✓ A5 apply: guard not effective (permissive) -> exit 1 after retries
+   A5: spec's RBAC Writer is not granted; ClusterRole covers what d... 88/294 ✓ A5: spec's RBAC Writer is not granted; ClusterRole covers what deploy creates
+   A5: ClusterRole never grants secrets (helm uses configmap driver... 89/294 ✓ A5: ClusterRole never grants secrets (helm uses configmap driver, DEC-026)
+   A5 apply: converts kubeconfig and binds ClusterRole to the SP ob... 90/294 ✓ A5 apply: converts kubeconfig and binds ClusterRole to the SP object id
+   A5 idempotent: everything present -> no creates 91/294 ✓ A5 idempotent: everything present -> no creates
+   A5: operator without cluster access after role assignment fails 92/294 ✓ A5: operator without cluster access after role assignment fails
+   A5: invalid GH_REPO exits 2 93/294 ✓ A5: invalid GH_REPO exits 2
+   A6 apply: creates env and all workflow variables 94/294 ✓ A6 apply: creates env and all workflow variables
+   A6: no repo admin -> apply refuses, dry-run warns 95/294 ✓ A6: no repo admin -> apply refuses, dry-run warns
+   A6: missing Entra app fails 96/294 ✓ A6: missing Entra app fails
+flux.bats
+   HelmRelease chart versions == bootstrap/versions.env pins 97/294 ✓ HelmRelease chart versions == bootstrap/versions.env pins
+   HelmRelease values == bootstrap/values files (single source for ... 98/294 ✓ HelmRelease values == bootstrap/values files (single source for bash + Flux)
+   adoption: releaseName, targetNamespace and storageNamespace matc... 99/294 ✓ adoption: releaseName, targetNamespace and storageNamespace match what a1-a4 installed
+   http-add-on waits for keda; every release has drift detection wi...100/294 ✓ http-add-on waits for keda; every release has drift detection with runtime-field ignores
+   team overlay builds; objects pass kubeconform; cert-manager gets...101/294 ✓ team overlay builds; objects pass kubeconform; cert-manager gets the workload identity client id
+   config overlay: issuer + wildcard cert per project domain, TLSSt...102/294 ✓ config overlay: issuer + wildcard cert per project domain, TLSStore lists every non-default cert
+   config overlay: ClusterRole identical to a5's; each repo guard c...103/294 ✓ config overlay: ClusterRole identical to a5's; each repo guard confines its SP to preview-<app>-*
+harness.bats
+   roadmap gate: one IN PROGRESS ok (status = last backtick span); ...104/294 ✓ roadmap gate: one IN PROGRESS ok (status = last backtick span); zero or two fail; all done ok
+   state rule --staged: code change needs PROJECT_STATE staged; har...105/294 ✓ state rule --staged: code change needs PROJECT_STATE staged; harness-only change is fine
+   state rule --range (CI): judged over the whole PR diff106/294 ✓ state rule --range (CI): judged over the whole PR diff
+   state rule: a move from code into .harness/ still counts as a co...107/294 ✓ state rule: a move from code into .harness/ still counts as a code change (no rename folding)
+   --range: all-zero base (branch creation push) skips the state ru...108/294 ✓ --range: all-zero base (branch creation push) skips the state rule with a warning, not exit 2 / silent pass
+   --range: base not in the clone (force-push orphan) skips with a ...109/294 ✓ --range: base not in the clone (force-push orphan) skips with a warning, not exit 2
+   --staged: merge commit skips the state rule (CI judges the PR ra...110/294 ✓ --staged: merge commit skips the state rule (CI judges the PR range); normal commit still checked
+   --roadmap in a missing directory reports the path as given111/294 ✓ --roadmap in a missing directory reports the path as given
+   --staged judges the index: unstaged good mirrors don't hide a st...112/294 ✓ --staged judges the index: unstaged good mirrors don't hide a stale commit; unstaged bad roadmap doesn't block
+   --files: state rule over stdin paths only; init.sh gate + curren...113/294 ✓ --files: state rule over stdin paths only; init.sh gate + current feature delegate to harness-check
+   Stop hook: code change blocks; + PROJECT_STATE allows; harness-o...114/294 ✓ Stop hook: code change blocks; + PROJECT_STATE allows; harness-only path with a space allows
+   SessionStart re-fire (resume/compact, same session) keeps the fi...115/294 ✓ SessionStart re-fire (resume/compact, same session) keeps the first baseline
+   Stop hook: many changed files stay fast (batched hashing)116/294 ✓ Stop hook: many changed files stay fast (batched hashing)
+   Stop hook: a code file moved into .harness/ (git mv, committed) ...117/294 ✓ Stop hook: a code file moved into .harness/ (git mv, committed) still blocks
+   Stop hook: PROJECT_STATE already dirty at start and edited again...118/294 ✓ Stop hook: PROJECT_STATE already dirty at start and edited again counts; untouched dirty files don't
+   mirrors: editing a command source without re-sync fails; re-sync...119/294 ✓ mirrors: editing a command source without re-sync fails; re-sync fixes; other prompt files untouched
+   mirrors: Claude commands only when opted in (.claude/settings.js...120/294 ✓ mirrors: Claude commands only when opted in (.claude/settings.json|commands); --check never creates it
+   generated prompts: valid front matter (quoted description), Copi...121/294 ✓ generated prompts: valid front matter (quoted description), Copilot agent mode, banner, same body
+   generated prompts: backslashes / quotes in the title stay valid YAML122/294 ✓ generated prompts: backslashes / quotes in the title stay valid YAML
+   this repo passes its own gate; pre-commit hook delegates to harn...123/294 ✓ this repo passes its own gate; pre-commit hook delegates to harness-check --staged
+   entry files: AGENTS.md canonical; CLAUDE.md imports it; Copilot ...124/294 ✓ entry files: AGENTS.md canonical; CLAUDE.md imports it; Copilot instructions point to it
+   CI: harness-check runs on PRs + main, read-only token, full hist...125/294 ✓ CI: harness-check runs on PRs + main, read-only token, full history, range from the event
+   Copier template: generic files identical to this repo's (no drif...126/294 ✓ Copier template: generic files identical to this repo's (no drift, no orphans)
+   Copier template renders a repo whose own gate passes (with and w...127/294 ✓ Copier template renders a repo whose own gate passes (with and without Claude hooks)
+init.bats
+   roadmap: exactly one IN PROGRESS passes (status legend line ignored)128/294 ✓ roadmap: exactly one IN PROGRESS passes (status legend line ignored)
+   roadmap: zero IN PROGRESS fails129/294 ✓ roadmap: zero IN PROGRESS fails
+   roadmap: all COMPLETE/DEPRECATED passes (roadmap finished)130/294 ✓ roadmap: all COMPLETE/DEPRECATED passes (roadmap finished)
+   roadmap: zero IN PROGRESS with one NOT STARTED left still fails131/294 ✓ roadmap: zero IN PROGRESS with one NOT STARTED left still fails
+   roadmap: status is the last backtick span (description mentionin...132/294 ✓ roadmap: status is the last backtick span (description mentioning COMPLETE / IN PROGRESS ignored)
+   roadmap: two IN PROGRESS fails133/294 ✓ roadmap: two IN PROGRESS fails
+   roadmap: empty file fails134/294 ✓ roadmap: empty file fails
+   roadmap: missing file fails135/294 ✓ roadmap: missing file fails
+   real ROADMAP passes the gate136/294 ✓ real ROADMAP passes the gate
+   unknown argument exits 2137/294 ✓ unknown argument exits 2
+kit-release.bats
+   repo is consistent for its own kit/VERSION138/294 ✓ repo is consistent for its own kit/VERSION
+   prepare bumps every pinned place; verify accepts only the matchi...139/294 ✓ prepare bumps every pinned place; verify accepts only the matching tag
+   verify catches a single stale pin140/294 ✓ verify catches a single stale pin
+   prepare rejects non-semver141/294 ✓ prepare rejects non-semver
+   publish-chart: packages the chart, logs into the ACR with a toke...142/294 ✓ publish-chart: packages the chart, logs into the ACR with a token, pushes to oci://<acr>/helm
+   github-release: creates the tag's release, verified tag, pin sni...143/294 ✓ github-release: creates the tag's release, verified tag, pin snippet in notes
+   consumer example: thin callers pinned to a full kit tag, only th...144/294 ✓ consumer example: thin callers pinned to a full kit tag, only the two job-level permissions
+   unknown subcommand exits 2145/294 ✓ unknown subcommand exits 2
+platform.bats
+   a0 dry-run: plans storage, vault, roles, container, key; mutates...146/294 ✓ a0 dry-run: plans storage, vault, roles, container, key; mutates nothing
+   a0 apply: creates everything missing, grants the signed-in operator147/294 ✓ a0 apply: creates everything missing, grants the signed-in operator
+   a0 idempotent: everything present -> no mutation148/294 ✓ a0 idempotent: everything present -> no mutation
+   a0: existing key without encrypt/decrypt -> ops fixed, not recreated149/294 ✓ a0: existing key without encrypt/decrypt -> ops fixed, not recreated
+   a0: unregistered KeyVault provider is registered first150/294 ✓ a0: unregistered KeyVault provider is registered first
+   a0: container/key never creatable (RBAC not effective) -> exit 1...151/294 ✓ a0: container/key never creatable (RBAC not effective) -> exit 1 after retries
+   a0: invalid names -> exit 2 before any call152/294 ✓ a0: invalid names -> exit 2 before any call
+   envs/nimat: remote state is Entra-authenticated and encryption i...153/294 ✓ envs/nimat: remote state is Entra-authenticated and encryption is enforced for state and plans
+   team-cluster: kubelet pulls from the ACR; RG is data-only (never...154/294 ✓ team-cluster: kubelet pulls from the ACR; RG is data-only (never created or deleted)
+   checkov skips are all justified inline155/294 ✓ checkov skips are all justified inline
+preview-ci.bats
+   plan: writes identity to GITHUB_OUTPUT with HEAD short sha156/294 ✓ plan: writes identity to GITHUB_OUTPUT with HEAD short sha
+   plan: .preview.yaml with two components -> config, build matrix,...157/294 ✓ plan: .preview.yaml with two components -> config, build matrix, routes
+   plan: empty inputs fall back to .preview.yaml defaults, then bui...158/294 ✓ plan: empty inputs fall back to .preview.yaml defaults, then built-ins; explicit inputs win (F021)
+   plan: invalid .preview.yaml (bad key, bad YAML) -> exit 1; yq mi...159/294 ✓ plan: invalid .preview.yaml (bad key, bad YAML) -> exit 1; yq missing -> exit 2; nothing written
+   plan: invalid input -> exit 1, nothing written160/294 ✓ plan: invalid input -> exit 1, nothing written
+   plan: app falls back to the repo name when PREVIEW_APP is unset ...161/294 ✓ plan: app falls back to the repo name when PREVIEW_APP is unset or empty
+   plan: missing GITHUB_REPOSITORY -> exit 2; unusable repo -> exit...162/294 ✓ plan: missing GITHUB_REPOSITORY -> exit 2; unusable repo -> exit 1; nothing written
+   plan: missing env -> exit 2 naming it; bad src dir -> exit 1163/294 ✓ plan: missing env -> exit 2 naming it; bad src dir -> exit 1
+   namespace: applies label contract via kubectl apply -f -164/294 ✓ namespace: applies label contract via kubectl apply -f -
+   namespace: existing ns of another repo -> refused, never relabel...165/294 ✓ namespace: existing ns of another repo -> refused, never relabeled; own/legacy -> applied
+   namespace: missing APP or GITHUB_REPOSITORY -> exit 2166/294 ✓ namespace: missing APP or GITHUB_REPOSITORY -> exit 2
+   deploy: helm upgrade --install with configmap driver, string-saf...167/294 ✓ deploy: helm upgrade --install with configmap driver, string-safe values, traefik class
+   deploy: CONFIG -> components values file with per-component imag...168/294 ✓ deploy: CONFIG -> components values file with per-component images, no top-level image
+   deploy: helm failure propagates; missing env -> exit 2169/294 ✓ deploy: helm failure propagates; missing env -> exit 2
+   deploy passes strings via --set-string: branch 'null'/'true' ren...170/294 ✓ deploy passes strings via --set-string: branch 'null'/'true' renders (plain --set breaks the chart)
+   verify: 200 on first try -> ok, one request171/294 ✓ verify: 200 on first try -> ok, one request
+   verify: cold start (000, 502) then 200 -> ok after 3 attempts172/294 ✓ verify: cold start (000, 502) then 200 -> ok after 3 attempts
+   verify: never 200 -> exit 1 after VERIFY_ATTEMPTS173/294 ✓ verify: never 200 -> exit 1 after VERIFY_ATTEMPTS
+   verify: every route in VERIFY_PATHS must return 200174/294 ✓ verify: every route in VERIFY_PATHS must return 200
+   summary: full table with URL175/294 ✓ summary: full table with URL
+   summary: components listed as one image each176/294 ✓ summary: components listed as one image each
+   summary: after an early failure (no plan outputs) still writes, ...177/294 ✓ summary: after an early failure (no plan outputs) still writes, no URL
+   unknown command -> exit 2178/294 ✓ unknown command -> exit 2
+   workflow: inputs, defaults, concurrency per API_SURFACE179/294 ✓ workflow: inputs, defaults, concurrency per API_SURFACE
+   kit-deploy: workflow_call inputs (empty = .preview.yaml defaults...180/294 ✓ kit-deploy: workflow_call inputs (empty = .preview.yaml defaults), kit checked out at kit_ref, steps via ./.kit/kit
+   kit composite action: runs scripts/preview-ci.sh from the kit ro...181/294 ✓ kit composite action: runs scripts/preview-ci.sh from the kit root, command via env, exposes plan outputs
+   workflow: plan -> build matrix -> deploy; configmap driver, amd6...182/294 ✓ workflow: plan -> build matrix -> deploy; configmap driver, amd64, ingress class var, summary always
+   workflow: no expression interpolation inside run: (script inject...183/294 ✓ workflow: no expression interpolation inside run: (script injection guard)
+   destroy: preview-bot namespace -> delete --ignore-not-found --wa...184/294 ✓ destroy: preview-bot namespace -> delete --ignore-not-found --wait=false, same id as deploy
+   destroy: another repo's namespace of the same name is refused, n...185/294 ✓ destroy: another repo's namespace of the same name is refused, never deleted
+   destroy: pre-F015 legacy preview-<id> (no repo label) is deleted...186/294 ✓ destroy: pre-F015 legacy preview-<id> (no repo label) is deleted when the new name is absent
+   destroy: legacy-looking name carrying a repo label (a new-format...187/294 ✓ destroy: legacy-looking name carrying a repo label (a new-format ns) is never deleted by fallback
+   destroy: non-existent preview -> success, no delete (idempotent)188/294 ✓ destroy: non-existent preview -> success, no delete (idempotent)
+   destroy: namespace not owned by preview-bot is refused, never de...189/294 ✓ destroy: namespace not owned by preview-bot is refused, never deleted
+   destroy: invalid branch -> exit 1, missing -> exit 2, kubectl ge...190/294 ✓ destroy: invalid branch -> exit 1, missing -> exit 2, kubectl get failure -> exit non-zero, no delete
+   destroy workflow: caller -> kit-destroy; concurrency shared with...191/294 ✓ destroy workflow: caller -> kit-destroy; concurrency shared with deploy, env-only input, kit step
+   reap: deletes only expired preview-* namespaces of this repo (+ ...192/294 ✓ reap: deletes only expired preview-* namespaces of this repo (+ legacy), lists by label
+   reap: nothing expired / no previews -> 'nothing to reap', exit 0...193/294 ✓ reap: nothing expired / no previews -> 'nothing to reap', exit 0, no delete
+   reap: one delete fails -> others still deleted, run fails194/294 ✓ reap: one delete fails -> others still deleted, run fails
+   reap: list failure or malformed list -> non-zero, no delete195/294 ✓ reap: list failure or malformed list -> non-zero, no delete
+   reap workflow: cron */30 + dispatch -> kit-reap (own concurrency...196/294 ✓ reap workflow: cron */30 + dispatch -> kit-reap (own concurrency group, kit step)
+   purge: deletes old unused sha tags, keeps in-use + newest, summary197/294 ✓ purge: deletes old unused sha tags, keeps in-use + newest, summary
+   purge: image still run by a pod (failed upgrade relabeled ns) is...198/294 ✓ purge: image still run by a pod (failed upgrade relabeled ns) is protected
+   purge: tag refreshed by a racing redeploy after listing -> re-re...199/294 ✓ purge: tag refreshed by a racing redeploy after listing -> re-read, skipped
+   purge: re-read fails -> tag skipped, run fails, others continue200/294 ✓ purge: re-read fails -> tag skipped, run fails, others continue
+   purge: dry run lists, deletes nothing201/294 ✓ purge: dry run lists, deletes nothing
+   purge: namespace list or tag list unreadable -> exit 1, deletes ...202/294 ✓ purge: namespace list or tag list unreadable -> exit 1, deletes nothing
+   purge: nothing stale -> 'nothing to purge', exit 0203/294 ✓ purge: nothing stale -> 'nothing to purge', exit 0
+   purge: one delete fails -> others still deleted, run fails204/294 ✓ purge: one delete fails -> others still deleted, run fails
+   purge: walks APP_IMAGE_NAME and APP_IMAGE_NAME/* repos only (F016)205/294 ✓ purge: walks APP_IMAGE_NAME and APP_IMAGE_NAME/* repos only (F016)
+   purge: pod running a component image protects that tag in its repo206/294 ✓ purge: pod running a component image protects that tag in its repo
+   purge: repository list unreadable -> exit 1, deletes nothing; no...207/294 ✓ purge: repository list unreadable -> exit 1, deletes nothing; no repos -> nothing to purge
+   purge: config errors -> exit 2, nothing listed208/294 ✓ purge: config errors -> exit 2, nothing listed
+   purge workflow: daily cron + dispatch dry_run -> kit-purge (own ...209/294 ✓ purge workflow: daily cron + dispatch dry_run -> kit-purge (own concurrency, env-only inputs, kit step)
+   kit-release: tag push only, contents:write (rule 7 exception), v...210/294 ✓ kit-release: tag push only, contents:write (rule 7 exception), verify before publish, script steps
+preview.bats
+   preview_id matches spec pipeline over corpus211/294 ✓ preview_id matches spec pipeline over corpus
+   preview_id examples212/294 ✓ preview_id examples
+   preview_id: exactly 40 chars kept213/294 ✓ preview_id: exactly 40 chars kept
+   preview_id: >40 with '-' at the cut is trimmed214/294 ✓ preview_id: >40 with '-' at the cut is trimmed
+   preview_id: unicode collapses deterministically215/294 ✓ preview_id: unicode collapses deterministically
+   preview_id: -n and -e are sanitized, not swallowed (spec echo bug)216/294 ✓ preview_id: -n and -e are sanitized, not swallowed (spec echo bug)
+   preview_id: empty, whitespace-only, all-symbol fail217/294 ✓ preview_id: empty, whitespace-only, all-symbol fail
+   namespace and host218/294 ✓ namespace and host
+   preview_app: var wins, else repo name; sanitized, <= 20 chars219/294 ✓ preview_app: var wins, else repo name; sanitized, <= 20 chars
+   preview_app: no usable app or repo -> error220/294 ✓ preview_app: no usable app or repo -> error
+   preview_repo_label: owner/repo slug, <= 63, label-safe221/294 ✓ preview_repo_label: owner/repo slug, <= 63, label-safe
+   preview_namespace: > 63 chars -> 54-char prefix + 8-hex hash, st...222/294 ✓ preview_namespace: > 63 chars -> 54-char prefix + 8-hex hash, stable and distinct
+   preview_namespace: hashed name never ends the prefix with '-'223/294 ✓ preview_namespace: hashed name never ends the prefix with '-'
+   preview_owns: managed + same repo, or legacy without repo label224/294 ✓ preview_owns: managed + same repo, or legacy without repo label
+   to_seconds units225/294 ✓ to_seconds units
+   to_seconds: leading zero is decimal, not octal226/294 ✓ to_seconds: leading zero is decimal, not octal
+   to_seconds rejects malformed227/294 ✓ to_seconds rejects malformed
+   idle_seconds: never and passthrough228/294 ✓ idle_seconds: never and passthrough
+   resolve_lifetime229/294 ✓ resolve_lifetime
+   expires_at with fixed now230/294 ✓ expires_at with fixed now
+   expires_at defaults now to current time231/294 ✓ expires_at defaults now to current time
+   expires_at rejects zero lifetime, bad lifetime, bad now232/294 ✓ expires_at rejects zero lifetime, bad lifetime, bad now
+   expired_namespaces: only own repo (+ legacy unlabeled); other re...233/294 ✓ expired_namespaces: only own repo (+ legacy unlabeled); other repos never listed
+   expired_namespaces: < now, missing/garbage label expired, foreig...234/294 ✓ expired_namespaces: < now, missing/garbage label expired, foreign ns ignored
+   expired_namespaces: expires-at == now is not expired235/294 ✓ expired_namespaces: expires-at == now is not expired
+   expired_namespaces: empty list -> no output236/294 ✓ expired_namespaces: empty list -> no output
+   expired_namespaces: malformed JSON and bad now fail237/294 ✓ expired_namespaces: malformed JSON and bad now fail
+   sourcing does not change caller shell options238/294 ✓ sourcing does not change caller shell options
+   max_replicas: 1..6 accepted, leading zero decimal239/294 ✓ max_replicas: 1..6 accepted, leading zero decimal
+   max_replicas: 0, over quota, negative, non-numeric, empty rejected240/294 ✓ max_replicas: 0, over quota, negative, non-numeric, empty rejected
+   preview_plan: happy path emits the full identity241/294 ✓ preview_plan: happy path emits the full identity
+   preview_plan: custom lifetime and never idle242/294 ✓ preview_plan: custom lifetime and never idle
+   preview_plan: every invalid input fails and prints nothing on stdout243/294 ✓ preview_plan: every invalid input fails and prints nothing on stdout
+   namespace_manifest: label contract + raw branch escaped into ann...244/294 ✓ namespace_manifest: label contract + raw branch escaped into annotation
+   purge_tags: old sha tags only; skips in-use, locked, non-sha, ne...245/294 ✓ purge_tags: old sha tags only; skips in-use, locked, non-sha, newest KEEP, recent
+   purge_tags: KEEP larger than the tag count -> nothing246/294 ✓ purge_tags: KEEP larger than the tag count -> nothing
+   purge_tags: KEEP 0, age 0 -> every deletable sha tag (none locke...247/294 ✓ purge_tags: KEEP 0, age 0 -> every deletable sha tag (none locked/non-sha)
+   purge_tags: empty tag list -> nothing; malformed json -> non-zero248/294 ✓ purge_tags: empty tag list -> nothing; malformed json -> non-zero
+   purge_tags: invalid now / age / keep -> non-zero249/294 ✓ purge_tags: invalid now / age / keep -> non-zero
+   preview_commits: labels of preview-bot preview-* namespaces only250/294 ✓ preview_commits: labels of preview-bot preview-* namespaces only
+   purge_tags: digest shared with a protected tag (in-use / latest)...251/294 ✓ purge_tags: digest shared with a protected tag (in-use / latest) is never deleted; shared victims once
+   purge_tags: digest shared with a KEEP-newest tag is protected252/294 ✓ purge_tags: digest shared with a KEEP-newest tag is protected
+   image_tags_in_use: deployment templates + pods in preview-* only...253/294 ✓ image_tags_in_use: deployment templates + pods in preview-* only, this image only
+   iso_epoch: fractional seconds dropped; garbage -> non-zero254/294 ✓ iso_epoch: fractional seconds dropped; garbage -> non-zero
+   preview_config: minimal component gets defaults255/294 ✓ preview_config: minimal component gets defaults
+   preview_config: full two-component config kept; trailing '/' on ...256/294 ✓ preview_config: full two-component config kept; trailing '/' on route normalized; resources kept
+   preview_config: shape errors257/294 ✓ preview_config: shape errors
+   preview_config: field validation258/294 ✓ preview_config: field validation
+   preview_config: resources and addons validation259/294 ✓ preview_config: resources and addons validation
+   preview_values: config -> helm components with per-component ima...260/294 ✓ preview_values: config -> helm components with per-component image; bad args fail
+   preview_default_config is a valid config261/294 ✓ preview_default_config is a valid config
+   preview_verify_paths: probe under own route, else route262/294 ✓ preview_verify_paths: probe under own route, else route
+   preview_config: defaults kept when valid, filled when absent263/294 ✓ preview_config: defaults kept when valid, filled when absent
+   preview_config: invalid defaults rejected264/294 ✓ preview_config: invalid defaults rejected
+project-domain.bats
+   a7 apply: zone, delegation in parent, wildcard, role, issuer + c...265/294 ✓ a7 apply: zone, delegation in parent, wildcard, role, issuer + cert, TLSStore entry
+   a7 apply: TLSStore already lists other certs -> append (json pat...266/294 ✓ a7 apply: TLSStore already lists other certs -> append (json patch), never replace the default
+   a7 idempotent: zone, NS, A, role, TLSStore entry present -> no m...267/294 ✓ a7 idempotent: zone, NS, A, role, TLSStore entry present -> no mutation but apply/wait
+   a7: stale wildcard IP replaced268/294 ✓ a7: stale wildcard IP replaced
+   a7 without --parent-zone: prints NS for the registrar, no delega...269/294 ✓ a7 without --parent-zone: prints NS for the registrar, no delegation record
+   a7 dry-run: plans everything, mutates nothing270/294 ✓ a7 dry-run: plans everything, mutates nothing
+   a7 input errors exit 2 before any cloud call271/294 ✓ a7 input errors exit 2 before any cloud call
+   a7: no LB IP / no cert-manager identity / cert never Ready -> fails272/294 ✓ a7: no LB IP / no cert-manager identity / cert never Ready -> fails
+   a7: wrong kube context refuses before any cloud call273/294 ✓ a7: wrong kube context refuses before any cloud call
+   teardown: deletes PROJECT_DOMAINS zones before the main zone274/294 ✓ teardown: deletes PROJECT_DOMAINS zones before the main zone
+   a6: PREVIEW_DOMAIN overrides DNS_ZONE for this repo275/294 ✓ a6: PREVIEW_DOMAIN overrides DNS_ZONE for this repo
+quota-check.bats
+   enforced quota: CP0-CP4 PASS, fills to hard.pods, fill pods clea...276/294 ✓ enforced quota: CP0-CP4 PASS, fills to hard.pods, fill pods cleaned up
+   quota not enforced (everything admitted) -> FAIL exit 1, still c...277/294 ✓ quota not enforced (everything admitted) -> FAIL exit 1, still cleans up
+   rejected for another reason is not a PASS278/294 ✓ rejected for another reason is not a PASS
+   fill pod creation fails -> CP4 FAIL, no final probe279/294 ✓ fill pod creation fails -> CP4 FAIL, no final probe
+   already at hard.pods -> no fill, CP4 still probes280/294 ✓ already at hard.pods -> no fill, CP4 still probes
+   no preview-quota in namespace -> exit 1281/294 ✓ no preview-quota in namespace -> exit 1
+   usage: missing arg, extra arg, or non-preview namespace -> exit ...282/294 ✓ usage: missing arg, extra arg, or non-preview namespace -> exit 2, nothing touched
+smoke.bats
+   happy path: 1 -> 0, wake to 1, back to 0 => 3 PASS, namespace cl...283/294 ✓ happy path: 1 -> 0, wake to 1, back to 0 => 3 PASS, namespace cleaned
+   never scales to zero => CP2 FAIL before any request, still cleaned284/294 ✓ never scales to zero => CP2 FAIL before any request, still cleaned
+   missing spec.replicas is not mistaken for asleep285/294 ✓ missing spec.replicas is not mistaken for asleep
+   HTTP 200 but no ready pod => CP2 FAIL286/294 ✓ HTTP 200 but no ready pod => CP2 FAIL
+   wake returns 502 => CP2 FAIL287/294 ✓ wake returns 502 => CP2 FAIL
+   bad TLS => CP1 FAIL288/294 ✓ bad TLS => CP1 FAIL
+   --keep leaves the namespace289/294 ✓ --keep leaves the namespace
+   usage errors exit 2290/294 ✓ usage errors exit 2
+workflow-pins.bats
+   workflows reference at least one action291/294 ✓ workflows reference at least one action
+   every action ref is a full release tag292/294 ✓ every action ref is a full release tag
+   no floating major-only tag293/294 ✓ no floating major-only tag
+   no commit-SHA pin294/294 ✓ no commit-SHA pin
+
+294 tests, 0 failures
+
+[info] init: ✔ bats (full suite)
+[info] init: ▶ tofu fmt + validate + test
+Success! The configuration is valid.
+Success! The configuration is valid.
+Success! The configuration is valid.
+[info] init: ✔ tofu fmt + validate + test
+[info] init: ▶ tflint
+[info] init: ✔ tflint
+[info] init: ▶ checkov
+terraform scan results:
+
+Passed checks: 9, Failed checks: 0, Skipped checks: 4
+
+
+[info] init: ✔ checkov
+[info] init: ▶ check-architecture
+[info] check-architecture: root=/Users/nimatullahrazmjo/workstation/ephemeral-environments lib=1 workflows=10 templates=8
+clean
+[info] check-architecture: clean
+[info] init: ✔ check-architecture
+[info] init: skip e2e smoke (no runner yet — F005)
+
+== Active feature ==
+**F023** — Pilot second repo (same branch, different domain, isolated destroy/reap) — `IN PROGRESS`
+== Next step (CURRENT_TASK.md) ==
+Done: F022 PR #28 merged to `main`, kit v1.1.0 prepared and tagged.
+1. Write sprint contract for F023 in `.harness/verification/contracts/F023.md`.
+2. Onboard second repo via OpenTofu `repo-onboarding` module (`platform/envs/nimat/repos.tf`, `clusters/nimat/config/repos/`).
+3. Setup second repo to consume the kit (v1.1.0), with its own domain (`shop.preview.nimat.dev`).
+4. Prove two previews on the same branch run simultaneously without cross-repo interference, with independent destroy/reap.
+5. Record evidence and PR review loop.
+
+Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
+1. (done: BLK-008 resolved by F020)
+2. Untagged ACR manifests (buildx platform/attestation children) are never purged (F011 contract §5).
+3. `ubuntu-latest` migrates to Ubuntu 26 from 2026-10-19 (runner notice on every run) — re-run workflows after; pin `ubuntu-24.04` if anything breaks.
+4. Cluster RUNNING since 2026-09-30 (F015 e2e) — stop with `az aks stop -g nimatresourceg -n aks-preview` when idle.
+
+
+BASELINE GREEN
+[info] init: done
