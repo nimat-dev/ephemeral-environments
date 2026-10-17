@@ -4,9 +4,8 @@
 **Status**: COMPLETE (2026-10-01). Full Roadmap COMPLETE (23/23, 100%).
 
 ## Exact next step
-Done: `nimat-dev/shop` onboarded, live multi-tenant deployments verified simultaneously on `feat/pilot`, isolated destroy verified, full `./scripts/init.sh` BASELINE GREEN (294/294 tests).
-1. Open PR for `feat/F023` to `main`, ensure `harness-check` CI passes, review clean, and merge.
-2. Pause test cluster when done: `az aks stop -g nimatresourceg -n aks-preview`.
+Done: `nimat-dev/shop` onboarded, live multi-tenant deployments verified simultaneously on `feat/pilot`, isolated destroy verified, root `README.md` added, full `./scripts/init.sh` BASELINE GREEN (294/294 tests).
+1. Pause test cluster when done: `az aks stop -g nimatresourceg -n aks-preview`.
 
 Follow-ups (not on the roadmap; each needs a new FID first; several fold into Phase 05):
 1. (done: BLK-008 resolved by F020)

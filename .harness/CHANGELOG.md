@@ -18,6 +18,12 @@ Notes: <anything the next agent should know>
 
 <!-- entries go below, newest first -->
 
+## 2026-10-17 — docs(readme): Root README.md — COMPLETE
+Branch/commit: main
+Evidence:
+  - added root `README.md` covering standalone Helm chart usage (without Terraform/OpenTofu), bash bootstrap (`bootstrap/`), OpenTofu + Flux setup (`platform/`, `clusters/`), reusable preview kit (`examples/consumer/`), and verification commands
+  - `./scripts/harness-check.sh` -> ok
+
 ## 2026-10-01 — F023 Pilot second repo — COMPLETE
 Branch/commit: feat/F023   Contract: `verification/contracts/F023.md`
 Evidence (`evidence/F023/`):
